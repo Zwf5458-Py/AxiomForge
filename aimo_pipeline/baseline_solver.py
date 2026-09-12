@@ -3,16 +3,15 @@ AIMO (AI Mathematical Olympiad) Kaggle 竞赛打榜基线求解器
 =========================================================
 核心算法架构：
 1. Tool-Integrated Reasoning (TIR): 引导模型编写并执行 Python 验证脚本
-2. Multi-Process Hard Timeout: 基于 ProcessPoolExecutor 的硬超时防护，杜绝死循环挂起
+2. Multi-Process Hard Timeout: 基于 multiprocessing 物理进程终止，杜绝任何死循环挂起
 3. Self-Consistency Majority Voting: 基于 collections.Counter 的自洽性多数投票
 """
 
-import collections
 from collections import Counter
-import concurrent.futures
 import contextlib
 import io
 import math
+import multiprocessing
 import os
 import re
 import sys
@@ -20,7 +19,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 def _eval_worker(code_str: str) -> Dict[str, Any]:
-    """子进程独立工作函数：在沙箱命名空间内执行解题代码"""
+    """沙箱子进程核心执行逻辑"""
     buffer = io.StringIO()
     safe_globals = {
         "math": math,
@@ -37,14 +36,12 @@ def _eval_worker(code_str: str) -> Dict[str, Any]:
         with contextlib.redirect_stdout(buffer):
             exec(code_str, safe_globals, local_scope)
 
-        # 优先从标准输出中提取最后一个整数
         output = buffer.getvalue().strip()
         numbers = re.findall(r"-?\d+", output)
         if numbers:
             ans = int(numbers[-1]) % 1000
             return {"success": True, "result": ans, "error": None}
 
-        # 其次从局部变量中提取 ans / result / answer
         for var_name in ["ans", "result", "answer"]:
             if var_name in local_scope and isinstance(local_scope[var_name], int):
                 return {"success": True, "result": local_scope[var_name] % 1000, "error": None}
@@ -53,26 +50,42 @@ def _eval_worker(code_str: str) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "result": None, "error": f"{type(e).__name__}: {str(e)}"}
 
+def _mp_runner(code_str: str, queue: Any) -> None:
+    """供 multiprocessing 调用的顶层工作函数"""
+    res = _eval_worker(code_str)
+    queue.put(res)
+
 def execute_math_code(
     code_str: str,
     timeout_seconds: float = 5.0
 ) -> Tuple[Optional[int], Optional[str]]:
     """
-    带多进程硬超时保护的代码执行器：
-    利用 ProcessPoolExecutor 隔离执行，彻底杜绝死循环挂起，超时时强制截断
+    带硬超时防护的代码执行器：
+    启动独立子进程执行。一旦超时，立即通过 proc.terminate() / proc.kill()
+    物理终结子进程，杜绝 while True 等死循环占用 CPU 或死锁主进程。
     """
     try:
-        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(_eval_worker, code_str)
-            try:
-                res = future.result(timeout=timeout_seconds)
-                return res["result"], res["error"]
-            except concurrent.futures.TimeoutError:
-                return None, f"TimeoutError: Code execution exceeded {timeout_seconds}s limit"
-            except Exception as e:
-                return None, f"ExecutionError: {str(e)}"
+        ctx = multiprocessing.get_context()
+        queue = ctx.Queue()
+        proc = ctx.Process(target=_mp_runner, args=(code_str, queue))
+        proc.start()
+
+        proc.join(timeout=timeout_seconds)
+
+        if proc.is_alive():
+            # 物理杀死陷入死循环的子进程
+            proc.terminate()
+            proc.join(timeout=0.5)
+            if proc.is_alive():
+                proc.kill()
+            return None, f"TimeoutError: Code execution exceeded {timeout_seconds}s limit"
+
+        if not queue.empty():
+            res = queue.get_nowait()
+            return res["result"], res["error"]
+        return None, "ExecutionError: Subprocess exited with no result"
     except Exception as e:
-        # 兜底降级处理（例如在极少数不支持 fork/spawn 的受限环境下）
+        # 降级同进程执行（保底）
         res = _eval_worker(code_str)
         return res["result"], res["error"]
 
@@ -80,7 +93,7 @@ def aggregate_votes(valid_answers: List[Any]) -> Optional[int]:
     """基于 collections.Counter 的加权多数投票集成"""
     clean_answers = [a for a in valid_answers if a is not None and isinstance(a, int) and 0 <= a <= 999]
     if not clean_answers:
-        return 0  # 官方竞赛默认保底值
+        return 0  # 竞赛默认保底
     counter = Counter(clean_answers)
     most_common = counter.most_common(1)
     return most_common[0][0] if most_common else 0
@@ -92,7 +105,7 @@ class AIMOSolver:
         self.timeout = timeout_per_eval
 
     def solve_problem_offline_mock(self, problem_text: str) -> Dict[str, Any]:
-        """离线解题演示（用于本地无 API 时的基准流水线测试）"""
+        """离线演示求解器"""
         sample_code = """
 # 针对同余方程组与数论极值问题的验证脚本
 def solve():
@@ -119,8 +132,8 @@ solve()
 
 def run_aimo_demo():
     print("=" * 65)
-    print("🏆 AIMO Prize / Kaggle 竞赛打榜基线求解器 (硬超时防护升级版)")
-    print("📐 架构：ProcessPoolExecutor 硬超时 + Counter 多数投票")
+    print("🏆 AIMO Prize / Kaggle 竞赛打榜基线求解器 (硬超时防护物理杀死版)")
+    print("📐 架构：multiprocessing 物理硬超时 + Counter 多数投票")
     print("=" * 65)
 
     sample_problem = (
