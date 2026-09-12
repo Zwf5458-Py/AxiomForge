@@ -98,6 +98,56 @@ def baseline_priority_weights(p: Point, n: int) -> float:
         score += (val == 1) * 2.0 + (val == 2) * 1.5 - (val == 0) * 0.5 + idx * 0.1
     return score
 
+def sanitize_code_for_sandbox(code: str) -> str:
+    """代码清洗与语法自愈器：修复未闭合的 docstring、单双引号及多余自然语言文本"""
+    if not code:
+        return ""
+    import ast
+    import re
+
+    lines = code.strip().split("\n")
+    has_def = False
+    clean_lines = []
+    for line in lines:
+        if not has_def and re.search(r"^[ \t]*def\s+priority\b", line):
+            clean_lines.append("def priority(p: tuple, n: int) -> float:")
+            has_def = True
+            continue
+        if has_def:
+            clean_lines.append(line)
+
+    if not has_def:
+        clean_lines = ["def priority(p: tuple, n: int) -> float:"] + ["    " + l for l in lines]
+
+    code_candidate = "\n".join(clean_lines)
+
+    # 预编译检查与自动自愈
+    try:
+        ast.parse(code_candidate)
+        return code_candidate
+    except SyntaxError as e:
+        err_msg = str(e).lower()
+        # 处理 unterminated string literal 导致的代码错误
+        if "unterminated" in err_msg or "literal" in err_msg or "string" in err_msg or "quote" in err_msg:
+            fixed_lines = []
+            for l in clean_lines:
+                # 修复未闭合的三引号 docstring
+                if (l.count('"""') % 2 != 0) or (l.count("'''") % 2 != 0):
+                    fixed_lines.append("    # [Cleaned unclosed docstring]")
+                # 修复未闭合的单/双引号
+                elif not l.strip().startswith("#") and ((l.count('"') % 2 != 0) or (l.count("'") % 2 != 0)):
+                    fixed_lines.append("    # " + l.strip())
+                else:
+                    fixed_lines.append(l)
+            code_candidate = "\n".join(fixed_lines)
+            try:
+                ast.parse(code_candidate)
+                return code_candidate
+            except Exception:
+                pass
+
+    return code_candidate
+
 def evaluate_program(code_str: str, n: int) -> Dict[str, Any]:
     """
     在隔离的全局命名空间中执行 LLM 生成的 priority 函数代码并评分
@@ -109,9 +159,10 @@ def evaluate_program(code_str: str, n: int) -> Dict[str, Any]:
     }
     """
     local_scope: Dict[str, Any] = {}
+    clean_code = sanitize_code_for_sandbox(code_str)
     try:
-        # 在安全沙箱中执行代码
-        exec(code_str, {"math": math, "__builtins__": __builtins__}, local_scope)
+        # 在安全沙箱中执行经过自愈清洗的代码
+        exec(clean_code, {"math": math, "__builtins__": __builtins__}, local_scope)
         if "priority" not in local_scope or not callable(local_scope["priority"]):
             return {"valid": False, "score": 0, "error": "Function 'priority(p, n)' not found", "points": []}
 

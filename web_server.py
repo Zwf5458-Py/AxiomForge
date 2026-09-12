@@ -403,6 +403,7 @@ def priority(p: tuple, n: int) -> float:
         eval_time = time.time() - t_start
 
         if not eval_dict.get("valid"):
+            print(f"[FunSearch] 沙箱执行失败: {eval_dict.get('error')}\n代码内容:\n{extracted_code}")
             self._send_json({
                 "success": False,
                 "code": extracted_code,

@@ -390,10 +390,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const thinkingStatusText = document.getElementById('thinking-status-text');
 
   // 打字机流式输出与可跳过交互
+  const btnSkipTyping = document.getElementById('btn-skip-typing');
   let activeTypingTimer = null;
   let activeStageTimer = null;
   let pendingFullText = null;
   let onTypingCompleteCallback = null;
+
+  function finishTypingInstantly() {
+    if (activeTypingTimer && pendingFullText) {
+      clearInterval(activeTypingTimer);
+      activeTypingTimer = null;
+      aiThinkingText.textContent = pendingFullText;
+      aiThinkingText.scrollTop = aiThinkingText.scrollHeight;
+      pendingFullText = null;
+      if (btnSkipTyping) btnSkipTyping.style.display = 'none';
+      if (onTypingCompleteCallback) {
+        const cb = onTypingCompleteCallback;
+        onTypingCompleteCallback = null;
+        cb();
+      }
+    }
+  }
 
   function streamTypeWriter(element, text, speed = 8, onComplete) {
     if (activeTypingTimer) {
@@ -408,6 +425,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const step = text.length > 1200 ? 8 : (text.length > 500 ? 4 : 2);
     const interval = Math.max(10, speed);
 
+    if (btnSkipTyping) {
+      btnSkipTyping.style.display = 'inline-block';
+    }
+
     activeTypingTimer = setInterval(() => {
       idx += step;
       if (idx >= text.length) {
@@ -416,6 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(activeTypingTimer);
         activeTypingTimer = null;
         pendingFullText = null;
+        if (btnSkipTyping) btnSkipTyping.style.display = 'none';
         if (onTypingCompleteCallback) {
           const cb = onTypingCompleteCallback;
           onTypingCompleteCallback = null;
@@ -428,21 +450,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }, interval);
   }
 
+  if (btnSkipTyping) {
+    btnSkipTyping.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      finishTypingInstantly();
+    });
+  }
+
   if (aiThinkingText) {
-    aiThinkingText.title = "提示：点击此处可跳过打字动画立即显示全部数学推导";
+    // 坚决不使用原生 title 属性，彻底根除遮挡文字的浏览器默认悬停 Tooltip 框
+    aiThinkingText.removeAttribute('title');
     aiThinkingText.addEventListener('click', () => {
-      if (activeTypingTimer && pendingFullText) {
-        clearInterval(activeTypingTimer);
-        activeTypingTimer = null;
-        aiThinkingText.textContent = pendingFullText;
-        aiThinkingText.scrollTop = aiThinkingText.scrollHeight;
-        pendingFullText = null;
-        if (onTypingCompleteCallback) {
-          const cb = onTypingCompleteCallback;
-          onTypingCompleteCallback = null;
-          cb();
-        }
-      }
+      finishTypingInstantly();
     });
   }
 
@@ -514,17 +534,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const deductionBody = result.reasoning || result.raw_text || "【代数推导】模型已完成 F_3^n 空间的代数特征提取与构造。";
         const fullOutput = deductionBody + evalSummary;
 
-        // 启动打字机动画流式输出大模型数学推导与验算全景
-        streamTypeWriter(aiThinkingText, fullOutput, 10, () => {
-          // 打字完成或跳过时，更新状态与 3D 点阵
-          funsearchEngine.applyEvolvedResult(result);
-        });
-
-        // 提前将代码放入代码预览窗口，形成代码与思考同步涌现的质感
+        // 1. 【即时反馈到主图框】：模型推演出的最新点集与代码，第 0 秒立刻点亮并更新到主图框与 HUD！
+        funsearchEngine.applyEvolvedResult(result);
         if (result.code) {
           const codeEl = document.getElementById('funsearch-code-display');
           if (codeEl) codeEl.textContent = result.code;
         }
+
+        // 2. 同时启动打字机动画流式输出大模型数学推导与验算全景
+        streamTypeWriter(aiThinkingText, fullOutput, 10);
 
       } catch (err) {
         isResultReceived = true;

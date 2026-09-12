@@ -468,8 +468,11 @@
               <span style="color: #94a3b8;">当前驱动模型:</span>
               <span id="active-model-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-family: monospace;">DeepSeek-V3</span>
             </div>
-            <details id="ai-thinking-details" open style="margin-top: 6px; cursor: pointer;">
-              <summary style="color: #f59e0b; font-size: 11px; font-weight: 600;">🧠 大模型代数分析与推演过程全景 (<span id="thinking-status-text">就绪</span>)</summary>
+            <details id="ai-thinking-details" open style="margin-top: 6px;">
+              <summary style="color: #f59e0b; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                <span>🧠 大模型代数分析与推演全景 (<span id="thinking-status-text">就绪</span>)</span>
+                <button type="button" id="btn-skip-typing" style="display: none; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.6); color: #fef08a; padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: normal; transition: all 0.2s ease;">⚡ 立即展开全部</button>
+              </summary>
               <pre id="ai-thinking-text" style="background: rgba(0,0,0,0.65); border: 1px solid rgba(245,158,11,0.25); padding: 10px; border-radius: 6px; color: #e2e8f0; font-size: 11px; white-space: pre-wrap; margin-top: 6px; max-height: 260px; overflow-y: auto; line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">点击“AI 大模型生成演化”将向当前配置的模型发起真实请求，由模型实时推理并生成代数分析与代码，并在 Python 沙箱中完成严格三点共线验算。系统坚决杜绝任何未经模型真实推演的预定结果。</pre>
             </details>
             <div id="sandbox-status-badge" style="margin-top: 6px; font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
