@@ -307,6 +307,14 @@ class MultiDimCapSetVisualizer {
    * 应用由大模型真实端到端演化出的程序与沙箱验算结果
    */
   applyEvolvedResult(data) {
+    if (data.dimension && data.dimension !== this.dimension) {
+      this.dimension = data.dimension;
+      this.allPoints = this.generatePoints(data.dimension);
+      // 同步顶部维度切换按钮高亮
+      document.querySelectorAll('.dim-pill-btn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.dim, 10) === data.dimension);
+      });
+    }
     this.isEvolved = true;
     this.evolvedModel = data.model_id;
     this.currentCode = data.code;
