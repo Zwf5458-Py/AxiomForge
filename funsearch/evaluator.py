@@ -132,3 +132,42 @@ def evaluate_program(code_str: str, n: int) -> Dict[str, Any]:
             "error": f"{type(e).__name__}: {str(e)}",
             "points": []
         }
+
+def count_collinear_lines(points: Sequence[Point]) -> int:
+    """计算点集中存在的三点共线三元组数量（合法的 Cap Set 必须严格为 0）"""
+    if len(points) < 3:
+        return 0
+    point_set = set(points)
+    collinear_count = 0
+    n_pts = len(points)
+    for i in range(n_pts):
+        p1 = points[i]
+        for j in range(i + 1, n_pts):
+            p2 = points[j]
+            p3 = tuple((-a - b) % 3 for a, b in zip(p1, p2))
+            if p3 in point_set and p3 > p2:
+                collinear_count += 1
+    return collinear_count
+
+def get_dimension_topology(n: int, selected_points: Optional[List[Point]] = None) -> Dict[str, Any]:
+    """导出指定维度的空间规模、汉明重量分布及超维投影参数"""
+    all_pts = generate_all_points(n)
+    sel_set = set(selected_points) if selected_points else set()
+
+    hamming_dist: Dict[int, int] = {}
+    sel_hamming_dist: Dict[int, int] = {}
+    for p in all_pts:
+        hw = sum(1 for x in p if x != 0)
+        hamming_dist[hw] = hamming_dist.get(hw, 0) + 1
+        if p in sel_set:
+            sel_hamming_dist[hw] = sel_hamming_dist.get(hw, 0) + 1
+
+    return {
+        "dimension": n,
+        "total_points": len(all_pts),
+        "selected_count": len(sel_set),
+        "hamming_distribution": hamming_dist,
+        "selected_hamming_distribution": sel_hamming_dist,
+        "is_cap_set": is_valid_cap_set(list(sel_set)) if sel_set else True,
+        "collinear_violations": count_collinear_lines(list(sel_set)) if sel_set else 0
+    }

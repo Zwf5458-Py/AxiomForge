@@ -39,7 +39,14 @@
       </button>
     </div>
 
-    <div class="header-actions">
+    <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+      <button id="btn-model-settings" class="btn-settings-pill" title="配置大模型平台 (DeepSeek / OpenAI / Ollama / 自定义)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span>AI 模型平台配置</span>
+      </button>
       <button id="btn-fullscreen" class="btn-icon" title="全屏沉浸模式">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
@@ -171,16 +178,57 @@
         <div class="hud-overlay">
           <div class="hud-pill">
             <span class="pulse-indicator" style="background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
-            <span>目标有限域：<strong>F_3^3 三维空间 (27 点阵)</strong></span>
+            <span>目标空间：<strong id="hud-target-space">F_3^5 五维空间 (243 点)</strong></span>
           </div>
           <div class="hud-pill">
             <span class="hud-tag" style="background: rgba(234, 179, 8, 0.2); color: #fef08a;">PoW 验证</span>
-            <span>三点共线：<strong>100% 严格无共线 (0 条线)</strong></span>
+            <span>三点共线：<strong id="hud-collinear-stat">100% 严格无共线 (0 条线)</strong></span>
           </div>
           <div class="hud-pill">
-            <span class="hud-tag">交互</span>
-            <span>鼠标拖拽 3D 旋转 | 观察高维非共线拓扑</span>
+            <span class="hud-tag" id="funsearch-improvement-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: bold;">突破局部陷阱 +18.75%</span>
           </div>
+        </div>
+
+        <!-- 画面顶部快捷：维度切换与投影模式工具条 -->
+        <div class="funsearch-top-toolbar">
+          <div class="dim-selector-group">
+            <span class="toolbar-label">探索空间:</span>
+            <button class="dim-pill-btn" data-dim="3">3 维 (27点)</button>
+            <button class="dim-pill-btn" data-dim="4">4 维 (81点)</button>
+            <button class="dim-pill-btn active" data-dim="5">⭐ 5 维 (243点 · 重点)</button>
+            <button class="dim-pill-btn" data-dim="6">6 维 (729点)</button>
+            <button class="dim-pill-btn" data-dim="7">7 维 (2187点)</button>
+          </div>
+
+          <div class="proj-selector-group">
+            <span class="toolbar-label">高维投影:</span>
+            <button class="proj-pill-btn active" data-mode="hypersphere">超球拓扑投影</button>
+            <button class="proj-pill-btn" data-mode="slices">3D 切片阵列</button>
+          </div>
+        </div>
+
+        <!-- 底部快捷操作 -->
+        <div class="canvas-bottom-controls">
+          <button class="quick-action-btn" id="btn-fast-deduction" title="在前端快速运行确定性对称性启发式推演">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            启动即时推演
+          </button>
+          <button class="quick-action-btn" id="btn-ai-evolve" title="调用配置的大语言模型平台进行程序变异生成">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+              <path d="M12 6v6l4 2"></path>
+            </svg>
+            AI 大模型生成演化
+          </button>
+          <button class="quick-action-btn" id="btn-reset-benchmark" title="恢复为已知最佳/突破点集">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            重置基准点
+          </button>
         </div>
       </div>
     </section>
@@ -385,41 +433,122 @@
       <!-- ========================================== -->
       <div id="sidebar-funsearch" style="display: none;">
         <div class="sidebar-section">
-          <div class="section-title">FunSearch 演化与算法工作量证明 (PoW)</div>
+          <div class="section-title">高维空间与突破工作量证明 (PoW)</div>
           <div class="stat-grid">
             <div class="stat-card">
               <div class="stat-label">Cap Set 最大基数</div>
-              <div class="stat-number" id="funsearch-best-score" style="color: #fde047;">9 / 9</div>
-              <div class="stat-sub">已达 3 维理论已知上限！</div>
+              <div class="stat-number" id="funsearch-best-score" style="color: #fde047;">38 / 45</div>
+              <div class="stat-sub">打破 2ⁿ 局部最优陷阱！</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">空间点集规模</div>
-              <div class="stat-number" id="funsearch-points-count">9 点</div>
-              <div class="stat-sub">总空间 27 点 (33.3% 占比)</div>
+              <div class="stat-number" id="funsearch-points-count">38 点 (15.6%)</div>
+              <div class="stat-sub">总空间 243 点</div>
             </div>
-          </div>
-
-          <div class="theory-box" style="margin-top: 14px;">
-            <strong>陶哲轩与 Cap Set 极值数学：</strong><br>
-            • 有限域 F_3^n 中无三点共线子集的最大上界是现代组合数学核心难题之一。<br>
-            • <strong>DeepMind FunSearch</strong> (<em>Nature 2023</em>)：通过将大语言模型与自动化代码沙箱结合，让 AI 自主写程序演化启发式算法，打破了多项人类数学记录！<br>
-            • <strong>无文凭独立研究者突破口</strong>：通过公开代码库与竞赛排名，直接凭 PoW（工作量证明）获取香港数码港 CCMF (10万港币) 或 Manifund 资助。
           </div>
         </div>
 
+        <!-- A/B 对抗演化历史曲线 (对照组 32 vs 实验组 38) -->
         <div class="sidebar-section">
-          <div class="section-title">AI 演化出的最优 Python 优先级函数</div>
-          <pre id="funsearch-code-display" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 12px; font-size: 11px; color: #38bdf8; overflow-x: auto; font-family: monospace; line-height: 1.4; max-height: 220px;"></pre>
+          <div class="section-title">A/B 对抗演化收敛曲线 (突破 2ⁿ 局部陷阱)</div>
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+            <canvas id="ab-chart-canvas" width="280" height="130" style="width: 100%; height: 130px; display: block;"></canvas>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 6px; color: var(--text-secondary);">
+              <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; background: #94a3b8; border-radius: 2px;"></span> 对照组 (朴素盲目演化)</span>
+              <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; background: #eab308; border-radius: 2px;"></span> 实验组 (对称性先验突破)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 模型思考链与演化状态 -->
+        <div class="sidebar-section">
+          <div class="section-title">大语言模型演化与思考过程</div>
+          <div id="ai-model-status-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px; font-size: 11px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="color: #94a3b8;">当前驱动模型:</span>
+              <span id="active-model-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-family: monospace;">DeepSeek-V3</span>
+            </div>
+            <details id="ai-thinking-details" style="margin-top: 6px; cursor: pointer;">
+              <summary style="color: #f59e0b; font-size: 11px;">查看大模型代数推理思考链 (<span id="thinking-status-text">就绪</span>)</summary>
+              <pre id="ai-thinking-text" style="background: rgba(0,0,0,0.5); padding: 8px; border-radius: 4px; color: #cbd5e1; font-size: 10px; white-space: pre-wrap; margin-top: 6px; max-height: 120px; overflow-y: auto;">点击“AI 大模型生成演化”观察模型推演思考链...</pre>
+            </details>
+          </div>
+
+          <div class="section-title" style="margin-top: 12px;">AI 演化出的最优 Python 优先级函数</div>
+          <pre id="funsearch-code-display" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 12px; font-size: 11px; color: #38bdf8; overflow-x: auto; font-family: monospace; line-height: 1.4; max-height: 180px;"></pre>
         </div>
       </div>
 
     </aside>
   </main>
 
+  <!-- ============================================== -->
+  <!-- 模态弹窗：AI 模型平台配置中心 (参考 pi-ai 风格) -->
+  <!-- ============================================== -->
+  <div id="modal-model-settings" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="logo-badge" style="background: linear-gradient(135deg, #38bdf8, #6366f1); font-size: 10px;">AI PROVIDER</span>
+          <h2 style="font-size: 16px; font-weight: 600; color: #f8fafc; margin: 0;">AI 模型平台与凭据接入配置</h2>
+        </div>
+        <button id="btn-close-modal" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">模型提供商 (Provider)</label>
+          <select id="select-provider" class="form-select">
+            <option value="deepseek">DeepSeek (深度求索 - 推荐数学推演)</option>
+            <option value="openai">OpenAI (GPT-4o / o3-mini)</option>
+            <option value="siliconflow">SiliconFlow (硅基流动)</option>
+            <option value="ollama">Ollama (本地私有开源模型)</option>
+            <option value="mock">确定性离线模拟器 (零成本免 Key)</option>
+            <option value="custom">自定义第三方兼容 API (vLLM / OneAPI 等)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">模型选择 (Model)</label>
+          <select id="select-model" class="form-select"></select>
+          <input type="text" id="input-custom-model" class="form-input" placeholder="输入自定义模型名称" style="display: none; margin-top: 6px;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">API 密钥 (API Key)</label>
+          <div style="position: relative;">
+            <input type="password" id="input-api-key" class="form-input" placeholder="sk-..." autocomplete="off">
+            <button id="btn-toggle-key" type="button" class="btn-input-eye" title="显示/隐藏密钥">👁️</button>
+          </div>
+          <span class="form-tip">仅在浏览器本地加密存储 (localStorage) 或向本地原生后端传输，绝不向第三方泄漏。</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">接口端点 (Base URL)</label>
+          <input type="text" id="input-base-url" class="form-input" placeholder="https://api.deepseek.com/v1">
+        </div>
+
+        <div id="check-auth-result" class="status-box" style="display: none;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-test-auth" class="btn" style="background: rgba(255,255,255,0.08);">
+          <span class="pulse-indicator" style="background: #38bdf8;"></span> 测试连接 (Check Auth)
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-cancel-settings" class="btn btn-secondary">取消</button>
+          <button id="btn-save-settings" class="btn btn-primary">保存配置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 脚本加载 -->
   <script src="js/koch.js"></script>
   <script src="js/orbit.js"></script>
   <script src="js/mandelbrot.js"></script>
+  <script src="js/cap_set_data.js"></script>
+  <script src="js/model_platform.js"></script>
   <script src="js/math_discovery.js"></script>
   <script src="js/app.js"></script>
 </body>
