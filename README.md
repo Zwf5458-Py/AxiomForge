@@ -1,6 +1,8 @@
-# MathGenesis · 分形动力学与 AI 现代数学探索系统
+# AxiomForge · AI 现代数学发现与分形动力学探索系统
 
-> **Proof of Work (PoW) 开源矩阵**：基于 WebGL/HTML5 动力学可视化，结合 DeepMind FunSearch 程序演化搜索与 AIMO 竞赛解题流水线，专为独立研究者打造的无门槛科研与资助变现基底。
+> **AxiomForge (公理熔炉)**：面向无大学文凭独立研究者的 **Proof of Work (PoW) 开源矩阵**。基于 WebGL/HTML5 动力学交互模拟，结合 DeepMind FunSearch 程序演化搜索与 AIMO 奥数竞赛解题流水线，打通从“开源 PoW 建设”到“香港数码港 CCMF / Manifund 独立资助申报”的完整变现闭环。
+> 
+> 🌐 **GitHub 仓库**: [https://github.com/Zwf5458-Py/AxiomForge](https://github.com/Zwf5458-Py/AxiomForge)
 
 ---
 
