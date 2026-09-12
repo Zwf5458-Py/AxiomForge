@@ -1,51 +1,119 @@
 {
-  "dimension": 3,
-  "best_score": 8,
+  "dimension": 4,
+  "best_score": 18,
   "is_valid": true,
-  "points_count": 8,
-  "best_code": "def priority(p: tuple, n: int) -> float:\n    # 初始种群基线：基于坐标加权与模特征\n    score = 0.0\n    for idx, val in enumerate(p):\n        if val == 1:\n            score += 2.0\n        elif val == 2:\n            score += 1.5\n        else:\n            score -= 0.5\n        score += idx * 0.1\n    return float(score)",
+  "points_count": 18,
+  "best_code": "def priority(p: tuple, n: int) -> float:\n    # 变异策略：汉明权重与二阶坐标交叉项\n    c0 = p.count(0)\n    c1 = p.count(1)\n    c2 = p.count(2)\n    score = c0 * -1.351 + c1 * 1.901 + c2 * 3.153\n    for i in range(len(p) - 1):\n        score += (p[i] ^ p[i+1]) * 1.864\n    return float(score)",
   "points": [
     [
       1,
-      1,
-      1
-    ],
-    [
-      1,
-      1,
-      2
-    ],
-    [
-      1,
-      2,
-      1
-    ],
-    [
-      2,
-      1,
-      1
-    ],
-    [
-      1,
-      2,
-      2
-    ],
-    [
       2,
       1,
       2
     ],
     [
       2,
+      1,
       2,
       1
     ],
     [
       2,
+      1,
       2,
       2
+    ],
+    [
+      2,
+      2,
+      1,
+      2
+    ],
+    [
+      1,
+      2,
+      2,
+      1
+    ],
+    [
+      2,
+      1,
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      2,
+      1
+    ],
+    [
+      1,
+      2,
+      1,
+      1
+    ],
+    [
+      1,
+      2,
+      0,
+      2
+    ],
+    [
+      2,
+      0,
+      2,
+      1
+    ],
+    [
+      1,
+      1,
+      2,
+      2
+    ],
+    [
+      2,
+      2,
+      1,
+      1
+    ],
+    [
+      2,
+      0,
+      2,
+      2
+    ],
+    [
+      0,
+      2,
+      0,
+      2
+    ],
+    [
+      2,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      0,
+      2
+    ],
+    [
+      1,
+      0,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      0,
+      0
     ]
   ],
-  "total_evaluations": 23,
-  "timestamp": "2026-09-12 10:01:30"
+  "total_evaluations": 64,
+  "timestamp": "2026-09-12 11:16:53"
 }
