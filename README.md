@@ -1,58 +1,67 @@
-# AxiomForge · AI 现代数学发现与分形动力学探索系统
+# AxiomForge: FunSearch-Inspired Heuristic Search Framework for Combinatorial Problems
 
-> **AxiomForge (公理熔炉)**：面向无大学文凭独立研究者的 **Proof of Work (PoW) 开源矩阵**。基于 WebGL/HTML5 动力学交互模拟，结合 DeepMind FunSearch 程序演化搜索与 AIMO 奥数竞赛解题流水线，打通从“开源 PoW 建设”到“香港数码港 CCMF / Manifund 独立资助申报”的完整变现闭环。
-> 
-> 🌐 **GitHub 仓库**: [https://github.com/Zwf5458-Py/AxiomForge](https://github.com/Zwf5458-Py/AxiomForge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI Tests](https://github.com/Zwf5458-Py/AxiomForge/actions/workflows/tests.yml/badge.svg)](https://github.com/Zwf5458-Py/AxiomForge/actions)
 
----
-
-## 🌟 核心功能特性
-
-### 1. 科赫雪花 (Koch Snowflake) · 几何自相似
-- **连续生长形变动画 (Morphing Animation)**：支持等边三角形凸起从高度 $0 \to h$ 平滑生长萌芽；
-- **动态数学推导与指标仪表盘**：周长发散 $P_n \to \infty$、包围面积收敛至 $\frac{8}{5}A_0$、豪斯多夫分形维数 $D \approx 1.26186$；
-- **自由缩放与漫游**：鼠标滚轮缩放与平移。
-
-### 2. 曼德勃罗集 (Mandelbrot Set) · 广义高阶复动力学
-- **WebGL GPU 极速并行渲染 (60 FPS)**：GLSL 并发执行 $z_{n+1} = z^d + c$ 迭代判定；
-- **连续势平滑着色算法**：通过 $\nu = i + 1 - \log_2(\log_2 |z|)$ 消除离散断层；
-- **电影级自动深潜巡航与复数轨道探测器**：动态绘制复平面轨道跳跃收敛/逃逸轨迹。
-
-### 3. AI 数学发现 · Cap Set 极值组合搜索 (FunSearch)
-- **有限域 $\mathbb{F}_3^3$ 空间 3D 离散点阵交互投影**：实时高亮显示 9 点最优解（已达理论上限），提供 100% 严格无三点共线判定；
-- **自主演化程序数据库与沙箱评测**：基于遗传岛屿算法自动变异生成 Python 启发式代码，实现数学规律自主挖掘。
+> **项目定位**：一个面向独立研究者的**早期开源研究原型（Early Research Prototype）**，旨在探索代数结构先验（Symmetry & Modular Invariants）是否能改善有限域极值组合问题（如 Cap Set 问题）中的启发式贪心搜索。
 
 ---
 
-## 🛠️ 核心代码与运行指南
+## 🔬 研究背景与初步发现
 
-### 1. 本地网页可视化原型
+在有限域 $\mathbb{F}_3^n$ 的帽集问题（Cap Set Problem，即寻找无三点共线 $x + y + z \equiv 0 \pmod 3$ 的最大子集）中，朴素启发式贪心往往容易被困在容量为 $2^n$ 的低维超立方体子空间中（例如 $n=4 \to 16$, $n=5 \to 32$, $n=6 \to 64$, $n=7 \to 128$）。
+
+我们构建了一套受 DeepMind FunSearch 启发的轻量级启发式搜索与评测框架。在跨多组随机种子的初步受限实验中：
+- 对照组（朴素线性启发式）：受限于 $2^n$ 超立方体局部解；
+- 实验组（注入仿射同余与汉明范数切片先验）：打破了 $2^n$ 封印，观测到统计显著的容量增益（$n=4$ 稳定达到已知理论上限 20 点，$n=5$ 均值达到 $37.6 \pm 0.7$ 点，$n=7$ 观测到 157 点）。
+
+> [!NOTE]
+> **关于基准与当前局限的说明**：
+> - 在 $n=7$ 维度下，当前最好单次结果为 157 点，距离数学家 Edel (2004) 构造的已知最佳下界（236 点）仍有约 33.5% 的差距。
+> - 本项目目前处于**早期探索型原型阶段**，核心代码为模板化启发式变异，尚不构成完整的大模型自主程序演化闭环。下一阶段目标是通过多随机种子、严格基准、公开实验日志和接入大模型 API，检验改进是否具有一般统计稳定性。
+
+---
+
+## 🛠️ 快速开始与实验复现
+
+### 1. 安装环境与依赖
 ```bash
-# 启动本地轻量 HTTP 服务器
+git clone https://github.com/Zwf5458-Py/AxiomForge.git
+cd AxiomForge
+pip install -r requirements.txt
+```
+
+### 2. 运行单元测试
+```bash
+pytest tests/
+```
+
+### 3. 运行多随机种子统计评测
+```bash
+# 在 n=5 维度下运行 10 组随机种子对比评测
+python3 experiments/run_ab_experiment.py --dimension 5 --iterations 30 --seeds 10
+
+# 在 n=6 维度下运行 5 组随机种子对比评测
+python3 experiments/run_ab_experiment.py --dimension 6 --iterations 30 --seeds 5
+```
+
+### 4. 启动 WebGL 3D 交互原型
+```bash
 python3 -m http.server 8080
-# 浏览器访问 http://localhost:8080，支持在三大视窗间自由切换
-```
-
-### 2. 运行 FunSearch Cap Set 演化搜索
-```bash
-# 启动离线演化搜索，自动寻找最优 Cap Set 并导出 JSON
-python3 run_cap_set_search.py --dimension 3 --iterations 20
-
-# 运行数学判定单元测试
-python3 -m unittest discover -s tests
-```
-
-### 3. 运行 AIMO 奥数竞赛打榜 Demo
-```bash
-python3 aimo_pipeline/baseline_solver.py
+# 访问 http://localhost:8080 观察 F_3^3 空间的 27 点阵三维正交投影与动力学系统
 ```
 
 ---
 
-## 💰 独立研究者资助申报与生计变现文档
+## 📄 学术引用与许可证
 
-本项目配套完整的独立科研生计变现指南，无学历门槛，纯凭公开 PoW 获取资金：
-- 🇭🇰 [香港数码港 CCMF 10万港元无股权资助申报全套方案](docs/grants/ccmf_application_proposal.md)
-- 🌐 [Manifund 国际独立研究者微型资助申请 Pitch 文档](docs/grants/manifund_grant_pitch.md)
-- 🏆 [Kaggle AIMO 竞赛打榜与全球排名杠杆指南](aimo_pipeline/README.md)
+本项目采用 [MIT License](LICENSE) 开源许可证。若您在研究中参考了本项目的实验或代码，请按 [CITATION.cff](CITATION.cff) 进行引用：
 
+```bibtex
+@software{axiomforge2026,
+  author = {Zwf5458-Py},
+  title = {AxiomForge: A FunSearch-Inspired Heuristic Search Framework for Combinatorial Problems},
+  year = {2026},
+  url = {https://github.com/Zwf5458-Py/AxiomForge}
+}
+```

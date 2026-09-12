@@ -47,8 +47,8 @@ def main():
 
     n = args.dimension
     print("=" * 65)
-    print(f"🔬 启动 FunSearch 程序演化搜索 · Cap Set 在有限域 F_3^{n} 空间")
-    print(f"📊 理论已知上界/最优值：n=2->4, n=3->9, n=4->20, n=5->45, n=6->112")
+    print(f"🔬 启动 FunSearch-inspired 启发式搜索 · Cap Set 在有限域 F_3^{n} 空间")
+    print(f"📊 已知最佳构造/基准参照：n=2->4, n=3->9, n=4->20, n=5->45, n=6->112, n=7->236 (Edel 2004)")
     print(f"⚙️ 模式：{args.api_type.upper()} | 迭代轮数：{args.iterations} | 岛屿数：{args.islands}")
     print("=" * 65)
 

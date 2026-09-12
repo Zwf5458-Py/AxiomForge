@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+title: "AxiomForge: A FunSearch-Inspired Heuristic Search Framework for Combinatorial Problems"
+authors:
+  - family-names: "Z"
+    given-names: "W"
+    affiliation: "Independent Researcher"
+date-released: 2026-09-12
+url: "https://github.com/Zwf5458-Py/AxiomForge"
+keywords:
+  - "extremal combinatorics"
+  - "cap set problem"
+  - "funsearch"
+  - "heuristic search"
+  - "genetic algorithms"
+license: "MIT"
