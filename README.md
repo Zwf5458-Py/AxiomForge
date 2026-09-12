@@ -36,7 +36,19 @@ pip install -r requirements.txt
 pytest tests/
 ```
 
-### 3. 运行多随机种子统计评测
+### 3. 运行完整的 FunSearch 真实算法演化系统
+```bash
+# 模式 A: 确定性离线复现模式 (零成本，无需 API Key)
+python3 run_funsearch_real.py --dimension 4 --iterations 20 --backend mock --seed 42
+
+# 模式 B: 接入真实大模型在线演化 (支持 DeepSeek / OpenAI / Qwen 等)
+python3 run_funsearch_real.py --dimension 4 --iterations 30 --backend deepseek --api-key YOUR_API_KEY
+
+# 模式 C: 接入本地 Ollama / vLLM 开源大模型
+python3 run_funsearch_real.py --dimension 4 --iterations 30 --backend custom --api-base http://localhost:11434/v1
+```
+
+### 4. 运行多随机种子统计评测
 ```bash
 # 在 n=5 维度下运行 10 组随机种子对比评测
 python3 experiments/run_ab_experiment.py --dimension 5 --iterations 30 --seeds 10
@@ -45,7 +57,7 @@ python3 experiments/run_ab_experiment.py --dimension 5 --iterations 30 --seeds 1
 python3 experiments/run_ab_experiment.py --dimension 6 --iterations 30 --seeds 5
 ```
 
-### 4. 启动 WebGL 3D 交互原型
+### 5. 启动 WebGL 3D 交互原型
 ```bash
 python3 -m http.server 8080
 # 访问 http://localhost:8080 观察 F_3^3 空间的 27 点阵三维正交投影与动力学系统
