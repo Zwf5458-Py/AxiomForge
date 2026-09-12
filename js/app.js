@@ -636,7 +636,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputApiKey = document.getElementById('input-api-key');
   const inputBaseUrl = document.getElementById('input-base-url');
   const checkResultBox = document.getElementById('check-auth-result');
-  const activeModelBadge = document.getElementById('active-model-badge');
 
   let isManualModelMode = false;
 
