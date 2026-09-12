@@ -1,0 +1,56 @@
+{
+  "dimension": 3,
+  "best_score": 9,
+  "is_valid": true,
+  "points_count": 9,
+  "best_code": "def priority(p: tuple, n: int) -> float:\n    # 变异策略：汉明权重与二阶坐标交叉项\n    c0 = p.count(0)\n    c1 = p.count(1)\n    c2 = p.count(2)\n    score = c0 * -1.811 + c1 * 1.496 + c2 * 0.935\n    for i in range(len(p) - 1):\n        score += (p[i] ^ p[i+1]) * 1.785\n    return float(score)",
+  "points": [
+    [
+      1,
+      2,
+      1
+    ],
+    [
+      2,
+      1,
+      2
+    ],
+    [
+      1,
+      2,
+      0
+    ],
+    [
+      0,
+      2,
+      1
+    ],
+    [
+      1,
+      1,
+      2
+    ],
+    [
+      2,
+      1,
+      1
+    ],
+    [
+      2,
+      0,
+      2
+    ],
+    [
+      1,
+      0,
+      2
+    ],
+    [
+      2,
+      0,
+      1
+    ]
+  ],
+  "total_evaluations": 23,
+  "timestamp": "2026-09-12 09:48:14"
+}

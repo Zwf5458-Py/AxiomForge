@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分形几何学与动力学模型动画模拟系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 顶部导航条 -->
+  <header class="app-header">
+    <div class="brand-area">
+      <span class="logo-badge">FRACTAL LAB</span>
+      <h1 class="app-title">分形几何学动画模拟</h1>
+      <span class="app-subtitle">科赫雪花 & 广义曼德勃罗集</span>
+    </div>
+
+    <!-- 模式切换选项卡 -->
+    <div class="mode-tabs">
+      <button id="tab-koch" class="tab-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 22 19.5 2 19.5 12 2"></polygon>
+        </svg>
+        科赫雪花 · 几何自相似
+      </button>
+      <button id="tab-mandelbrot" class="tab-btn active">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 2a10 10 0 0 0 0 20"></path>
+        </svg>
+        曼德勃罗集 · 广义高阶动力学
+      </button>
+      <button id="tab-funsearch" class="tab-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        AI 数学发现 · Cap Set (FunSearch)
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <button id="btn-fullscreen" class="btn-icon" title="全屏沉浸模式">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主体工作区 -->
+  <main class="app-container">
+
+    <!-- ============================================== -->
+    <!-- 模块一：科赫雪花 (Koch Snowflake) 视窗 -->
+    <!-- ============================================== -->
+    <section id="view-koch" class="view-panel">
+      <div class="canvas-wrapper">
+        <canvas id="koch-canvas" class="render-canvas"></canvas>
+
+        <!-- 浮动信息条 (HUD) -->
+        <div class="hud-overlay">
+          <div class="hud-pill">
+            <span class="pulse-indicator"></span>
+            <span>演化状态：<strong id="stat-order">第 3 阶</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag">操作</span>
+            <span>滚轮缩放 | 拖拽漫游 | 自动连续萌芽演化</span>
+          </div>
+        </div>
+
+        <!-- 底部快捷操作 -->
+        <div class="canvas-bottom-controls">
+          <button class="quick-action-btn" id="btn-koch-zoom-out" title="以图形中心缩小">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            中心缩小
+          </button>
+          <button class="quick-action-btn" id="btn-koch-reset" title="重置居中全貌">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            中心全貌
+          </button>
+          <button class="quick-action-btn" id="btn-koch-zoom-in" title="以图形中心放大">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            中心放大
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 模块二：曼德勃罗集与广义多重分形视窗 (默认高亮) -->
+    <!-- ============================================== -->
+    <section id="view-mandelbrot" class="view-panel active">
+      <div class="canvas-wrapper">
+        <canvas id="mandelbrot-canvas" class="render-canvas"></canvas>
+        <canvas id="orbit-canvas"></canvas>
+
+        <!-- 浮动信息条 (HUD) -->
+        <div class="hud-overlay">
+          <div class="hud-pill">
+            <span class="pulse-indicator"></span>
+            <span id="mb-coord">c = 0.00000 + 0.00000i</span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag">动力学判定</span>
+            <span id="orbit-status">探测就绪 (移动鼠标取样)</span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag">轨道状态</span>
+            <span id="orbit-step">移动鼠标观察复数轨道</span>
+          </div>
+        </div>
+
+        <!-- 画面左下角醒目大公式 (对应截图同款风格) -->
+        <div class="hud-watermark">
+          <div class="watermark-title">分形几何学</div>
+          <div class="watermark-formula" id="mb-formula-display">z ↦ z<sup>2.00</sup> + c</div>
+        </div>
+
+        <!-- 底部快捷操作 -->
+        <div class="canvas-bottom-controls">
+          <button class="quick-action-btn" id="btn-mb-zoom-out" title="以中心缩小">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            中心缩小
+          </button>
+          <button class="quick-action-btn" id="btn-mb-reset" title="重置居中全景">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            中心全景
+          </button>
+          <button class="quick-action-btn" id="btn-mb-zoom-in" title="以中心放大">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            中心放大
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 模块三：AI 数学发现 · Cap Set (FunSearch) 视窗 -->
+    <!-- ============================================== -->
+    <section id="view-funsearch" class="view-panel">
+      <div class="canvas-wrapper">
+        <canvas id="funsearch-canvas" class="render-canvas"></canvas>
+
+        <!-- 浮动信息条 (HUD) -->
+        <div class="hud-overlay">
+          <div class="hud-pill">
+            <span class="pulse-indicator" style="background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
+            <span>目标有限域：<strong>F_3^3 三维空间 (27 点阵)</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag" style="background: rgba(234, 179, 8, 0.2); color: #fef08a;">PoW 验证</span>
+            <span>三点共线：<strong>100% 严格无共线 (0 条线)</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag">交互</span>
+            <span>鼠标拖拽 3D 旋转 | 观察高维非共线拓扑</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 右侧参数控制与数学理论侧边栏 -->
+    <!-- ============================================== -->
+    <aside class="control-sidebar">
+
+      <!-- 侧边栏：科赫雪花控制与推导 -->
+      <div id="sidebar-koch" style="display: none;">
+        <div class="sidebar-section">
+          <div class="section-title">生长与演化控制</div>
+          
+          <div class="control-row">
+            <div class="control-label-group">
+              <span>迭代阶数 (Order)</span>
+              <span class="control-val" id="koch-order-val">3</span>
+            </div>
+            <input type="range" id="koch-order-slider" min="0" max="5" value="3" step="1">
+          </div>
+
+          <div class="btn-group" style="margin-top: 12px;">
+            <button id="btn-koch-play" class="btn btn-primary btn-active">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+              暂停演化
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">数学推导动态仪表盘</div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">线段总数 (×4 递增)</div>
+              <div class="stat-number" id="stat-segments">192</div>
+              <div class="stat-sub">N_n = 3 × 4ⁿ</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">总周长 (4/3 发散)</div>
+              <div class="stat-number" id="stat-perimeter">7.111 × P₀</div>
+              <div class="stat-sub">P_n → ∞ (趋于无穷)</div>
+            </div>
+
+            <div class="stat-card" style="grid-column: span 2;">
+              <div class="stat-label">包围面积 (收敛至 8/5 倍)</div>
+              <div class="stat-number" id="stat-area">1.5472 × A₀</div>
+              
+              <div class="progress-bar-container">
+                <div class="progress-track">
+                  <div class="progress-fill" id="stat-area-bar" style="width: 96.7%;"></div>
+                  <div class="progress-target" style="left: 100%;" title="收敛极限 1.6 A0"></div>
+                </div>
+                <div class="progress-meta">
+                  <span id="stat-area-diff">距理论极限 8/5(1.6) 差: 0.05280</span>
+                  <span>极限 1.6000</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-card" style="grid-column: span 2;">
+              <div class="stat-label">豪斯多夫分形维数</div>
+              <div class="stat-number" id="stat-dimension">D ≈ 1.26186</div>
+              <div class="stat-sub">D = log(4) / log(3) ≈ 1.262</div>
+            </div>
+          </div>
+
+          <div class="theory-box">
+            <strong>核心数学结论：</strong><br>
+            • 构造：正三角形 $\to$ 每边三等分 $\to$ 中间向外补等边三角形。<br>
+            • 周长：每次边长 $\times 1/3$，边数 $\times 4$，周长公比为 $4/3 > 1$，无限迭代下<strong>周长发散至无穷大</strong>。<br>
+            • 面积：新增小三角形面积按公比 $4/9$ 几何级数收敛，总面积有限，严格趋向于<strong>初始三角形的 8/5 倍</strong>。<br>
+            • 哲理：<strong>“无限周长，包围有限面积”</strong>。
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">视觉与色彩主题</div>
+          <div class="color-scheme-group">
+            <button class="color-scheme-btn koch-theme-btn active" data-theme="cyan-glow">青蓝光晕</button>
+            <button class="color-scheme-btn koch-theme-btn" data-theme="aurora">星空极光</button>
+            <button class="color-scheme-btn koch-theme-btn" data-theme="wireframe">几何线框</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 侧边栏：曼德勃罗集与高阶多重分形控制 -->
+      <div id="sidebar-mandelbrot">
+        
+        <!-- 重磅新增：高阶幂次演化开花动画 -->
+        <div class="sidebar-section">
+          <div class="section-title">分形高阶幂次演化 (z ↦ zᵈ + c)</div>
+
+          <div class="control-row">
+            <div class="control-label-group">
+              <span>分形指数幂次 (Power d)</span>
+              <span class="control-val" id="mb-power-val">2.00</span>
+            </div>
+            <input type="range" id="mb-power-slider" min="2.00" max="7.00" value="2.00" step="0.01">
+          </div>
+
+          <div class="btn-group" style="margin-top: 10px;">
+            <button id="btn-power-morph" class="btn btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+              </svg>
+              开启开花形变动画
+            </button>
+          </div>
+
+          <div class="preset-pills" style="margin-top: 10px;">
+            <span class="preset-chip active" data-power="2.00">z² (经典)</span>
+            <span class="preset-chip" data-power="3.00">z³ (双瓣)</span>
+            <span class="preset-chip" data-power="4.00">z⁴ (三叶)</span>
+            <span class="preset-chip" data-power="5.08" style="border-color: var(--accent-amber); color: #fed7aa;">z⁵·⁰⁸ (截图同款)</span>
+            <span class="preset-chip" data-power="6.00">z⁶ (五瓣星)</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">计算精度与深潜巡航</div>
+
+          <div class="control-row">
+            <div class="control-label-group">
+              <span>GPU 迭代精度</span>
+              <span class="control-val" id="mb-iter-val">180</span>
+            </div>
+            <input type="range" id="mb-iter-slider" min="50" max="800" value="180" step="25">
+          </div>
+
+          <div class="btn-group" style="margin-top: 10px;">
+            <button id="btn-mb-tour" class="btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+              </svg>
+              自动深潜巡航
+            </button>
+          </div>
+
+          <div class="preset-pills" style="margin-top: 10px;">
+            <span class="preset-chip" data-preset="infinite_spiral" style="border-color: #d8b4fe; color: #f5d0fe; font-weight: 600;">✨ 以为走到了尽头 (绝美多臂螺旋)</span>
+            <span class="preset-chip" data-preset="seahorse">海马谷 (Seahorse)</span>
+            <span class="preset-chip" data-preset="elephant">象谷 (Elephant)</span>
+            <span class="preset-chip" data-preset="minimandel">迷你微型体</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">实时动力学指标</div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">当前视口放大倍率</div>
+              <div class="stat-number" id="mb-stat-zoom">0.85x</div>
+              <div class="stat-sub">100% 完整全貌展现</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">GPU 并行迭代</div>
+              <div class="stat-number" id="mb-stat-iter">180 次</div>
+              <div class="stat-sub">60 FPS 丝滑渲染</div>
+            </div>
+          </div>
+
+          <div class="control-row" style="margin-top: 14px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
+              <input type="checkbox" id="chk-orbit-enable" checked>
+              <span>启用复数轨道探测器 (鼠标悬停跟踪轨迹)</span>
+            </label>
+          </div>
+
+          <div class="theory-box">
+            <strong>核心数学机理（上帝指纹）：</strong><br>
+            • 迭代方程：<code>z_{n+1} = z^d + c</code> (从 <code>z_0 = 0</code> 开始)<br>
+            • 当幂次 <code>d = 5.08</code> 时，对称花瓣数量为 <code>d - 1 ≈ 4</code> 个主瓣，如同生命有机体绽放！<br>
+            • 集合定义：若数列模长始终 <code>|z| ≤ 2</code> 有界，则 <code>c ∈ M</code>（黑色内部）。<br>
+            • 上色依据：若数列发散脱离，记录<strong>逃逸前步数</strong>并进行平滑连续势着色。<br>
+            • <strong>不是设计出来的，是算出来的！</strong>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">色彩艺术方案</div>
+          <div class="color-scheme-group">
+            <button class="color-scheme-btn active" data-palette="5" style="border-color: #f59e0b; color: #fed7aa;">分形蓝金(截图同款)</button>
+            <button class="color-scheme-btn" data-palette="6" style="border-color: #c084fc; color: #f5d0fe;">梦幻紫金(螺旋同款)</button>
+            <button class="color-scheme-btn" data-palette="0">赛博霓虹</button>
+            <button class="color-scheme-btn" data-palette="1">深空冰蓝</button>
+            <button class="color-scheme-btn" data-palette="2">炽烈熔岩</button>
+            <button class="color-scheme-btn" data-palette="3">翡翠极光</button>
+            <button class="color-scheme-btn" data-palette="4">奢华黑金</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 侧边栏模式三：AI 数学发现 · Cap Set 控制台 -->
+      <!-- ========================================== -->
+      <div id="sidebar-funsearch" style="display: none;">
+        <div class="sidebar-section">
+          <div class="section-title">FunSearch 演化与算法工作量证明 (PoW)</div>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">Cap Set 最大基数</div>
+              <div class="stat-number" id="funsearch-best-score" style="color: #fde047;">9 / 9</div>
+              <div class="stat-sub">已达 3 维理论已知上限！</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">空间点集规模</div>
+              <div class="stat-number" id="funsearch-points-count">9 点</div>
+              <div class="stat-sub">总空间 27 点 (33.3% 占比)</div>
+            </div>
+          </div>
+
+          <div class="theory-box" style="margin-top: 14px;">
+            <strong>陶哲轩与 Cap Set 极值数学：</strong><br>
+            • 有限域 F_3^n 中无三点共线子集的最大上界是现代组合数学核心难题之一。<br>
+            • <strong>DeepMind FunSearch</strong> (<em>Nature 2023</em>)：通过将大语言模型与自动化代码沙箱结合，让 AI 自主写程序演化启发式算法，打破了多项人类数学记录！<br>
+            • <strong>无文凭独立研究者突破口</strong>：通过公开代码库与竞赛排名，直接凭 PoW（工作量证明）获取香港数码港 CCMF (10万港币) 或 Manifund 资助。
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">AI 演化出的最优 Python 优先级函数</div>
+          <pre id="funsearch-code-display" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 12px; font-size: 11px; color: #38bdf8; overflow-x: auto; font-family: monospace; line-height: 1.4; max-height: 220px;"></pre>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- 脚本加载 -->
+  <script src="js/koch.js"></script>
+  <script src="js/orbit.js"></script>
+  <script src="js/mandelbrot.js"></script>
+  <script src="js/math_discovery.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
