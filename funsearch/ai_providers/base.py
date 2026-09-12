@@ -79,27 +79,57 @@ class BaseProvider(abc.ABC):
     @staticmethod
     def extract_code(text: str) -> str:
         """从模型回复中抽取出 Python 优先级函数 priority 代码"""
-        # 1. 匹配标准 ```python def priority ... ``` 代码块
-        blocks = re.findall(r"```(?:python)?\s*(def\s+priority\b.*?)```", text, re.DOTALL)
-        if blocks:
-            return blocks[0].strip()
-        # 2. 匹配任意 ```python ... ``` 块中包含 def priority 的内容
-        all_blocks = re.findall(r"```(?:python)?\s*(.*?)```", text, re.DOTALL)
-        for b in all_blocks:
-            if "def priority" in b:
-                return b.strip()
-        # 3. 正则查找 def priority 开始的函数体至下一个顶层定义或文本结尾
-        match = re.search(r"(def\s+priority\s*\(.*?\):.*)", text, re.DOTALL)
-        if match:
-            lines = match.group(1).split("\n")
-            code_lines = [lines[0]]
-            for line in lines[1:]:
-                if line.startswith(" ") or line.startswith("\t") or line.strip() == "":
-                    code_lines.append(line)
-                else:
-                    break
-            return "\n".join(code_lines).strip()
-        return text.strip()
+        if not text:
+            return ""
+
+        # 1. 优先提取标准 Markdown 代码块 (含 ```python 或 ```py，也容错未闭合代码块)
+        code_candidates = []
+        for m in re.finditer(r"```(?:python|py)?\s*([\s\S]*?)(?:```|$)", text):
+            blk = m.group(1).strip()
+            if blk:
+                code_candidates.append(blk)
+        # 将原始文本本身也作为候选
+        code_candidates.append(text.strip())
+
+        # 2. 在候选文本中查找 def priority 函数声明 (完全兼容 -> float / -> int 等返回类型注解与各种形参)
+        sig_pattern = re.compile(r"^[ \t]*def\s+priority\s*\([^)]*\)(?:\s*->\s*[^:]+)?:", re.MULTILINE)
+        for candidate in code_candidates:
+            m = sig_pattern.search(candidate)
+            if m:
+                sub = candidate[m.start():]
+                lines = sub.split("\n")
+                result_lines = [lines[0].strip()]
+                for line in lines[1:]:
+                    if line.startswith(" ") or line.startswith("\t") or line.strip() == "":
+                        result_lines.append(line)
+                    else:
+                        break
+                return "\n".join(result_lines).strip()
+
+        # 3. 别名与相似函数容错匹配 (如 def cap_set_priority / def evaluate / def score 等)
+        alias_pattern = re.compile(
+            r"^[ \t]*def\s+(?:cap_set_priority|heuristic_priority|point_priority|evaluate_point|score_point|heuristic|evaluate|\w+)\s*\((?:p|point|vector|coord)[^)]*\)(?:\s*->\s*[^:]+)?:",
+            re.MULTILINE
+        )
+        for candidate in code_candidates:
+            m = alias_pattern.search(candidate)
+            if m:
+                sub = candidate[m.start():]
+                lines = sub.split("\n")
+                result_lines = ["def priority(p: tuple, n: int) -> float:"]
+                for line in lines[1:]:
+                    if line.startswith(" ") or line.startswith("\t") or line.strip() == "":
+                        result_lines.append(line)
+                    else:
+                        break
+                return "\n".join(result_lines).strip()
+
+        # 4. 如果代码块直接写了 return 语句而没有 def
+        for candidate in code_candidates:
+            if "return " in candidate and "def " not in candidate:
+                return f"def priority(p: tuple, n: int) -> float:\n    {candidate}"
+
+        return ""
 
     @staticmethod
     def extract_reasoning_and_text(raw_text: str) -> Tuple[Optional[str], str]:

@@ -416,7 +416,10 @@ class ModelPlatformManager {
 
     const data = await res.json();
     if (!res.ok || !data.success) {
-      throw new Error(data.error || `服务端推演验算失败 (HTTP ${res.status})`);
+      const err = new Error(data.error || `服务端推演验算失败 (HTTP ${res.status})`);
+      err.reasoning = data.reasoning;
+      err.raw_text = data.raw_text;
+      throw err;
     }
 
     return data;

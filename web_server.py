@@ -320,12 +320,23 @@ Current Best / Baseline Program:
 ```
 
 Evolutionary Optimization Task:
-1. Provide a concise, rigorous mathematical analysis (within 200 words): explore algebraic invariants (such as intermediate Hamming weight / L0 norm sphere level sets, affine modulo 3 invariants like sum(p)%3, quadratic forms, or cyclic coordinate differences) to break the greedy 2^{dimension} local subspace trap.
+1. Provide a concise, rigorous mathematical analysis (within 150 words): explore algebraic invariants (such as intermediate Hamming weight / L0 norm sphere level sets, affine modulo 3 invariants like sum(p)%3, quadratic forms, or cyclic coordinate differences) to break the greedy 2^{dimension} local subspace trap.
 2. Formulate your reasoning and output an improved Python function `priority(p: tuple, n: int) -> float`.
-Rules:
-- Function signature MUST be `def priority(p: tuple, n: int) -> float:`.
+
+CRITICAL INSTRUCTIONS:
+- You MUST define the Python function named exactly `def priority(p: tuple, n: int) -> float:`.
+- Enclose the executable Python code inside a single ```python ``` block.
 - Only use standard Python math or builtins.
-- Put the executable code inside a ```python ``` block."""
+
+Example format:
+### Mathematical Deduction:
+(your algebraic reasoning)
+
+```python
+def priority(p: tuple, n: int) -> float:
+    # your implementation
+    return ...
+```"""
 
         sys_prompt = "You are an expert mathematician specializing in extremal combinatorics and automated program discovery."
 
@@ -354,6 +365,12 @@ Rules:
         p_obj = MODELS_REGISTRY.get_provider(result.provider)
         extracted_code = p_obj.extract_code(result.text) if p_obj else ""
 
+        # 如果正文未抽取到代码且模型包含思考链，尝试从思考链中提取
+        if (not extracted_code or "def priority" not in extracted_code) and result.reasoning:
+            r_code = p_obj.extract_code(result.reasoning) if p_obj else ""
+            if r_code and "def priority" in r_code:
+                extracted_code = r_code
+
         # 智能提取非代码的完整数学分析与代数推导正文
         raw_text = result.text or ""
         clean_analysis = re.sub(r"```(?:python)?\s*def\s+priority\b.*?```", "", raw_text, flags=re.DOTALL).strip()
@@ -371,6 +388,7 @@ Rules:
         full_deduction_text = "\n\n".join(analysis_parts)
 
         if not extracted_code or "def priority" not in extracted_code:
+            print(f"[FunSearch] 代码提取警告: 未找到 def priority。正文前200字符: {result.text[:200]!r}, 思考链前200字符: {(result.reasoning or '')[:200]!r}")
             self._send_json({
                 "success": False,
                 "reasoning": full_deduction_text,

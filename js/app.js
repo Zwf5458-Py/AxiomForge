@@ -550,7 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (aiThinkingText) {
-          aiThinkingText.textContent = `❌ 模型推演未成功: ${errStr}\n\n${guidance}`;
+          if (err.reasoning) {
+            aiThinkingText.textContent = `${err.reasoning}\n\n═══════════════════════════════════════════════════\n⚠️ 推演提示: ${errStr}\n系统已启用强化型代码容错提取，请再次点击【AI 大模型生成演化】重试。\n═══════════════════════════════════════════════════`;
+          } else {
+            aiThinkingText.textContent = `❌ 模型推演未成功: ${errStr}\n\n${guidance}`;
+          }
         }
       } finally {
         btnAiEvolve.disabled = false;
