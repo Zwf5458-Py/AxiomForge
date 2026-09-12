@@ -10,8 +10,7 @@ class ModelPlatformManager {
   constructor() {
     this.storageKey = 'axiomforge_ai_credentials';
     this.customPlatformsKey = 'axiomforge_custom_platforms';
-    this.activeProvider = 'deepseek';
-    this.activeModel = 'deepseek-chat';
+    this.activeSelectionKey = 'axiomforge_active_selection';
 
     // 内置官方提供商预设
     this.builtins = {
@@ -73,6 +72,7 @@ class ModelPlatformManager {
         name: '自定义第三方平台 (OpenAI 兼容)',
         baseUrl: 'https://dst.225458.xyz/v1',
         apiKey: '',
+        selectedModel: 'deepseek-chat',
         isBuiltin: false,
         models: [
           { id: 'deepseek-chat', name: 'deepseek-chat', reasoning: false },
@@ -81,6 +81,54 @@ class ModelPlatformManager {
       };
       this.saveCustomPlatforms();
     }
+
+    // 智能恢复持久化的激活状态 (Active Provider & Active Model)
+    const savedActive = this.loadActiveSelection();
+    const candidateProvider = savedActive.provider;
+    const providerExists = !!(this.builtins[candidateProvider] || this.customPlatforms[candidateProvider]);
+    this.activeProvider = providerExists ? candidateProvider : 'deepseek';
+
+    // 恢复激活模型
+    const pInfo = this.getProviderInfo(this.activeProvider);
+    if (savedActive.model && savedActive.model !== 'default') {
+      this.activeModel = savedActive.model;
+    } else if (pInfo && pInfo.selectedModel) {
+      this.activeModel = pInfo.selectedModel;
+    } else if (pInfo && pInfo.models && pInfo.models[0]) {
+      this.activeModel = pInfo.models[0].id;
+    } else {
+      this.activeModel = 'deepseek-chat';
+    }
+
+    // 自动异步向本地后端同步注册自定义平台
+    this.syncAllCustomPlatformsToBackend();
+  }
+
+  loadActiveSelection() {
+    try {
+      const raw = localStorage.getItem(this.activeSelectionKey);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  saveActiveSelection(providerId, modelId) {
+    try {
+      localStorage.setItem(this.activeSelectionKey, JSON.stringify({
+        provider: providerId || this.activeProvider,
+        model: modelId || this.activeModel
+      }));
+    } catch (e) {
+      console.warn('保存激活状态失败:', e);
+    }
+  }
+
+  setActive(providerId, modelId) {
+    if (providerId) this.activeProvider = providerId;
+    if (modelId) this.activeModel = modelId;
+    this.saveActiveSelection(this.activeProvider, this.activeModel);
+    this.saveProviderSelectedModel(this.activeProvider, this.activeModel);
   }
 
   loadCredentials() {
@@ -135,55 +183,164 @@ class ModelPlatformManager {
     if (this.builtins[providerId]) {
       const p = this.builtins[providerId];
       const cred = this.credentials[providerId] || {};
+
+      // 深度合并内置官方模型与用户针对该平台通过拉取/添加保存的模型列表
+      const modelMap = new Map();
+      (p.models || []).forEach(m => modelMap.set(m.id, { ...m }));
+      (cred.customModels || []).forEach(m => modelMap.set(m.id, { ...m }));
+      const mergedModels = Array.from(modelMap.values());
+
       return {
         id: providerId,
         name: p.name,
         isBuiltin: true,
         baseUrl: cred.baseUrl || p.baseUrl,
         apiKey: cred.apiKey || '',
-        models: p.models || []
+        selectedModel: cred.selectedModel || (mergedModels[0] ? mergedModels[0].id : ''),
+        models: mergedModels
       };
     }
     if (this.customPlatforms[providerId]) {
-      return this.customPlatforms[providerId];
+      const p = this.customPlatforms[providerId];
+      return {
+        ...p,
+        selectedModel: p.selectedModel || (p.models && p.models[0] ? p.models[0].id : '')
+      };
     }
     return null;
   }
 
   /**
-   * 保存或更新平台配置
+   * 立即持久化保存指定平台的可用模型列表 (无论内置还是自定义，均立刻存入 LocalStorage)
+   */
+  updateProviderModels(providerId, models) {
+    if (!Array.isArray(models) || models.length === 0) return;
+
+    // 规范化模型对象
+    const cleanModels = models.map(m => {
+      const mId = typeof m === 'string' ? m : m.id;
+      const lower = mId.toLowerCase();
+      const isReasoning = typeof m.reasoning === 'boolean'
+        ? m.reasoning
+        : ['r1', 'reasoner', 'o1', 'o3', 'thinking', 'qwq'].some(k => lower.includes(k));
+      return {
+        id: mId,
+        name: m.name || mId,
+        reasoning: isReasoning,
+        isCustom: !!m.isCustom
+      };
+    });
+
+    if (this.builtins[providerId]) {
+      if (!this.credentials[providerId]) {
+        this.credentials[providerId] = {};
+      }
+      this.credentials[providerId].customModels = cleanModels;
+      this.saveCredentials();
+    } else if (this.customPlatforms[providerId]) {
+      this.customPlatforms[providerId].models = cleanModels;
+      this.saveCustomPlatforms();
+      this.syncCustomPlatformToBackend(providerId);
+    }
+  }
+
+  /**
+   * 将用户选定或手动输入的模型名沉淀到当前平台的可用模型列表中
+   */
+  addModelToProvider(providerId, modelId) {
+    if (!modelId || modelId === 'default') return;
+    const pInfo = this.getProviderInfo(providerId);
+    if (!pInfo) return;
+
+    const exists = (pInfo.models || []).some(m => m.id === modelId);
+    if (!exists) {
+      const lower = modelId.toLowerCase();
+      const isReasoning = ['r1', 'reasoner', 'o1', 'o3', 'thinking', 'qwq'].some(k => lower.includes(k));
+      const newModelObj = { id: modelId, name: modelId, reasoning: isReasoning, isCustom: true };
+      const nextModels = [newModelObj, ...(pInfo.models || [])];
+      this.updateProviderModels(providerId, nextModels);
+    }
+    this.saveProviderSelectedModel(providerId, modelId);
+  }
+
+  /**
+   * 独立记录每个平台上次选中的模型 (记住用户的选择偏好)
+   */
+  saveProviderSelectedModel(providerId, modelId) {
+    if (!modelId || modelId === 'default') return;
+    if (this.builtins[providerId]) {
+      if (!this.credentials[providerId]) {
+        this.credentials[providerId] = {};
+      }
+      this.credentials[providerId].selectedModel = modelId;
+      this.saveCredentials();
+    } else if (this.customPlatforms[providerId]) {
+      this.customPlatforms[providerId].selectedModel = modelId;
+      this.saveCustomPlatforms();
+    }
+  }
+
+  /**
+   * 保存或更新平台配置，并确保所选模型和拉取模型全部持久化
    */
   savePlatform(providerId, config) {
+    const chosenModel = config.selectedModel || '';
     if (this.builtins[providerId]) {
-      this.credentials[providerId] = {
-        apiKey: config.apiKey || '',
-        baseUrl: config.baseUrl || this.builtins[providerId].baseUrl
-      };
-      this.saveCredentials();
-      if (config.models && config.models.length > 0) {
-        this.builtins[providerId].models = config.models;
+      if (!this.credentials[providerId]) {
+        this.credentials[providerId] = {};
       }
+      this.credentials[providerId].apiKey = config.apiKey || '';
+      this.credentials[providerId].baseUrl = config.baseUrl || this.builtins[providerId].baseUrl;
+      if (chosenModel) {
+        this.credentials[providerId].selectedModel = chosenModel;
+      }
+      if (config.models && config.models.length > 0) {
+        this.credentials[providerId].customModels = config.models;
+      }
+      this.saveCredentials();
     } else {
       this.customPlatforms[providerId] = {
         id: providerId,
         name: config.name || '自定义平台',
         baseUrl: config.baseUrl || '',
         apiKey: config.apiKey || '',
+        selectedModel: chosenModel || (config.models && config.models[0] ? config.models[0].id : ''),
         isBuiltin: false,
         models: config.models || []
       };
       this.saveCustomPlatforms();
-      // 同步注册至后端
-      fetch('/api/providers/custom', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: providerId,
-          name: config.name,
-          api_base: config.baseUrl,
-          models: config.models || []
-        })
-      }).catch(() => {});
+      this.syncCustomPlatformToBackend(providerId);
+    }
+
+    if (chosenModel && chosenModel !== 'default') {
+      this.addModelToProvider(providerId, chosenModel);
+    }
+  }
+
+  /**
+   * 同步单个自定义平台到本地 Python 后端
+   */
+  syncCustomPlatformToBackend(providerId) {
+    const p = this.customPlatforms[providerId];
+    if (!p || !p.baseUrl) return;
+    fetch('/api/providers/custom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: p.id,
+        name: p.name,
+        api_base: p.baseUrl,
+        models: (p.models || []).map(m => m.id)
+      })
+    }).catch(() => {});
+  }
+
+  /**
+   * 同步所有自定义平台到本地后端
+   */
+  syncAllCustomPlatformsToBackend() {
+    for (const id of Object.keys(this.customPlatforms)) {
+      this.syncCustomPlatformToBackend(id);
     }
   }
 
@@ -197,6 +354,7 @@ class ModelPlatformManager {
       name: name,
       baseUrl: baseUrl,
       apiKey: '',
+      selectedModel: 'deepseek-chat',
       isBuiltin: false,
       models: []
     };
@@ -212,8 +370,7 @@ class ModelPlatformManager {
       delete this.customPlatforms[providerId];
       this.saveCustomPlatforms();
       if (this.activeProvider === providerId) {
-        this.activeProvider = 'deepseek';
-        this.activeModel = 'deepseek-chat';
+        this.setActive('deepseek', 'deepseek-chat');
       }
     }
   }
@@ -237,7 +394,18 @@ class ModelPlatformManager {
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.models) && data.models.length > 0) {
-          return data.models;
+          return data.models.map(item => {
+            const mId = typeof item === 'string' ? item : item.id;
+            const lower = mId.toLowerCase();
+            const isReasoning = typeof item.reasoning === 'boolean'
+              ? item.reasoning
+              : (item.supports_reasoning || ['r1', 'reasoner', 'o1', 'o3', 'thinking', 'qwq'].some(k => lower.includes(k)));
+            return {
+              id: mId,
+              name: item.name || mId,
+              reasoning: !!isReasoning
+            };
+          });
         }
       }
     } catch (backendErr) {

@@ -10,12 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const funsearchEngine = new MultiDimCapSetVisualizer('funsearch-canvas');
   funsearchEngine.updateUI();
 
-  const activeModelBadge = document.getElementById('active-model-badge');
-  if (activeModelBadge && window.modelPlatformManager) {
-    const curP = window.modelPlatformManager.getProviderInfo(window.modelPlatformManager.activeProvider);
-    const pName = curP ? curP.name : window.modelPlatformManager.activeProvider;
-    activeModelBadge.textContent = `${pName}: ${window.modelPlatformManager.activeModel}`;
-  }
+  window.updateActiveModelBadge = function() {
+    const activeModelBadge = document.getElementById('active-model-badge');
+    if (activeModelBadge && window.modelPlatformManager) {
+      const curP = window.modelPlatformManager.getProviderInfo(window.modelPlatformManager.activeProvider);
+      const pName = curP ? curP.name : window.modelPlatformManager.activeProvider;
+      activeModelBadge.textContent = `${pName}: ${window.modelPlatformManager.activeModel}`;
+    }
+  };
+  window.updateActiveModelBadge();
 
   let activeTab = 'mandelbrot'; // 默认进入震撼的广义高阶分形视窗
 
@@ -740,18 +743,29 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    let isSelectedMatched = false;
     models.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m.id;
       opt.textContent = `${m.name || m.id} ${m.reasoning ? '🧠 (Reasoning 思考链)' : ''}`;
       if (m.id === selectedModelId) {
         opt.selected = true;
+        isSelectedMatched = true;
       }
       selectModel.appendChild(opt);
     });
+
+    // 容错：如果用户配置了自定义模型，但该模型不在下拉列表内，自动追加一个选中项，确保永不丢失回显
+    if (selectedModelId && selectedModelId !== 'default' && !isSelectedMatched) {
+      const opt = document.createElement('option');
+      opt.value = selectedModelId;
+      opt.textContent = `⭐ ${selectedModelId} (当前配置模型)`;
+      opt.selected = true;
+      selectModel.insertBefore(opt, selectModel.firstChild);
+    }
   }
 
-  function loadProviderIntoForm(providerId) {
+  function loadProviderIntoForm(providerId, targetModelId) {
     const pInfo = window.modelPlatformManager.getProviderInfo(providerId);
     if (!pInfo) return;
 
@@ -768,8 +782,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputApiKey) inputApiKey.value = pInfo.apiKey || '';
     if (inputBaseUrl) inputBaseUrl.value = pInfo.baseUrl || '';
 
-    updateModelDropdown(pInfo.models, window.modelPlatformManager.activeModel);
-    if (inputCustomModel) inputCustomModel.value = window.modelPlatformManager.activeModel || '';
+    // 优先使用明确指定的 targetModelId，次优使用该平台记忆的 selectedModel，再次使用列表首个模型
+    const chosenModel = targetModelId || pInfo.selectedModel || (pInfo.models && pInfo.models[0] ? pInfo.models[0].id : '');
+
+    updateModelDropdown(pInfo.models, chosenModel);
+    if (inputCustomModel) inputCustomModel.value = chosenModel || '';
     if (checkResultBox) checkResultBox.style.display = 'none';
   }
 
@@ -777,8 +794,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnOpenModal.addEventListener('click', () => {
       modal.style.display = 'flex';
       refreshProviderDropdown();
-      selectProvider.value = window.modelPlatformManager.activeProvider;
-      loadProviderIntoForm(selectProvider.value);
+      const currentActive = window.modelPlatformManager.activeProvider;
+      selectProvider.value = currentActive;
+      loadProviderIntoForm(currentActive, window.modelPlatformManager.activeModel);
     });
   }
 
@@ -790,6 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (selectProvider) {
     selectProvider.addEventListener('change', (e) => {
+      // 切换平台时，根据目标平台自身记忆的 selectedModel 进行加载，不再无脑覆盖
       loadProviderIntoForm(e.target.value);
     });
   }
@@ -812,17 +831,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirm(`确定要删除自定义平台 [${inputPlatformName.value}] 吗？`)) {
         window.modelPlatformManager.deleteCustomPlatform(pid);
         refreshProviderDropdown();
-        selectProvider.value = window.modelPlatformManager.activeProvider;
-        loadProviderIntoForm(selectProvider.value);
+        const activePid = window.modelPlatformManager.activeProvider;
+        selectProvider.value = activePid;
+        loadProviderIntoForm(activePid, window.modelPlatformManager.activeModel);
       }
     });
   }
 
-  // 自动拉取远程模型
+  // 自动拉取远程模型并立即持久化存盘
   if (btnFetchModels) {
     btnFetchModels.addEventListener('click', async () => {
       const base = inputBaseUrl.value.trim();
       const key = inputApiKey.value.trim();
+      const pid = selectProvider.value;
 
       if (!base) {
         alert('请先输入接口端点 (Base URL)');
@@ -834,16 +855,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const models = await window.modelPlatformManager.fetchRemoteModels(base, key);
-        updateModelDropdown(models);
-        // 保存至当前平台内存
-        const pid = selectProvider.value;
+        // 关键：立刻持久化保存到本地存储，永不丢失！
+        window.modelPlatformManager.updateProviderModels(pid, models);
+
         const pInfo = window.modelPlatformManager.getProviderInfo(pid);
-        if (pInfo) pInfo.models = models;
+        const curModel = pInfo.selectedModel || (models[0] ? models[0].id : '');
+        updateModelDropdown(pInfo.models, curModel);
+        if (inputCustomModel) inputCustomModel.value = curModel;
 
         if (checkResultBox) {
           checkResultBox.style.display = 'block';
           checkResultBox.className = 'status-box success';
-          checkResultBox.textContent = `🎉 自动拉取成功！已同步 ${models.length} 个可用模型，请在下方选择。`;
+          checkResultBox.textContent = `🎉 自动拉取成功！已同步 ${models.length} 个可用模型并已永久保存，请在下方选择。`;
         }
       } catch (err) {
         if (checkResultBox) {
@@ -910,7 +933,13 @@ document.addEventListener('DOMContentLoaded', () => {
           checkResultBox.style.color = result.ok ? '#86efac' : '#fca5a5';
           checkResultBox.textContent = result.message;
         }
-        if (result.models && result.models.length > 0) {
+        if (result.ok && model && model !== 'default') {
+          window.modelPlatformManager.addModelToProvider(pid, model);
+          const pInfo = window.modelPlatformManager.getProviderInfo(pid);
+          if (pInfo) {
+            updateModelDropdown(pInfo.models, model);
+          }
+        } else if (result.models && result.models.length > 0) {
           updateModelDropdown(result.models, model);
         }
       } catch (err) {
@@ -935,9 +964,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const key = inputApiKey.value.trim();
       const base = inputBaseUrl.value.trim();
       const name = inputPlatformName ? inputPlatformName.value.trim() : '';
-      const chosenModel = isManualModelMode ? inputCustomModel.value.trim() : selectModel.value;
+      let chosenModel = isManualModelMode ? inputCustomModel.value.trim() : selectModel.value;
 
-      // 获取当前已载入的模型列表
+      if (!chosenModel || chosenModel === 'default') {
+        const pInfo = window.modelPlatformManager.getProviderInfo(pid);
+        chosenModel = (pInfo && pInfo.models && pInfo.models[0]) ? pInfo.models[0].id : 'deepseek-chat';
+      }
+
       const pInfo = window.modelPlatformManager.getProviderInfo(pid);
       const models = (pInfo && pInfo.models) ? pInfo.models : [];
 
@@ -945,15 +978,18 @@ document.addEventListener('DOMContentLoaded', () => {
         name: name,
         apiKey: key,
         baseUrl: base,
+        selectedModel: chosenModel,
         models: models
       });
 
-      window.modelPlatformManager.activeProvider = pid;
-      window.modelPlatformManager.activeModel = chosenModel || 'default';
+      // 真正持久化全局激活状态与模型 (刷新页面后 100% 还原)
+      window.modelPlatformManager.setActive(pid, chosenModel);
 
-      if (activeModelBadge) {
-        activeModelBadge.textContent = `${name || pid}: ${chosenModel || 'default'}`;
+      // 立即同步刷新右上角状态徽章
+      if (window.updateActiveModelBadge) {
+        window.updateActiveModelBadge();
       }
+
       closeModal();
     });
   }
