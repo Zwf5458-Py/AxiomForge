@@ -323,50 +323,41 @@ class ModelPlatformManager {
   }
 
   /**
-   * 触发大模型生成 Cap Set 优先级函数
+   * 触发大模型端到端真实程序演化与 Python 沙箱验算
+   * 严禁任何未经真实模型推演的静态伪造！
    */
-  async generateProgram(prompt, onThinkingChunk, onTextChunk) {
+  async evolveProgramStep({ dimension = 4, currentCode = '' } = {}) {
     const pInfo = this.getProviderInfo(this.activeProvider);
     const credKey = pInfo ? pInfo.apiKey : '';
     const credBase = pInfo ? pInfo.baseUrl : '';
+    const providerName = pInfo ? pInfo.name : this.activeProvider;
 
-    // 1. 优先向本地 web_server 请求
-    try {
-      const res = await fetch('/api/llm/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model_id: this.activeModel,
-          provider_id: this.activeProvider,
-          api_key: credKey,
-          api_base: credBase,
-          prompt: prompt
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.reasoning && onThinkingChunk) onThinkingChunk(data.reasoning);
-        if (data.text && onTextChunk) onTextChunk(data.text);
-        return { code: data.code, raw: data.text, reasoning: data.reasoning };
-      }
-    } catch (e) {
-      console.warn('后端服务不可用，回退至本地模拟生成器:', e);
+    // 非 Mock 引擎必须检查有效凭证，拒绝虚假结果
+    if (this.activeProvider !== 'mock' && !credKey && !credBase) {
+      throw new Error(`当前平台【${providerName}】未配置 API Key 或 Base URL。请点击右上角【AI 模型平台配置】填入真实凭据，或选用 Reproducible Mock 离线引擎。系统拒绝输出未经模型真实计算的虚假结果。`);
     }
 
-    // 2. 离线/模拟生成器
-    const mockReasoning = `【${this.activeModel} 思考过程】针对 F_3^n 空间，构建 L0 范数等位面切片与仿射坐标差分。`;
-    if (onThinkingChunk) onThinkingChunk(mockReasoning);
+    const res = await fetch('/api/funsearch/evolve_step', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dimension: dimension,
+        model_id: this.activeModel,
+        provider_id: this.activeProvider,
+        provider_name: providerName,
+        api_key: credKey,
+        api_base: credBase,
+        current_code: currentCode,
+        temperature: 0.7
+      })
+    });
 
-    const mockCode = `def priority(p: tuple, n: int) -> float:
-    # 由 ${this.activeModel} 演化出的代数对称性优先级函数
-    l0 = sum(1 for x in p if x != 0)
-    slice_bonus = 65.0 if l0 == (n // 2 + 1) else 0.0
-    parity = sum(p) % 3
-    diff = sum(abs(p[i] - p[(i+1)%n]) for i in range(n))
-    return float(slice_bonus + (parity == 0) * 32.0 - diff * 0.8 + p[0] * 1.5)`;
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || `服务端推演验算失败 (HTTP ${res.status})`);
+    }
 
-    if (onTextChunk) onTextChunk(`\`\`\`python\n${mockCode}\n\`\`\``);
-    return { code: mockCode, raw: mockCode, reasoning: mockReasoning };
+    return data;
   }
 }
 

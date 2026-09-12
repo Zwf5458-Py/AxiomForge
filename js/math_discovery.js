@@ -84,6 +84,12 @@ class MultiDimCapSetVisualizer {
     return pts;
   }
 
+  getInitialBaselineCode(dim) {
+    return `def priority(p: tuple, n: int) -> float:
+    # 朴素线性基线：简单坐标和启发式 (易被困在 2^${dim} 局部陷阱)
+    return float(sum(p))`;
+  }
+
   /**
    * 切换探索维度 (3, 4, 5, 6, 7)
    */
@@ -91,9 +97,19 @@ class MultiDimCapSetVisualizer {
     this.dimension = dim;
     const bench = CAP_SET_BENCHMARKS[dim] || CAP_SET_BENCHMARKS[5];
     this.allPoints = this.generatePoints(dim);
-    this.selectedPoints = bench.points || [];
-    this.currentCode = bench.bestCode || "";
-    this.updateUI();
+    this.isEvolved = false;
+    this.evolvedModel = '';
+    this.currentCode = this.getInitialBaselineCode(dim);
+    this.lastEvalResult = {
+      score: bench.naiveBaseline || Math.pow(2, dim),
+      evalTime: 0.001,
+      violations: 0
+    };
+    // 异步在真实沙箱中验算基准代码
+    this.runSandboxEvaluation(this.currentCode).catch(() => {
+      this.selectedPoints = [];
+      this.updateUI();
+    });
   }
 
   setProjectionMode(mode) {
@@ -243,49 +259,57 @@ class MultiDimCapSetVisualizer {
   }
 
   /**
-   * 浏览器端执行快速确定性启发式推演
+   * 将 Python 代码提交至后端真实 Python 沙箱进行执行验算
+   * 严格计算 $3^n$ 点打分、贪心选择与 $O(k^2)$ 三点共线判定
    */
-  runFastLocalDeduction() {
-    const n = this.dimension;
-    const allPts = this.allPoints;
-
-    // 对称性启发式评分
-    const scored = allPts.map(p => {
-      const l0 = p.reduce((acc, v) => acc + (v !== 0 ? 1 : 0), 0);
-      const sliceBonus = (l0 === Math.floor(n / 2) + 1) ? 60.0 : 0.0;
-      const parity = (p.reduce((a, b) => a + b, 0)) % 3;
-      let diff = 0;
-      for (let i = 0; i < n; i++) {
-        diff += Math.abs(p[i] - p[(i + 1) % n]);
-      }
-      const score = sliceBonus + (parity === 0 ? 30.0 : 0.0) - diff * 0.6 + p[0] * 2.5;
-      return { p, score };
+  async runSandboxEvaluation(codeStr) {
+    const code = codeStr || this.currentCode;
+    const res = await fetch('/api/eval', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, dimension: this.dimension })
     });
 
-    scored.sort((a, b) => b.score - a.score);
-
-    // 贪心无共线筛选
-    const selected = [];
-    const forbidden = new Set();
-
-    for (const item of scored) {
-      const p = item.p;
-      const pKey = p.join(',');
-      if (forbidden.has(pKey)) continue;
-
-      for (const exist of selected) {
-        const needed = p.map((val, idx) => (-val - exist[idx] + 9) % 3).join(',');
-        forbidden.add(needed);
-      }
-      selected.push(p);
+    if (!res.ok) {
+      throw new Error(`沙箱评测服务异常 (HTTP ${res.status})`);
     }
 
-    this.selectedPoints = selected;
+    const data = await res.json();
+    if (!data.valid) {
+      throw new Error(data.error || "沙箱执行错误");
+    }
+
+    this.selectedPoints = data.points || [];
+    this.currentCode = code;
+    this.lastEvalResult = {
+      score: data.score,
+      evalTime: data.eval_time_seconds || 0.001,
+      violations: data.collinear_count || 0
+    };
+    this.updateUI();
+    return data;
+  }
+
+  /**
+   * 应用由大模型真实端到端演化出的程序与沙箱验算结果
+   */
+  applyEvolvedResult(data) {
+    this.isEvolved = true;
+    this.evolvedModel = data.model_id;
+    this.currentCode = data.code;
+    this.selectedPoints = data.points || [];
+    this.lastEvalResult = {
+      score: data.score,
+      evalTime: data.eval_time_seconds || 0.001,
+      violations: data.collinear_violations || 0,
+      modelId: data.model_id
+    };
     this.updateUI();
   }
 
   updateUI() {
     const bench = CAP_SET_BENCHMARKS[this.dimension] || {};
+    const baseline = bench.naiveBaseline || Math.pow(2, this.dimension);
 
     // 顶部 HUD 动态文本
     const hudSpaceEl = document.getElementById('hud-target-space');
@@ -300,13 +324,26 @@ class MultiDimCapSetVisualizer {
 
     const countEl = document.getElementById('funsearch-points-count');
     if (countEl) {
-      const pct = ((this.selectedPoints.length / this.allPoints.length) * 100).toFixed(1);
+      const pct = this.allPoints.length > 0 ? ((this.selectedPoints.length / this.allPoints.length) * 100).toFixed(1) : 0;
       countEl.textContent = `${this.selectedPoints.length} 点 (${pct}%)`;
     }
 
     const impEl = document.getElementById('funsearch-improvement-badge');
-    if (impEl && bench.improvementPercent) {
-      impEl.textContent = `打破局部陷阱 +${bench.improvementPercent}%`;
+    if (impEl) {
+      if (this.isEvolved && this.selectedPoints.length > baseline) {
+        const gain = (((this.selectedPoints.length - baseline) / baseline) * 100).toFixed(1);
+        impEl.textContent = `打破 2^${this.dimension} 陷阱 +${gain}% (${this.evolvedModel} 真实推演)`;
+        impEl.style.background = 'rgba(234, 179, 8, 0.2)';
+        impEl.style.color = '#fef08a';
+      } else if (this.isEvolved) {
+        impEl.textContent = `模型真实得分: ${this.selectedPoints.length} 点 (${this.evolvedModel})`;
+        impEl.style.background = 'rgba(56, 189, 248, 0.15)';
+        impEl.style.color = '#38bdf8';
+      } else {
+        impEl.textContent = `朴素基线 (受限于 2^${this.dimension}=${baseline})`;
+        impEl.style.background = 'rgba(148, 163, 184, 0.15)';
+        impEl.style.color = '#94a3b8';
+      }
     }
 
     const codeEl = document.getElementById('funsearch-code-display');
@@ -314,9 +351,21 @@ class MultiDimCapSetVisualizer {
       codeEl.textContent = this.currentCode;
     }
 
+    const titleEl = document.getElementById('title-code-display');
+    if (titleEl) {
+      titleEl.textContent = this.isEvolved
+        ? `AI 演化出的最优 Python 优先级函数 (${this.evolvedModel} 真实生成)`
+        : `当前运行的 Python 优先级函数 (基准基线)`;
+    }
+
+    const sandboxStatusEl = document.getElementById('sandbox-status-text');
+    if (sandboxStatusEl && this.lastEvalResult) {
+      sandboxStatusEl.textContent = `沙箱验算: 耗时 ${this.lastEvalResult.evalTime}s | 三点共线违规: ${this.lastEvalResult.violations} (100% 严格验证)`;
+    }
+
     // 触发图表重新绘制
     if (window.renderAbComparisonChart) {
-      window.renderAbComparisonChart(this.dimension);
+      window.renderAbComparisonChart(this.dimension, this.isEvolved ? this.selectedPoints.length : null);
     }
   }
 }

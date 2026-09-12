@@ -18,6 +18,7 @@ import http.server
 import json
 import os
 import sys
+import time
 import urllib.parse
 from pathlib import Path
 
@@ -76,6 +77,8 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_eval_code(payload)
         elif path == "/api/llm/generate":
             self.handle_llm_generate(payload)
+        elif path == "/api/funsearch/evolve_step":
+            self.handle_funsearch_evolve_step(payload)
         else:
             self.send_error(404, "API endpoint not found")
 
@@ -177,7 +180,10 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
     def handle_eval_code(self, payload: dict):
         code_str = payload.get("code", "")
         n = int(payload.get("dimension", 3))
+        t0 = time.time()
         res = evaluate_program(code_str, n)
+        eval_time = time.time() - t0
+        res["eval_time_seconds"] = round(eval_time, 4)
         # 补充共线检测
         if res.get("points"):
             res["collinear_count"] = count_collinear_lines(res["points"])
@@ -214,6 +220,134 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
             })
         except Exception as e:
             self._send_json({"success": False, "error": str(e)}, status_code=500)
+
+    def handle_funsearch_evolve_step(self, payload: dict):
+        """
+        处理大语言模型端到端真实演化推演请求：
+        1. 真实调用配置的大语言模型 (携带代数对称性先验数学 Prompt)
+        2. 真实捕获大模型的思考链 (Reasoning / Thinking) 与生成文本
+        3. 真实提取 Python 优先级函数 priority(p, n)
+        4. 真实在 Python 沙箱中编译并执行 F_3^n 空间的 3^n 点贪心打分与无共线检测
+        5. 真实返回点集坐标、基数得分与违规检测结果，拒绝一切虚假预定数据！
+        """
+        dimension = int(payload.get("dimension", 4))
+        provider_id = payload.get("provider_id", "mock")
+        model_id = payload.get("model_id", "reproducible-mock-llm")
+        api_key = payload.get("api_key")
+        api_base = payload.get("api_base")
+        current_code = payload.get("current_code", "").strip()
+        temperature = float(payload.get("temperature", 0.7))
+
+        # 1. 动态挂载自定义 Provider (如果是自定义平台且尚未注册)
+        if api_base and (not MODELS_REGISTRY.get_provider(provider_id) or provider_id.startswith("custom_")):
+            custom_p = create_custom_provider(
+                provider_id=provider_id,
+                name=payload.get("provider_name") or provider_id,
+                api_base=api_base,
+                models=[model_id]
+            )
+            MODELS_REGISTRY.set_provider(custom_p)
+
+        # 2. 组装严谨的数学演化提示词 (Prompt)
+        total_pts = 3 ** dimension
+        seed_code = current_code if current_code else f"""def priority(p: tuple, n: int) -> float:
+    # 朴素线性基准函数 (容易陷入 2^{dimension} 局部陷阱)
+    return float(sum(p))"""
+
+        prompt = f"""You are an expert mathematician and algorithmic researcher in extremal combinatorics, working on the Cap Set Problem in the finite affine vector space F_3^{dimension} (total {total_pts} points).
+
+Mathematical Definition:
+- Each point p in F_3^{dimension} is represented as an integer tuple of length {dimension}, where p[i] in {{0, 1, 2}}.
+- Three distinct points x, y, z form an affine line (arithmetic progression) iff x + y + z = (0, 0, ..., 0) mod 3.
+- A Cap Set is a subset of F_3^{dimension} that contains NO three collinear points.
+- Greedy algorithm evaluates `priority(p, n)` on all {total_pts} points, sorts points in descending order of priority, and greedily admits points that do not introduce any collinear triples.
+
+Current Best / Baseline Program:
+```python
+{seed_code}
+```
+
+Evolutionary Optimization Task:
+1. Provide a mathematical analysis: explore algebraic invariants (such as intermediate Hamming weight / L0 norm sphere level sets, affine modulo 3 invariants like sum(p)%3, quadratic forms, or cyclic coordinate differences) to break the greedy 2^{dimension} local subspace trap.
+2. Formulate your reasoning and output an improved Python function `priority(p: tuple, n: int) -> float`.
+Rules:
+- Function signature MUST be `def priority(p: tuple, n: int) -> float:`.
+- Only use standard Python math or builtins.
+- Put the executable code inside a ```python ``` block."""
+
+        sys_prompt = "You are an expert mathematician specializing in extremal combinatorics and automated program discovery."
+
+        # 3. 真实调用大模型
+        try:
+            result = MODELS_REGISTRY.complete(
+                model_id=model_id,
+                prompt=prompt,
+                system_prompt=sys_prompt,
+                provider_id=provider_id,
+                api_key=api_key,
+                api_base=api_base,
+                temperature=temperature,
+                timeout=60.0
+            )
+        except Exception as e:
+            # 真实返回错误，绝不伪造
+            self._send_json({
+                "success": False,
+                "error": f"大语言模型接口真实请求失败: {str(e)}。请检查【AI 模型平台配置】中的 API Key、Base URL 或网络连接。系统拒绝未经模型真实响应的虚假结果。"
+            }, status_code=400)
+            return
+
+        # 4. 提取生成的代码
+        p_obj = MODELS_REGISTRY.get_provider(result.provider)
+        extracted_code = p_obj.extract_code(result.text) if p_obj else ""
+
+        if not extracted_code or "def priority" not in extracted_code:
+            self._send_json({
+                "success": False,
+                "reasoning": result.reasoning,
+                "raw_text": result.text,
+                "error": "模型已真实响应，但未在输出中包含合法的 `def priority(p: tuple, n: int) -> float:` 代码块。请尝试重新演化或降低采样温度。"
+            }, status_code=400)
+            return
+
+        # 5. 在 Python 沙箱中执行真实验算
+        t_start = time.time()
+        eval_dict = evaluate_program(extracted_code, dimension)
+        eval_time = time.time() - t_start
+
+        if not eval_dict.get("valid"):
+            self._send_json({
+                "success": False,
+                "code": extracted_code,
+                "reasoning": result.reasoning,
+                "raw_text": result.text,
+                "error": f"模型生成的代码在 Python 沙箱执行时出错: {eval_dict.get('error')}"
+            }, status_code=400)
+            return
+
+        points = eval_dict.get("points", [])
+        score = eval_dict.get("score", 0)
+        violations = count_collinear_lines(points)
+
+        # 6. 返回 100% 真实计算与沙箱验算结果
+        self._send_json({
+            "success": True,
+            "dimension": dimension,
+            "model_id": model_id,
+            "provider_id": result.provider,
+            "reasoning": result.reasoning or "（模型直接生成了数学分析与代码）",
+            "raw_text": result.text,
+            "code": extracted_code,
+            "score": score,
+            "points": points,
+            "total_points": total_pts,
+            "collinear_violations": violations,
+            "eval_time_seconds": round(eval_time, 4),
+            "usage": {
+                "total_tokens": result.usage.total_tokens,
+                "latency": round(result.usage.latency_seconds, 2)
+            }
+        })
 
 def main():
     parser = argparse.ArgumentParser(description="AxiomForge Web Server")

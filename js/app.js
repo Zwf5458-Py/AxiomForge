@@ -335,17 +335,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 快捷推演操作
+  // 快捷推演操作 (真实调用 Python 沙箱)
   const btnFastDeduction = document.getElementById('btn-fast-deduction');
   if (btnFastDeduction) {
-    btnFastDeduction.addEventListener('click', () => {
+    btnFastDeduction.addEventListener('click', async () => {
       btnFastDeduction.disabled = true;
-      btnFastDeduction.innerHTML = '<span class="pulse-indicator"></span> 推演计算中...';
-      setTimeout(() => {
-        funsearchEngine.runFastLocalDeduction();
+      btnFastDeduction.innerHTML = '<span class="pulse-indicator"></span> 沙箱验算中...';
+      try {
+        await funsearchEngine.runSandboxEvaluation();
+      } catch (err) {
+        console.error('推演执行失败:', err);
+      } finally {
         btnFastDeduction.disabled = false;
         btnFastDeduction.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 启动即时推演';
-      }, 50);
+      }
     });
   }
 
@@ -356,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // AI 大模型在线代码演化
+  // AI 大模型真实在线代码演化 (端到端真实 API + 思考链提取 + Python 沙箱验算)
   const btnAiEvolve = document.getElementById('btn-ai-evolve');
   const aiThinkingDetails = document.getElementById('ai-thinking-details');
   const aiThinkingText = document.getElementById('ai-thinking-text');
@@ -365,29 +368,35 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnAiEvolve) {
     btnAiEvolve.addEventListener('click', async () => {
       btnAiEvolve.disabled = true;
-      btnAiEvolve.innerHTML = '<span class="pulse-indicator" style="background:#38bdf8;"></span> AI 深度推理中...';
+      btnAiEvolve.innerHTML = '<span class="pulse-indicator" style="background:#38bdf8;"></span> AI 真实演化推理中...';
       if (aiThinkingDetails) aiThinkingDetails.open = true;
-      if (thinkingStatusText) thinkingStatusText.textContent = "正在生成代数思考链...";
-      if (aiThinkingText) aiThinkingText.textContent = "";
-
-      const prompt = `Task: Evolve a priority function for Cap Set search in F_3^${funsearchEngine.dimension} space. Points count: ${Math.pow(3, funsearchEngine.dimension)}. Maximize non-collinear subset size.`;
+      if (thinkingStatusText) thinkingStatusText.textContent = "正在调用模型生成代数分析与程序...";
+      const curModel = window.modelPlatformManager.activeModel;
+      if (aiThinkingText) {
+        aiThinkingText.textContent = `[网络连接中] 正在向模型【${curModel}】发起真实极值组合数学演化请求...\n请稍候，大模型正在进行代数结构推理并输出 Python 优先级函数，生成完毕后将立即送入 Python 沙箱严格验算三点共线。`;
+      }
 
       try {
-        const result = await window.modelPlatformManager.generateProgram(
-          prompt,
-          (chunk) => {
-            if (aiThinkingText) aiThinkingText.textContent = chunk;
-          },
-          (textChunk) => {}
-        );
-        if (thinkingStatusText) thinkingStatusText.textContent = "推理完成";
-        if (result.code) {
-          funsearchEngine.currentCode = result.code;
-          funsearchEngine.updateUI();
-          funsearchEngine.runFastLocalDeduction();
+        const result = await window.modelPlatformManager.evolveProgramStep({
+          dimension: funsearchEngine.dimension,
+          currentCode: funsearchEngine.currentCode
+        });
+
+        if (thinkingStatusText) thinkingStatusText.textContent = "真实推理与沙箱验算完成";
+        if (aiThinkingText) {
+          const evalSummary = `\n\n═══════════════════════════════════════════════════\n✅ Python 沙箱验算完成报告:\n- 演化模型: ${result.model_id}\n- 3^${result.dimension} 空间打分耗时: ${result.eval_time_seconds}s\n- 三点共线违规数: ${result.collinear_violations} (100% 严格验证)\n- 真实选出非共线点集基数: ${result.score} 点\n═══════════════════════════════════════════════════`;
+          aiThinkingText.textContent = (result.reasoning || result.raw_text) + evalSummary;
         }
+
+        // 将真实代码、真实得分与真实点阵应用到 3D 画布与 UI
+        funsearchEngine.applyEvolvedResult(result);
+
       } catch (err) {
-        if (aiThinkingText) aiThinkingText.textContent = `生成失败: ${err.message}`;
+        if (thinkingStatusText) thinkingStatusText.textContent = "推演中断";
+        if (aiThinkingText) {
+          aiThinkingText.textContent = `❌ 模型推演中断: ${err.message}\n\n【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。`;
+        }
+        alert(`推演提示: ${err.message}`);
       } finally {
         btnAiEvolve.disabled = false;
         btnAiEvolve.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> AI 大模型生成演化';
@@ -398,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==============================================
   // 6. A/B 演化对抗收敛图表绘制 (Canvas)
   // ==============================================
-  window.renderAbComparisonChart = function(dim) {
+  window.renderAbComparisonChart = function(dim, latestScore = null) {
     const canvas = document.getElementById('ab-chart-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -407,11 +416,15 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.clearRect(0, 0, w, h);
 
     const bench = CAP_SET_BENCHMARKS[dim] || CAP_SET_BENCHMARKS[5];
-    const history = bench.abHistory || {
+    const history = JSON.parse(JSON.stringify(bench.abHistory || {
       generations: Array.from({ length: 30 }, (_, i) => i + 1),
       naiveScores: Array(30).fill(bench.naiveBaseline || 8),
       symmetryScores: Array(30).fill(bench.axiomForgeBest || 9)
-    };
+    }));
+
+    if (latestScore !== null && history.symmetryScores.length > 0) {
+      history.symmetryScores[history.symmetryScores.length - 1] = latestScore;
+    }
 
     const padLeft = 30;
     const padBottom = 20;
