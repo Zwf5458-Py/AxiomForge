@@ -212,12 +212,61 @@ class OpenAICompatibleProvider(BaseProvider):
         except Exception as e:
             yield StreamEvent(type="error", error_message=f"[{self.name}] 流式传输异常: {e}")
 
-    def check_auth(self, auth: ProviderAuth) -> Tuple[bool, str]:
-        """轻量级连通性测试"""
-        if not auth.api_key and self.id != "ollama":
-            return False, f"未配置 {self.name} 的 API Key"
+    def fetch_remote_models(self, auth: ProviderAuth, timeout: float = 15.0) -> List[ModelInfo]:
+        """向远程 /v1/models 发起 GET 请求动态拉取该平台的所有模型清单 (对齐 pi-ai)"""
+        base = (auth.api_base if auth and auth.api_base else self.default_base_url).rstrip("/")
+        if base.endswith("/chat/completions"):
+            models_url = base.replace("/chat/completions", "/models")
+        elif not base.endswith("/models"):
+            models_url = f"{base}/models"
+        else:
+            models_url = base
+
+        headers = self._build_headers(auth)
+        req = urllib.request.Request(models_url, headers=headers, method="GET")
+
         try:
-            # 请求最基础的 completions 测试连通性
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                items = data.get("data") or data.get("models") or []
+                discovered = []
+                for item in items:
+                    m_id = item.get("id") if isinstance(item, dict) else str(item)
+                    if not m_id:
+                        continue
+                    m_lower = m_id.lower()
+                    is_reasoning = any(k in m_lower for k in ["r1", "reasoner", "o1", "o3", "thinking", "qwq"])
+                    info = ModelInfo(
+                        id=m_id,
+                        name=m_id,
+                        provider=self.id,
+                        api="openai-completions",
+                        context_window=64000,
+                        supports_reasoning=is_reasoning
+                    )
+                    self.register_model(info)
+                    discovered.append(info)
+                return discovered if discovered else self.get_models()
+        except Exception as e:
+            raise RuntimeError(f"从远端拉取模型列表失败 ({models_url}): {e}")
+
+    def check_auth(self, auth: ProviderAuth) -> Tuple[bool, str]:
+        """智能连通性与鉴权测试：优先测试 /models，避免调用不存在模型触发 403"""
+        if not auth.api_key and self.id not in ["ollama", "mock"]:
+            return False, f"未配置 {self.name} 的 API Key"
+
+        start_t = time.time()
+        # 1. 优先尝试标准的 /models 接口拉取真实模型
+        try:
+            remote_models = self.fetch_remote_models(auth, timeout=10.0)
+            latency = time.time() - start_t
+            if remote_models:
+                return True, f"鉴权成功！已识别到 {len(remote_models)} 个可用模型 (延迟: {latency:.2f}s)"
+        except Exception as fetch_err:
+            pass
+
+        # 2. 如果 /models 不可用，使用现存第一个真实已知模型进行最小验证
+        try:
             models = self.get_models()
             test_model = models[0].id if models else "default"
             res = self.complete(

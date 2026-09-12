@@ -70,6 +70,8 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_check_provider(payload)
         elif path == "/api/providers/custom":
             self.handle_register_custom(payload)
+        elif path == "/api/models/fetch":
+            self.handle_fetch_models(payload)
         elif path == "/api/eval":
             self.handle_eval_code(payload)
         elif path == "/api/llm/generate":
@@ -147,6 +149,30 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
         )
         MODELS_REGISTRY.set_provider(provider)
         self._send_json({"success": True, "message": f"成功注册自定义提供商: {name or p_id}"})
+
+    def handle_fetch_models(self, payload: dict):
+        """处理远端模型自动抓取请求"""
+        api_base = payload.get("api_base")
+        api_key = payload.get("api_key")
+        headers = payload.get("headers", {})
+
+        if not api_base:
+            self._send_json({"success": False, "error": "请提供 API Base URL"}, status_code=400)
+            return
+
+        from funsearch.ai_providers import OpenAICompatibleProvider, ProviderAuth
+        temp_p = OpenAICompatibleProvider("temp_discovery", "Discovery", api_base, default_headers=headers)
+        auth = ProviderAuth(api_key=api_key, api_base=api_base, headers=headers, source="explicit")
+        try:
+            models = temp_p.fetch_remote_models(auth, timeout=12.0)
+            model_list = [{
+                "id": m.id,
+                "name": m.name,
+                "supports_reasoning": m.supports_reasoning
+            } for m in models]
+            self._send_json({"success": True, "models": model_list})
+        except Exception as e:
+            self._send_json({"success": False, "error": str(e)}, status_code=500)
 
     def handle_eval_code(self, payload: dict):
         code_str = payload.get("code", "")

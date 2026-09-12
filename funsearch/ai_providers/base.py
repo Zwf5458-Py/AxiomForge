@@ -37,6 +37,10 @@ class BaseProvider(abc.ABC):
         """获取单个模型元信息"""
         return self._models.get(model_id)
 
+    def fetch_remote_models(self, auth: ProviderAuth, timeout: float = 15.0) -> List[ModelInfo]:
+        """动态从远端端点获取模型清单 (对齐 pi-ai models.refresh())"""
+        return self.get_models()
+
     @abc.abstractmethod
     def complete(
         self,

@@ -483,61 +483,100 @@
   </main>
 
   <!-- ============================================== -->
-  <!-- 模态弹窗：AI 模型平台配置中心 (参考 pi-ai 风格) -->
+  <!-- 模态弹窗：AI 模型平台配置中心 (深度对齐 pi-ai) -->
   <!-- ============================================== -->
   <div id="modal-model-settings" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="logo-badge" style="background: linear-gradient(135deg, #38bdf8, #6366f1); font-size: 10px;">AI PROVIDER</span>
-          <h2 style="font-size: 16px; font-weight: 600; color: #f8fafc; margin: 0;">AI 模型平台与凭据接入配置</h2>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="logo-badge" style="background: linear-gradient(135deg, #0ea5e9, #6366f1); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 700;">AI PROVIDER STUDIO</span>
+          <div>
+            <h2 style="font-size: 15px; font-weight: 700; color: #f8fafc; margin: 0;">AI 模型平台与自定义配置</h2>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">完整支持动态模型抓取、自定义端点、多平台命名与密钥隔离</div>
+          </div>
         </div>
-        <button id="btn-close-modal" class="modal-close-btn">&times;</button>
+        <button id="btn-close-modal" class="modal-close-btn" title="关闭">&times;</button>
       </div>
 
       <div class="modal-body">
+        <!-- 平台选择与管理栏 -->
         <div class="form-group">
-          <label class="form-label">模型提供商 (Provider)</label>
-          <select id="select-provider" class="form-select">
-            <option value="deepseek">DeepSeek (深度求索 - 推荐数学推演)</option>
-            <option value="openai">OpenAI (GPT-4o / o3-mini)</option>
-            <option value="siliconflow">SiliconFlow (硅基流动)</option>
-            <option value="ollama">Ollama (本地私有开源模型)</option>
-            <option value="mock">确定性离线模拟器 (零成本免 Key)</option>
-            <option value="custom">自定义第三方兼容 API (vLLM / OneAPI 等)</option>
-          </select>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" style="font-weight: 600;">选择或切换平台 (Provider)</label>
+            <div style="display: flex; gap: 8px;">
+              <button id="btn-add-custom-provider" type="button" class="btn-tool-link" title="创建新的第三方或私有大模型平台">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                + 添加新平台
+              </button>
+              <button id="btn-delete-provider" type="button" class="btn-tool-link text-danger" style="display: none;" title="删除当前自定义平台">
+                🗑️ 删除平台
+              </button>
+            </div>
+          </div>
+          <select id="select-provider" class="form-select"></select>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">模型选择 (Model)</label>
-          <select id="select-model" class="form-select"></select>
-          <input type="text" id="input-custom-model" class="form-input" placeholder="输入自定义模型名称" style="display: none; margin-top: 6px;">
+        <!-- 平台名称 (自定义平台可修改) -->
+        <div class="form-group" id="group-platform-name">
+          <label class="form-label">平台显示名称 (Platform Name)</label>
+          <input type="text" id="input-platform-name" class="form-input" placeholder="例如：DST 聚合中转 / 公司内部私有集群">
         </div>
 
+        <!-- 接口端点 + 自动抓取模型 -->
+        <div class="form-group">
+          <label class="form-label">接口端点 (Base URL)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="input-base-url" class="form-input" placeholder="https://dst.225458.xyz/v1" style="flex: 1;">
+            <button id="btn-fetch-remote-models" type="button" class="btn-fetch-models" title="向远端 /v1/models 探测并自动拉取所有真实可用模型">
+              <svg id="icon-fetch-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              <span>自动拉取模型</span>
+            </button>
+          </div>
+          <span class="form-tip">支持任意 OpenAI / Claude 兼容的 Base URL。输入端点和 Key 后点击“自动拉取模型”即可同步全部可用模型。</span>
+        </div>
+
+        <!-- API 密钥 -->
         <div class="form-group">
           <label class="form-label">API 密钥 (API Key)</label>
           <div style="position: relative;">
             <input type="password" id="input-api-key" class="form-input" placeholder="sk-..." autocomplete="off">
             <button id="btn-toggle-key" type="button" class="btn-input-eye" title="显示/隐藏密钥">👁️</button>
           </div>
-          <span class="form-tip">仅在浏览器本地加密存储 (localStorage) 或向本地原生后端传输，绝不向第三方泄漏。</span>
+          <span class="form-tip">凭据仅安全保存在本地（Local Storage），绝不向任何第三方服务上报。</span>
         </div>
 
+        <!-- 可用模型选择与切换模式 -->
         <div class="form-group">
-          <label class="form-label">接口端点 (Base URL)</label>
-          <input type="text" id="input-base-url" class="form-input" placeholder="https://api.deepseek.com/v1">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label">模型选择 (Model)</label>
+            <button id="btn-toggle-manual-model" type="button" class="btn-tool-link" style="color: #38bdf8;">
+              手动输入模型名
+            </button>
+          </div>
+          <div id="container-select-model">
+            <select id="select-model" class="form-select"></select>
+          </div>
+          <div id="container-input-model" style="display: none;">
+            <input type="text" id="input-custom-model" class="form-input" placeholder="例如：deepseek-chat 或 gpt-4o">
+          </div>
         </div>
 
+        <!-- 状态与错误反馈卡片 -->
         <div id="check-auth-result" class="status-box" style="display: none;"></div>
       </div>
 
       <div class="modal-footer">
-        <button id="btn-test-auth" class="btn" style="background: rgba(255,255,255,0.08);">
-          <span class="pulse-indicator" style="background: #38bdf8;"></span> 测试连接 (Check Auth)
+        <button id="btn-test-auth" class="btn btn-auth-test" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          测试连接 (Check Auth)
         </button>
-        <div style="display: flex; gap: 8px;">
-          <button id="btn-cancel-settings" class="btn btn-secondary">取消</button>
-          <button id="btn-save-settings" class="btn btn-primary">保存配置</button>
+        <div class="modal-footer-actions">
+          <button id="btn-cancel-settings" class="btn btn-secondary" type="button">取消</button>
+          <button id="btn-save-settings" class="btn btn-primary" type="button">保存并应用配置</button>
         </div>
       </div>
     </div>

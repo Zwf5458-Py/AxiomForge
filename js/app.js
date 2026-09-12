@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.renderAbComparisonChart(5);
 
   // ==============================================
-  // 7. AI 模型平台设置弹窗逻辑 (参考 pi-ai 交互)
+  // 7. AI 模型平台设置中心完整逻辑 (深度对齐 pi-ai)
   // ==============================================
   const btnOpenModal = document.getElementById('btn-model-settings');
   const modal = document.getElementById('modal-model-settings');
@@ -494,38 +494,100 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancelModal = document.getElementById('btn-cancel-settings');
   const btnSaveModal = document.getElementById('btn-save-settings');
   const btnTestAuth = document.getElementById('btn-test-auth');
+  const btnFetchModels = document.getElementById('btn-fetch-remote-models');
+  const iconFetchSpin = document.getElementById('icon-fetch-spin');
+  const btnAddCustomProvider = document.getElementById('btn-add-custom-provider');
+  const btnDeleteProvider = document.getElementById('btn-delete-provider');
   const selectProvider = document.getElementById('select-provider');
+  const inputPlatformName = document.getElementById('input-platform-name');
+  const groupPlatformName = document.getElementById('group-platform-name');
   const selectModel = document.getElementById('select-model');
+  const inputCustomModel = document.getElementById('input-custom-model');
+  const containerSelectModel = document.getElementById('container-select-model');
+  const containerInputModel = document.getElementById('container-input-model');
+  const btnToggleManualModel = document.getElementById('btn-toggle-manual-model');
   const inputApiKey = document.getElementById('input-api-key');
   const inputBaseUrl = document.getElementById('input-base-url');
   const checkResultBox = document.getElementById('check-auth-result');
   const activeModelBadge = document.getElementById('active-model-badge');
 
-  function updateModelDropdown(providerId) {
-    selectModel.innerHTML = '';
-    const pInfo = window.modelPlatformManager.builtins[providerId];
-    if (pInfo && pInfo.models) {
-      pInfo.models.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = `${m.name} ${m.reasoning ? '🧠 (Reasoning)' : ''}`;
-        selectModel.appendChild(opt);
-      });
+  let isManualModelMode = false;
+
+  function refreshProviderDropdown() {
+    if (!selectProvider) return;
+    const providers = window.modelPlatformManager.getAllProviders();
+    selectProvider.innerHTML = '';
+
+    const groupBuiltin = document.createElement('optgroup');
+    groupBuiltin.label = '官方内置平台';
+    const groupCustom = document.createElement('optgroup');
+    groupCustom.label = '用户自定义平台';
+
+    providers.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      if (p.isBuiltin) {
+        groupBuiltin.appendChild(opt);
+      } else {
+        groupCustom.appendChild(opt);
+      }
+    });
+
+    selectProvider.appendChild(groupBuiltin);
+    if (groupCustom.children.length > 0) {
+      selectProvider.appendChild(groupCustom);
     }
   }
 
+  function updateModelDropdown(models, selectedModelId) {
+    if (!selectModel) return;
+    selectModel.innerHTML = '';
+    if (!models || models.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = 'default';
+      opt.textContent = '未检索到模型 (请点击自动拉取或手动输入)';
+      selectModel.appendChild(opt);
+      return;
+    }
+
+    models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name || m.id} ${m.reasoning ? '🧠 (Reasoning 思考链)' : ''}`;
+      if (m.id === selectedModelId) {
+        opt.selected = true;
+      }
+      selectModel.appendChild(opt);
+    });
+  }
+
   function loadProviderIntoForm(providerId) {
-    const cred = window.modelPlatformManager.getCredential(providerId);
-    const pInfo = window.modelPlatformManager.builtins[providerId];
-    inputApiKey.value = cred.apiKey || '';
-    inputBaseUrl.value = cred.baseUrl || (pInfo ? pInfo.baseUrl : '');
-    updateModelDropdown(providerId);
+    const pInfo = window.modelPlatformManager.getProviderInfo(providerId);
+    if (!pInfo) return;
+
+    // 平台名称显示/隐藏
+    if (pInfo.isBuiltin) {
+      if (groupPlatformName) groupPlatformName.style.display = 'none';
+      if (btnDeleteProvider) btnDeleteProvider.style.display = 'none';
+    } else {
+      if (groupPlatformName) groupPlatformName.style.display = 'flex';
+      if (inputPlatformName) inputPlatformName.value = pInfo.name || '';
+      if (btnDeleteProvider) btnDeleteProvider.style.display = 'inline-flex';
+    }
+
+    if (inputApiKey) inputApiKey.value = pInfo.apiKey || '';
+    if (inputBaseUrl) inputBaseUrl.value = pInfo.baseUrl || '';
+
+    updateModelDropdown(pInfo.models, window.modelPlatformManager.activeModel);
+    if (inputCustomModel) inputCustomModel.value = window.modelPlatformManager.activeModel || '';
     if (checkResultBox) checkResultBox.style.display = 'none';
   }
 
   if (btnOpenModal && modal) {
     btnOpenModal.addEventListener('click', () => {
       modal.style.display = 'flex';
+      refreshProviderDropdown();
       selectProvider.value = window.modelPlatformManager.activeProvider;
       loadProviderIntoForm(selectProvider.value);
     });
@@ -543,6 +605,88 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 添加自定义平台
+  if (btnAddCustomProvider) {
+    btnAddCustomProvider.addEventListener('click', () => {
+      const newId = window.modelPlatformManager.addCustomPlatform('自定义聚合平台', 'https://');
+      refreshProviderDropdown();
+      selectProvider.value = newId;
+      loadProviderIntoForm(newId);
+      if (inputPlatformName) inputPlatformName.focus();
+    });
+  }
+
+  // 删除当前自定义平台
+  if (btnDeleteProvider) {
+    btnDeleteProvider.addEventListener('click', () => {
+      const pid = selectProvider.value;
+      if (confirm(`确定要删除自定义平台 [${inputPlatformName.value}] 吗？`)) {
+        window.modelPlatformManager.deleteCustomPlatform(pid);
+        refreshProviderDropdown();
+        selectProvider.value = window.modelPlatformManager.activeProvider;
+        loadProviderIntoForm(selectProvider.value);
+      }
+    });
+  }
+
+  // 自动拉取远程模型
+  if (btnFetchModels) {
+    btnFetchModels.addEventListener('click', async () => {
+      const base = inputBaseUrl.value.trim();
+      const key = inputApiKey.value.trim();
+
+      if (!base) {
+        alert('请先输入接口端点 (Base URL)');
+        return;
+      }
+
+      btnFetchModels.disabled = true;
+      if (iconFetchSpin) iconFetchSpin.classList.add('spin-anim');
+
+      try {
+        const models = await window.modelPlatformManager.fetchRemoteModels(base, key);
+        updateModelDropdown(models);
+        // 保存至当前平台内存
+        const pid = selectProvider.value;
+        const pInfo = window.modelPlatformManager.getProviderInfo(pid);
+        if (pInfo) pInfo.models = models;
+
+        if (checkResultBox) {
+          checkResultBox.style.display = 'block';
+          checkResultBox.className = 'status-box success';
+          checkResultBox.textContent = `🎉 自动拉取成功！已同步 ${models.length} 个可用模型，请在下方选择。`;
+        }
+      } catch (err) {
+        if (checkResultBox) {
+          checkResultBox.style.display = 'block';
+          checkResultBox.className = 'status-box error';
+          checkResultBox.textContent = `自动拉取失败: ${err.message} (您可点击下方“手动输入模型名”直接填写)`;
+        }
+      } finally {
+        btnFetchModels.disabled = false;
+        if (iconFetchSpin) iconFetchSpin.classList.remove('spin-anim');
+      }
+    });
+  }
+
+  // 手动输入模型切换
+  if (btnToggleManualModel) {
+    btnToggleManualModel.addEventListener('click', () => {
+      isManualModelMode = !isManualModelMode;
+      if (isManualModelMode) {
+        containerSelectModel.style.display = 'none';
+        containerInputModel.style.display = 'block';
+        btnToggleManualModel.textContent = '切换为下拉选择';
+        if (inputCustomModel) inputCustomModel.focus();
+      } else {
+        containerSelectModel.style.display = 'block';
+        containerInputModel.style.display = 'none';
+        btnToggleManualModel.textContent = '手动输入模型名';
+      }
+    });
+  }
+
+  // 密码明暗切换
   const btnToggleKey = document.getElementById('btn-toggle-key');
   if (btnToggleKey && inputApiKey) {
     btnToggleKey.addEventListener('click', () => {
@@ -550,6 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 智能连通性测试 (免 403 探测)
   if (btnTestAuth) {
     btnTestAuth.addEventListener('click', async () => {
       btnTestAuth.disabled = true;
@@ -557,34 +702,51 @@ document.addEventListener('DOMContentLoaded', () => {
       const pid = selectProvider.value;
       const key = inputApiKey.value.trim();
       const base = inputBaseUrl.value.trim();
+      const model = isManualModelMode ? inputCustomModel.value.trim() : selectModel.value;
 
-      const result = await window.modelPlatformManager.checkConnection(pid, key, base);
+      const result = await window.modelPlatformManager.checkConnection(pid, key, base, model);
       btnTestAuth.disabled = false;
-      btnTestAuth.innerHTML = '<span class="pulse-indicator" style="background: #38bdf8;"></span> 测试连接 (Check Auth)';
+      btnTestAuth.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 测试连接 (Check Auth)';
 
       if (checkResultBox) {
         checkResultBox.style.display = 'block';
         checkResultBox.className = `status-box ${result.ok ? 'success' : 'error'}`;
         checkResultBox.textContent = result.message;
       }
+      if (result.models && result.models.length > 0) {
+        updateModelDropdown(result.models, model);
+      }
     });
   }
 
+  // 保存并应用配置
   if (btnSaveModal) {
     btnSaveModal.addEventListener('click', () => {
       const pid = selectProvider.value;
       const key = inputApiKey.value.trim();
       const base = inputBaseUrl.value.trim();
-      const model = selectModel.value;
+      const name = inputPlatformName ? inputPlatformName.value.trim() : '';
+      const chosenModel = isManualModelMode ? inputCustomModel.value.trim() : selectModel.value;
 
-      window.modelPlatformManager.saveCredential(pid, key, base);
+      // 获取当前已载入的模型列表
+      const pInfo = window.modelPlatformManager.getProviderInfo(pid);
+      const models = (pInfo && pInfo.models) ? pInfo.models : [];
+
+      window.modelPlatformManager.savePlatform(pid, {
+        name: name,
+        apiKey: key,
+        baseUrl: base,
+        models: models
+      });
+
       window.modelPlatformManager.activeProvider = pid;
-      window.modelPlatformManager.activeModel = model;
+      window.modelPlatformManager.activeModel = chosenModel || 'default';
 
       if (activeModelBadge) {
-        activeModelBadge.textContent = model;
+        activeModelBadge.textContent = `${name || pid}: ${chosenModel || 'default'}`;
       }
       closeModal();
     });
   }
 });
+

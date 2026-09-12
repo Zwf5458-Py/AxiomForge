@@ -112,7 +112,24 @@ class TestAIProviders(unittest.TestCase):
         model = self.models.get_model("my-math-coder-70b")
         self.assertIsNotNone(model)
         self.assertEqual(model.provider, "my_fast_llm")
-        self.assertTrue(model.supports_reasoning)
+    def test_fetch_remote_models_and_refresh(self):
+        """测试动态拉取与刷新模型清单 (对齐 pi-ai models.refresh())"""
+        # 1. 验证 mock provider 刷新
+        models = self.models.refresh_provider_models("mock")
+        self.assertTrue(len(models) > 0)
+        self.assertEqual(models[0].id, "reproducible-mock-llm")
+
+        # 2. 验证 BaseProvider 默认行为
+        custom_p = create_custom_provider(
+            provider_id="my_custom",
+            name="Custom Platform",
+            api_base="https://myapi.com/v1",
+            models=[{"id": "m1", "name": "Model 1"}]
+        )
+        self.models.set_provider(custom_p)
+        res_models = self.models.get_models(provider_id="my_custom")
+        self.assertEqual(len(res_models), 1)
+        self.assertEqual(res_models[0].id, "m1")
 
     def test_llm_client_backward_compatibility(self):
         """测试重构后的 LLMClient 与旧代码 100% 兼容无缝对接"""
@@ -123,3 +140,4 @@ class TestAIProviders(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

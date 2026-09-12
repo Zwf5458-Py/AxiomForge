@@ -66,6 +66,14 @@ class Models:
         auth = self.get_auth(provider_id, explicit_key, explicit_base)
         return p.check_auth(auth)
 
+    def refresh_provider_models(self, provider_id: str, explicit_key: Optional[str] = None, explicit_base: Optional[str] = None) -> List[ModelInfo]:
+        """动态拉取并刷新 Provider 的模型清单 (对齐 pi-ai models.refresh())"""
+        p = self.get_provider(provider_id)
+        if not p:
+            raise ValueError(f"未找到 Provider: {provider_id}")
+        auth = self.get_auth(provider_id, explicit_key=explicit_key, explicit_base=explicit_base)
+        return p.fetch_remote_models(auth)
+
     def set_transform_headers(self, hook: Callable[[Dict[str, str]], Dict[str, str]]):
         """设置请求头转换拦截器 (对齐 pi-ai transformHeaders)"""
         self._transform_headers_hook = hook

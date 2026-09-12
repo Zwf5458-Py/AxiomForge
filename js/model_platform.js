@@ -1,21 +1,24 @@
 /**
  * AxiomForge: 前端 AI 模型平台管理器 (Model Platform Client)
- * 参考 @earendil-works/pi-ai 的设计规范：
- * 负责客户端 Provider 状态管理、凭据持久化、连通性探测及思考链流式联动。
+ * 深度复刻 @earendil-works/pi-ai 的动态模型发现与多自定义平台管理：
+ * 1. 动态抓取远程端点可用模型列表 (GET /v1/models)
+ * 2. 自由创建、重命名、配置多个自定义第三方平台
+ * 3. 智能凭据解析与免 403 连通性检测
  */
 
 class ModelPlatformManager {
   constructor() {
     this.storageKey = 'axiomforge_ai_credentials';
-    this.customProvidersKey = 'axiomforge_custom_providers';
+    this.customPlatformsKey = 'axiomforge_custom_platforms';
     this.activeProvider = 'deepseek';
     this.activeModel = 'deepseek-chat';
-    
-    // 内置提供商预设
+
+    // 内置官方提供商预设
     this.builtins = {
       'deepseek': {
         name: 'DeepSeek (深度求索)',
         baseUrl: 'https://api.deepseek.com/v1',
+        isBuiltin: true,
         models: [
           { id: 'deepseek-chat', name: 'DeepSeek-V3 (通用编码与演化)', reasoning: false },
           { id: 'deepseek-reasoner', name: 'DeepSeek-R1 (深度数学推理与思考)', reasoning: true }
@@ -24,6 +27,7 @@ class ModelPlatformManager {
       'openai': {
         name: 'OpenAI',
         baseUrl: 'https://api.openai.com/v1',
+        isBuiltin: true,
         models: [
           { id: 'gpt-4o', name: 'GPT-4o', reasoning: false },
           { id: 'gpt-4o-mini', name: 'GPT-4o-mini', reasoning: false },
@@ -33,6 +37,7 @@ class ModelPlatformManager {
       'siliconflow': {
         name: 'SiliconFlow (硅基流动)',
         baseUrl: 'https://api.siliconflow.cn/v1',
+        isBuiltin: true,
         models: [
           { id: 'deepseek-ai/DeepSeek-V3', name: 'DeepSeek-V3 (SiliconFlow)', reasoning: false },
           { id: 'deepseek-ai/DeepSeek-R1', name: 'DeepSeek-R1 (SiliconFlow)', reasoning: true },
@@ -42,6 +47,7 @@ class ModelPlatformManager {
       'ollama': {
         name: 'Ollama (本地私有大模型)',
         baseUrl: 'http://localhost:11434/v1',
+        isBuiltin: true,
         models: [
           { id: 'qwen2.5-coder:latest', name: 'Qwen2.5-Coder (Local)', reasoning: false },
           { id: 'deepseek-r1:latest', name: 'DeepSeek-R1 (Local Distill)', reasoning: true }
@@ -50,20 +56,31 @@ class ModelPlatformManager {
       'mock': {
         name: '确定性离线模拟器 (零成本免 Key)',
         baseUrl: 'mock://internal',
+        isBuiltin: true,
         models: [
           { id: 'reproducible-mock-llm', name: 'Deterministic Math Evolver', reasoning: true }
-        ]
-      },
-      'custom': {
-        name: '自定义第三方 API (兼容 OpenAI)',
-        baseUrl: '',
-        models: [
-          { id: 'custom-model', name: '自定义模型', reasoning: false }
         ]
       }
     };
 
     this.credentials = this.loadCredentials();
+    this.customPlatforms = this.loadCustomPlatforms();
+
+    // 如果还没有任何自定义平台，默认提供一个示例平台
+    if (Object.keys(this.customPlatforms).length === 0) {
+      this.customPlatforms['custom_default'] = {
+        id: 'custom_default',
+        name: '自定义第三方平台 (OpenAI 兼容)',
+        baseUrl: 'https://dst.225458.xyz/v1',
+        apiKey: '',
+        isBuiltin: false,
+        models: [
+          { id: 'deepseek-chat', name: 'deepseek-chat', reasoning: false },
+          { id: 'deepseek-reasoner', name: 'deepseek-reasoner', reasoning: true }
+        ]
+      };
+      this.saveCustomPlatforms();
+    }
   }
 
   loadCredentials() {
@@ -75,65 +92,245 @@ class ModelPlatformManager {
     }
   }
 
-  saveCredential(providerId, apiKey, baseUrl) {
-    this.credentials[providerId] = {
-      apiKey: apiKey || '',
-      baseUrl: baseUrl || this.builtins[providerId]?.baseUrl || ''
-    };
+  saveCredentials() {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.credentials));
     } catch (e) {
-      console.warn('存储凭据失败:', e);
+      console.warn('保存凭据失败:', e);
     }
   }
 
-  getCredential(providerId) {
-    return this.credentials[providerId] || {
-      apiKey: '',
-      baseUrl: this.builtins[providerId]?.baseUrl || ''
-    };
+  loadCustomPlatforms() {
+    try {
+      const raw = localStorage.getItem(this.customPlatformsKey);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  saveCustomPlatforms() {
+    try {
+      localStorage.setItem(this.customPlatformsKey, JSON.stringify(this.customPlatforms));
+    } catch (e) {
+      console.warn('保存自定义平台失败:', e);
+    }
   }
 
   /**
-   * 测试连接与鉴权
+   * 获取所有可用平台列表（内置 + 自定义）
    */
-  async checkConnection(providerId, apiKey, baseUrl) {
-    if (providerId === 'mock') {
-      return { ok: true, message: '离线引擎已就绪，随时可启动演化！' };
+  getAllProviders() {
+    const list = [];
+    for (const [id, item] of Object.entries(this.builtins)) {
+      list.push({ id, name: item.name, isBuiltin: true, baseUrl: item.baseUrl });
     }
+    for (const [id, item] of Object.entries(this.customPlatforms)) {
+      list.push({ id, name: item.name, isBuiltin: false, baseUrl: item.baseUrl });
+    }
+    return list;
+  }
 
-    try {
-      // 优先通过后端 web_server 检查
-      const res = await fetch('/api/providers/check', {
+  getProviderInfo(providerId) {
+    if (this.builtins[providerId]) {
+      const p = this.builtins[providerId];
+      const cred = this.credentials[providerId] || {};
+      return {
+        id: providerId,
+        name: p.name,
+        isBuiltin: true,
+        baseUrl: cred.baseUrl || p.baseUrl,
+        apiKey: cred.apiKey || '',
+        models: p.models || []
+      };
+    }
+    if (this.customPlatforms[providerId]) {
+      return this.customPlatforms[providerId];
+    }
+    return null;
+  }
+
+  /**
+   * 保存或更新平台配置
+   */
+  savePlatform(providerId, config) {
+    if (this.builtins[providerId]) {
+      this.credentials[providerId] = {
+        apiKey: config.apiKey || '',
+        baseUrl: config.baseUrl || this.builtins[providerId].baseUrl
+      };
+      this.saveCredentials();
+      if (config.models && config.models.length > 0) {
+        this.builtins[providerId].models = config.models;
+      }
+    } else {
+      this.customPlatforms[providerId] = {
+        id: providerId,
+        name: config.name || '自定义平台',
+        baseUrl: config.baseUrl || '',
+        apiKey: config.apiKey || '',
+        isBuiltin: false,
+        models: config.models || []
+      };
+      this.saveCustomPlatforms();
+      // 同步注册至后端
+      fetch('/api/providers/custom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          provider_id: providerId,
-          api_key: apiKey,
-          api_base: baseUrl
+          id: providerId,
+          name: config.name,
+          api_base: config.baseUrl,
+          models: config.models || []
         })
+      }).catch(() => {});
+    }
+  }
+
+  /**
+   * 新增一个自定义平台
+   */
+  addCustomPlatform(name = '新自定义平台', baseUrl = '') {
+    const id = 'custom_' + Date.now();
+    this.customPlatforms[id] = {
+      id: id,
+      name: name,
+      baseUrl: baseUrl,
+      apiKey: '',
+      isBuiltin: false,
+      models: []
+    };
+    this.saveCustomPlatforms();
+    return id;
+  }
+
+  /**
+   * 删除一个自定义平台
+   */
+  deleteCustomPlatform(providerId) {
+    if (this.customPlatforms[providerId]) {
+      delete this.customPlatforms[providerId];
+      this.saveCustomPlatforms();
+      if (this.activeProvider === providerId) {
+        this.activeProvider = 'deepseek';
+        this.activeModel = 'deepseek-chat';
+      }
+    }
+  }
+
+  /**
+   * 动态拉取远程模型清单 (对齐 pi-ai models.refresh())
+   * 向 /v1/models 发送请求，提取所有模型并自动探测 reasoning 能力
+   */
+  async fetchRemoteModels(baseUrl, apiKey) {
+    if (!baseUrl) {
+      throw new Error('请先输入接口端点 (Base URL)');
+    }
+
+    // 1. 优先通过后端代理抓取（防止跨域 CORS 问题）
+    try {
+      const res = await fetch('/api/models/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_base: baseUrl, api_key: apiKey })
       });
       if (res.ok) {
         const data = await res.json();
-        return { ok: data.valid, message: data.message };
+        if (data.success && Array.isArray(data.models) && data.models.length > 0) {
+          return data.models;
+        }
       }
-    } catch (e) {
-      // 若后端未启动，直接前端做基本校验
+    } catch (backendErr) {
+      console.warn('后端抓取失败，尝试浏览器直接探测:', backendErr);
     }
 
-    if (!apiKey && providerId !== 'ollama') {
-      return { ok: false, message: '请输入对应的 API Key 进行连通性检验' };
+    // 2. 浏览器直接 GET /v1/models
+    let modelsUrl = baseUrl.replace(/\/+$/, '');
+    if (modelsUrl.endsWith('/chat/completions')) {
+      modelsUrl = modelsUrl.replace('/chat/completions', '/models');
+    } else if (!modelsUrl.endsWith('/models')) {
+      modelsUrl = `${modelsUrl}/models`;
     }
-    return { ok: true, message: '凭据已在本地完成配置保存！' };
+
+    const headers = { 'Accept': 'application/json' };
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
+    const resp = await fetch(modelsUrl, { method: 'GET', headers: headers });
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+    }
+
+    const json = await resp.json();
+    const items = json.data || json.models || [];
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new Error('未在返回数据中解析到可用模型');
+    }
+
+    return items.map(item => {
+      const mId = typeof item === 'string' ? item : item.id;
+      const lower = mId.toLowerCase();
+      const isReasoning = ['r1', 'reasoner', 'o1', 'o3', 'thinking', 'qwq'].some(k => lower.includes(k));
+      return {
+        id: mId,
+        name: mId,
+        reasoning: isReasoning
+      };
+    });
+  }
+
+  /**
+   * 测试连接与鉴权 (智能免 403 探测)
+   */
+  async checkConnection(providerId, apiKey, baseUrl, selectedModel) {
+    if (providerId === 'mock') {
+      return { ok: true, message: '离线确定性模拟引擎就绪！随时可启动演化。' };
+    }
+
+    try {
+      // 1. 优先尝试自动拉取模型列表来作为鉴权成功的铁证
+      const models = await this.fetchRemoteModels(baseUrl, apiKey);
+      if (models && models.length > 0) {
+        return {
+          ok: true,
+          message: `✅ 鉴权成功！成功探测并识别到 ${models.length} 个可用模型。`,
+          models: models
+        };
+      }
+    } catch (fetchErr) {
+      // 若拉取模型失败，尝试向后端发送真实模型 ping
+      try {
+        const res = await fetch('/api/providers/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider_id: providerId,
+            api_key: apiKey,
+            api_base: baseUrl,
+            model_id: selectedModel
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return { ok: data.valid, message: data.message };
+        }
+      } catch (e) {}
+      return { ok: false, message: `连接失败: ${fetchErr.message}` };
+    }
+
+    return { ok: true, message: '配置已就绪！' };
   }
 
   /**
    * 触发大模型生成 Cap Set 优先级函数
    */
   async generateProgram(prompt, onThinkingChunk, onTextChunk) {
-    const cred = this.getCredential(this.activeProvider);
+    const pInfo = this.getProviderInfo(this.activeProvider);
+    const credKey = pInfo ? pInfo.apiKey : '';
+    const credBase = pInfo ? pInfo.baseUrl : '';
 
-    // 1. 尝试后端 API
+    // 1. 优先向本地 web_server 请求
     try {
       const res = await fetch('/api/llm/generate', {
         method: 'POST',
@@ -141,31 +338,27 @@ class ModelPlatformManager {
         body: JSON.stringify({
           model_id: this.activeModel,
           provider_id: this.activeProvider,
-          api_key: cred.apiKey,
-          api_base: cred.baseUrl,
+          api_key: credKey,
+          api_base: credBase,
           prompt: prompt
         })
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.reasoning && onThinkingChunk) {
-          onThinkingChunk(data.reasoning);
-        }
-        if (data.text && onTextChunk) {
-          onTextChunk(data.text);
-        }
+        if (data.reasoning && onThinkingChunk) onThinkingChunk(data.reasoning);
+        if (data.text && onTextChunk) onTextChunk(data.text);
         return { code: data.code, raw: data.text, reasoning: data.reasoning };
       }
     } catch (e) {
       console.warn('后端服务不可用，回退至本地模拟生成器:', e);
     }
 
-    // 2. 模拟 fallback
-    const mockReasoning = `【${this.activeModel} 思考过程】正在分析有限域 F_3^n 的代数对称性。根据最新组合理论，为突破 2^n 局部子空间陷阱，应当构建中间汉明重量层的等位面切片，并引入坐标差分三进制模 3 奇偶偏置。`;
+    // 2. 离线/模拟生成器
+    const mockReasoning = `【${this.activeModel} 思考过程】针对 F_3^n 空间，构建 L0 范数等位面切片与仿射坐标差分。`;
     if (onThinkingChunk) onThinkingChunk(mockReasoning);
 
     const mockCode = `def priority(p: tuple, n: int) -> float:
-    # 由 ${this.activeModel} 自主生成的高维对称性优先级函数
+    # 由 ${this.activeModel} 演化出的代数对称性优先级函数
     l0 = sum(1 for x in p if x != 0)
     slice_bonus = 65.0 if l0 == (n // 2 + 1) else 0.0
     parity = sum(p) % 3
