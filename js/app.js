@@ -328,6 +328,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const target = e.currentTarget;
       target.classList.add('active');
       const dim = parseInt(target.dataset.dim, 10);
+
+      // 切换维度时彻底终止上一维度的残留动画与状态
+      if (activeTypingTimer) {
+        clearInterval(activeTypingTimer);
+        activeTypingTimer = null;
+      }
+      if (activeStageTimer) {
+        clearInterval(activeStageTimer);
+        activeStageTimer = null;
+      }
+      pendingFullText = null;
+      onTypingCompleteCallback = null;
+      if (btnAiEvolve) {
+        btnAiEvolve.disabled = false;
+        btnAiEvolve.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> AI 大模型生成演化';
+      }
+
       funsearchEngine.switchDimension(dim);
     });
   });
@@ -342,16 +359,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 快捷推演操作 (真实调用 Python 沙箱)
+  // 前端即时确定性推演 (沙箱验算当前代码)
   const btnFastDeduction = document.getElementById('btn-fast-deduction');
   if (btnFastDeduction) {
     btnFastDeduction.addEventListener('click', async () => {
       btnFastDeduction.disabled = true;
-      btnFastDeduction.innerHTML = '<span class="pulse-indicator"></span> 沙箱验算中...';
+      btnFastDeduction.innerHTML = '<span class="pulse-indicator"></span> 正在验算...';
       try {
         await funsearchEngine.runSandboxEvaluation();
       } catch (err) {
-        console.error('推演执行失败:', err);
+        alert(`沙箱验算错误: ${err.message}`);
       } finally {
         btnFastDeduction.disabled = false;
         btnFastDeduction.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 启动即时推演';
@@ -374,6 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 打字机流式输出与可跳过交互
   let activeTypingTimer = null;
+  let activeStageTimer = null;
   let pendingFullText = null;
   let onTypingCompleteCallback = null;
 
@@ -441,28 +459,30 @@ document.addEventListener('DOMContentLoaded', () => {
       const dim = funsearchEngine.dimension;
       const totalPts = 3 ** dim;
 
-      if (thinkingStatusText) thinkingStatusText.textContent = "大模型几何代数分析与程序推导中...";
+      if (thinkingStatusText) thinkingStatusText.textContent = `大模型正在针对 ${dim} 维空间进行代数推演...`;
 
       // 四阶段动态推演提示轮播，避免等待卡顿与沉寂
       const stages = [
-        `[阶段 1/4 · 空间约束注入] 正在向模型【${curPName} / ${curModel}】注入 F_3^${dim} 空间约束与三点反共线先验 (目标规模 3^${dim}=${totalPts} 点)...`,
-        `[阶段 2/4 · 代数对称性探索] 大模型正在分析仿射不变性、中间层汉明权值切片分布与仿射同余群偏置，探索突破 2^${dim} 局部极大值陷阱...`,
-        `[阶段 3/4 · 启发式评分函数构建] 大模型正在形式化构造 def priority(p, n) -> float 函数并注入代数先验优化代码...`,
-        `[阶段 4/4 · 沙箱编译与严密验算] 正在接收大模型推演文本，准备传入 Python 沙箱执行 O(k²) 严密三点共线判定与贪心选点...`
+        `[阶段 1/4 · 空间约束注入] 正在向模型【${curPName} / ${curModel}】注入 F_3^${dim} 空间先验与反共线条件 (空间规模: 3^${dim} = ${totalPts} 点)...`,
+        `[阶段 2/4 · 代数对称性探索] 大模型正在分析 F_3^${dim} 的中间层汉明权值切片分布与仿射同余群偏置，探索突破 2^${dim}=${Math.pow(2, dim)} 局部陷阱...`,
+        `[阶段 3/4 · 启发式评分函数构建] 大模型正在形式化构造 priority(p, n) 优先级函数并优化代数不变性逻辑...`,
+        `[阶段 4/4 · 沙箱编译与严密验算] 正在接收大模型推演输出，准备送入 Python 沙箱执行 ${totalPts} 点的 O(k²) 严密三点共线判定与贪心选点...`
       ];
       let stageIdx = 0;
       let isResultReceived = false;
       if (aiThinkingText) {
         aiThinkingText.textContent = stages[0];
       }
-      const stageTimer = setInterval(() => {
+
+      if (activeStageTimer) clearInterval(activeStageTimer);
+      activeStageTimer = setInterval(() => {
         if (isResultReceived) return;
         stageIdx = (stageIdx + 1) % stages.length;
         if (aiThinkingText) {
           aiThinkingText.textContent = stages[stageIdx];
         }
         if (thinkingStatusText) {
-          thinkingStatusText.textContent = `推理演化中 (${stageIdx + 1}/4)...`;
+          thinkingStatusText.textContent = `推理演化中 (阶段 ${stageIdx + 1}/4 · 目标 ${dim} 维)...`;
         }
       }, 3000);
 
@@ -473,15 +493,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         isResultReceived = true;
-        clearInterval(stageTimer);
+        if (activeStageTimer) {
+          clearInterval(activeStageTimer);
+          activeStageTimer = null;
+        }
 
-        if (thinkingStatusText) thinkingStatusText.textContent = "真实推理与沙箱验算完成";
+        if (thinkingStatusText) thinkingStatusText.textContent = `真实推理与沙箱验算完成 (${dim} 维 · ${result.score} 点)`;
 
         const baselineScore = Math.pow(2, dim);
         const evalSummary = `\n\n═══════════════════════════════════════════════════\n` +
           `✅ Python 沙箱验算完成报告:\n` +
           `- 演化模型: ${result.model_id} (${result.provider_id || curProvider})\n` +
-          `- 目标空间: F_3^${result.dimension} (共 ${result.total_points || (3 ** result.dimension)} 个向量点)\n` +
+          `- 目标空间: F_3^${result.dimension} (总规模 ${result.total_points || (3 ** result.dimension)} 个向量点)\n` +
           `- 空间打分耗时: ${result.eval_time_seconds}s\n` +
           `- 三点共线违规数: ${result.collinear_violations} (100% 严密防线，0 容忍)\n` +
           `- 真实选出非共线点集基数: ${result.score} 点\n` +
@@ -505,12 +528,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
       } catch (err) {
         isResultReceived = true;
-        clearInterval(stageTimer);
-        if (thinkingStatusText) thinkingStatusText.textContent = "推演中断";
-        if (aiThinkingText) {
-          aiThinkingText.textContent = `❌ 模型推演中断: ${err.message}\n\n【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。`;
+        if (activeStageTimer) {
+          clearInterval(activeStageTimer);
+          activeStageTimer = null;
         }
-        alert(`推演提示: ${err.message}`);
+        if (thinkingStatusText) thinkingStatusText.textContent = "推演中断 (请查看下方诊断)";
+
+        const errStr = err.message || String(err);
+        const isTimeout = /timed?\s*out|超时/i.test(errStr);
+
+        let guidance = "";
+        if (isTimeout) {
+          guidance = `【⏱️ 超时根因与解决方案】：\n` +
+            `1. 当前驱动模型【${curModel}】生成长篇数学推演耗时较长，或中转聚合节点网络排队较慢。\n` +
+            `2. 解决方案 A：点击右上角【AI 模型平台配置】，切换为响应更快的轻量模型 (如 deepseek-chat 或 聚合平台的 flash 模型)；\n` +
+            `3. 解决方案 B：切换至内置的【Reproducible Mock 确定性离线引擎】，毫秒级体验完整的代数推演与沙箱验算闭环；\n` +
+            `4. 服务端已将连接超时放宽至 180 秒并精炼了 prompt，您也可以直接再次点击重试。`;
+        } else {
+          guidance = `【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n` +
+            `若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。`;
+        }
+
+        if (aiThinkingText) {
+          aiThinkingText.textContent = `❌ 模型推演未成功: ${errStr}\n\n${guidance}`;
+        }
       } finally {
         btnAiEvolve.disabled = false;
         btnAiEvolve.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> AI 大模型生成演化';

@@ -105,6 +105,19 @@ class MultiDimCapSetVisualizer {
       evalTime: 0.001,
       violations: 0
     };
+
+    // 重置思考链与推演视窗提示，消除上一维度的残留文本与误解
+    const thinkingTextEl = document.getElementById('ai-thinking-text');
+    const thinkingStatusEl = document.getElementById('thinking-status-text');
+    if (thinkingStatusEl) {
+      thinkingStatusEl.textContent = `就绪 (目标: ${dim} 维 · ${this.allPoints.length} 点)`;
+    }
+    if (thinkingTextEl) {
+      thinkingTextEl.textContent = `【当前探索目标：F_3^${dim} 空间 (共 ${this.allPoints.length} 点)】\n` +
+        `- 已知理论极值: ${bench.knownBest || '待探索'} 点 | 朴素贪心受限陷阱: 2^${dim} = ${Math.pow(2, dim)} 点\n\n` +
+        `点击下方【AI 大模型生成演化】，将向配置的模型发起 ${dim} 维极值组合推演请求，大模型将分析汉明切片与仿射同余不变性，并在 Python 沙箱中完成严格三点共线验算。`;
+    }
+
     // 异步在真实沙箱中验算基准代码
     this.runSandboxEvaluation(this.currentCode).catch(() => {
       this.selectedPoints = [];
@@ -326,6 +339,18 @@ class MultiDimCapSetVisualizer {
     if (countEl) {
       const pct = this.allPoints.length > 0 ? ((this.selectedPoints.length / this.allPoints.length) * 100).toFixed(1) : 0;
       countEl.textContent = `${this.selectedPoints.length} 点 (${pct}%)`;
+    }
+
+    const totalSpaceDescEl = document.getElementById('funsearch-total-space-desc');
+    if (totalSpaceDescEl) {
+      totalSpaceDescEl.textContent = `总空间 ${this.allPoints.length} 点 (3^${this.dimension})`;
+    }
+
+    const baselineSubEl = document.getElementById('funsearch-baseline-sub');
+    if (baselineSubEl) {
+      baselineSubEl.textContent = this.isEvolved && this.selectedPoints.length > baseline
+        ? `成功打破 2^${this.dimension}=${baseline} 局部最优！`
+        : `受限于 2^${this.dimension}=${baseline} 局部极值`;
     }
 
     const impEl = document.getElementById('funsearch-improvement-badge');

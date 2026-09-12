@@ -129,7 +129,10 @@ class OpenAICompatibleProvider(BaseProvider):
             detail_str = f" - {err_detail}" if err_detail else ""
             raise RuntimeError(f"[{self.name}] API 请求失败: HTTP {he.code} {he.reason}{detail_str}")
         except Exception as e:
-            raise RuntimeError(f"[{self.name}] API 请求失败: {e}")
+            err_msg = str(e)
+            if "timed out" in err_msg.lower():
+                raise TimeoutError(f"[{self.name}] 模型生成响应超时 (已等待超过限制)。上游模型生成长篇代数推演耗时较长或中转网络延迟高，建议在【模型配置】中切换为速度更快的模型 (如 deepseek-chat)，或再次尝试演化。")
+            raise RuntimeError(f"[{self.name}] API 请求失败: {err_msg}")
 
     def stream(
         self,

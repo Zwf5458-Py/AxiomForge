@@ -320,7 +320,7 @@ Current Best / Baseline Program:
 ```
 
 Evolutionary Optimization Task:
-1. Provide a mathematical analysis: explore algebraic invariants (such as intermediate Hamming weight / L0 norm sphere level sets, affine modulo 3 invariants like sum(p)%3, quadratic forms, or cyclic coordinate differences) to break the greedy 2^{dimension} local subspace trap.
+1. Provide a concise, rigorous mathematical analysis (within 200 words): explore algebraic invariants (such as intermediate Hamming weight / L0 norm sphere level sets, affine modulo 3 invariants like sum(p)%3, quadratic forms, or cyclic coordinate differences) to break the greedy 2^{dimension} local subspace trap.
 2. Formulate your reasoning and output an improved Python function `priority(p: tuple, n: int) -> float`.
 Rules:
 - Function signature MUST be `def priority(p: tuple, n: int) -> float:`.
@@ -329,7 +329,7 @@ Rules:
 
         sys_prompt = "You are an expert mathematician specializing in extremal combinatorics and automated program discovery."
 
-        # 3. 真实调用大模型
+        # 3. 真实调用大模型 (超时放宽至 180s，设置 max_tokens 防止网关超时断流)
         try:
             result = MODELS_REGISTRY.complete(
                 model_id=model_id,
@@ -339,7 +339,8 @@ Rules:
                 api_key=api_key,
                 api_base=api_base,
                 temperature=temperature,
-                timeout=60.0
+                max_tokens=1500,
+                timeout=180.0
             )
         except Exception as e:
             # 真实返回错误，绝不伪造
