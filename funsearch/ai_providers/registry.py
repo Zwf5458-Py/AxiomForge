@@ -185,15 +185,32 @@ def create_custom_provider(
         default_headers=default_headers
     )
     for m in models:
+        if isinstance(m, str):
+            m_id = m
+            m_name = m
+            supports_reasoning = any(k in m.lower() for k in ["r1", "reasoner", "o1", "o3", "thinking", "pro", "qwq"])
+            m_api = "openai-completions"
+            cw = 64000
+            cin = 0.0
+            cout = 0.0
+        else:
+            m_id = m.get("id", "default")
+            m_name = m.get("name", m_id)
+            supports_reasoning = m.get("supports_reasoning", False)
+            m_api = m.get("api", "openai-completions")
+            cw = m.get("context_window", 64000)
+            cin = m.get("cost_input_per_m", 0.0)
+            cout = m.get("cost_output_per_m", 0.0)
+
         provider.register_model(ModelInfo(
-            id=m["id"],
-            name=m.get("name", m["id"]),
+            id=m_id,
+            name=m_name,
             provider=provider_id,
-            api=m.get("api", "openai-completions"),
-            context_window=m.get("context_window", 64000),
-            supports_reasoning=m.get("supports_reasoning", False),
-            cost_input_per_m=m.get("cost_input_per_m", 0.0),
-            cost_output_per_m=m.get("cost_output_per_m", 0.0)
+            api=m_api,
+            context_window=cw,
+            supports_reasoning=supports_reasoning,
+            cost_input_per_m=cin,
+            cost_output_per_m=cout
         ))
     return provider
 

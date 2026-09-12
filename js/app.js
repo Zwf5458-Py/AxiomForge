@@ -707,27 +707,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 智能连通性测试 (免 403 探测)
+  // 真实模型连通性与响应测试 (Ping Check)
   if (btnTestAuth) {
     btnTestAuth.addEventListener('click', async () => {
       btnTestAuth.disabled = true;
-      btnTestAuth.innerHTML = '<span class="pulse-indicator"></span> 正在测试...';
+      btnTestAuth.innerHTML = '<span class="pulse-indicator"></span> 正在测试模型响应...';
       const pid = selectProvider.value;
       const key = inputApiKey.value.trim();
       const base = inputBaseUrl.value.trim();
       const model = isManualModelMode ? inputCustomModel.value.trim() : selectModel.value;
 
-      const result = await window.modelPlatformManager.checkConnection(pid, key, base, model);
-      btnTestAuth.disabled = false;
-      btnTestAuth.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 测试连接 (Check Auth)';
-
       if (checkResultBox) {
         checkResultBox.style.display = 'block';
-        checkResultBox.className = `status-box ${result.ok ? 'success' : 'error'}`;
-        checkResultBox.textContent = result.message;
+        checkResultBox.className = 'status-box';
+        checkResultBox.style.borderLeftColor = '#38bdf8';
+        checkResultBox.style.color = '#38bdf8';
+        checkResultBox.textContent = `⏳ 正在向模型【${model || '默认'}】发送测试信号，测试实际端到端响应延迟...`;
       }
-      if (result.models && result.models.length > 0) {
-        updateModelDropdown(result.models, model);
+
+      try {
+        const result = await window.modelPlatformManager.checkConnection(pid, key, base, model);
+        if (checkResultBox) {
+          checkResultBox.style.display = 'block';
+          checkResultBox.className = `status-box ${result.ok ? 'success' : 'error'}`;
+          checkResultBox.style.borderLeftColor = result.ok ? '#10b981' : '#ef4444';
+          checkResultBox.style.color = result.ok ? '#86efac' : '#fca5a5';
+          checkResultBox.textContent = result.message;
+        }
+        if (result.models && result.models.length > 0) {
+          updateModelDropdown(result.models, model);
+        }
+      } catch (err) {
+        if (checkResultBox) {
+          checkResultBox.style.display = 'block';
+          checkResultBox.className = 'status-box error';
+          checkResultBox.style.borderLeftColor = '#ef4444';
+          checkResultBox.style.color = '#fca5a5';
+          checkResultBox.textContent = `❌ 检测失败: ${err.message}`;
+        }
+      } finally {
+        btnTestAuth.disabled = false;
+        btnTestAuth.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 测试连接 (Check Auth)';
       }
     });
   }

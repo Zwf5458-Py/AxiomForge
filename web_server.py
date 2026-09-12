@@ -129,11 +129,62 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
         self._send_json(topo)
 
     def handle_check_provider(self, payload: dict):
-        provider_id = payload.get("provider_id", "deepseek")
-        api_key = payload.get("api_key")
-        api_base = payload.get("api_base")
-        valid, msg = MODELS_REGISTRY.check_auth(provider_id, explicit_key=api_key, explicit_base=api_base)
-        self._send_json({"valid": valid, "message": msg})
+        try:
+            provider_id = payload.get("provider_id", "deepseek")
+            api_key = payload.get("api_key")
+            api_base = payload.get("api_base")
+            model_id = (payload.get("model_id") or "").strip()
+
+            # 1. 动态挂载自定义 Provider (如果是自定义平台且尚未注册)
+            if api_base and (not MODELS_REGISTRY.get_provider(provider_id) or provider_id.startswith("custom_")):
+                custom_p = create_custom_provider(
+                    provider_id=provider_id,
+                    name=payload.get("provider_name") or provider_id,
+                    api_base=api_base,
+                    models=[model_id] if model_id else []
+                )
+                MODELS_REGISTRY.set_provider(custom_p)
+
+            # 2. 如果用户指定了具体模型，直接进行端到端真实对话 ping
+            if model_id and model_id != "custom-default":
+                try:
+                    t0 = time.time()
+                    res = MODELS_REGISTRY.complete(
+                        model_id=model_id,
+                        prompt="Hello! Please reply 'OK' to confirm connectivity.",
+                        provider_id=provider_id,
+                        api_key=api_key,
+                        api_base=api_base,
+                        temperature=0.1,
+                        max_tokens=15,
+                        timeout=15.0
+                    )
+                    latency = round(time.time() - t0, 2)
+                    snippet = (res.text or "").strip().replace("\n", " ")[:30]
+                    self._send_json({
+                        "valid": True,
+                        "model_id": model_id,
+                        "latency_seconds": latency,
+                        "reply_snippet": snippet,
+                        "message": f"✅ 模型【{model_id}】连通测试成功！响应延迟: {latency}s | 模型回复: \"{snippet}\""
+                    })
+                    return
+                except Exception as e:
+                    self._send_json({
+                        "valid": False,
+                        "model_id": model_id,
+                        "message": f"❌ 模型【{model_id}】调用失败: {str(e)}"
+                    })
+                    return
+
+            # 3. 未指定具体模型时，测试基础鉴权与模型列表
+            valid, msg = MODELS_REGISTRY.check_auth(provider_id, explicit_key=api_key, explicit_base=api_base)
+            self._send_json({"valid": valid, "message": msg})
+        except Exception as global_err:
+            self._send_json({
+                "valid": False,
+                "message": f"❌ 检测过程发生异常: {str(global_err)}"
+            })
 
     def handle_register_custom(self, payload: dict):
         p_id = payload.get("id")

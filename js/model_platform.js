@@ -281,31 +281,25 @@ class ModelPlatformManager {
   }
 
   /**
-   * 测试连接与鉴权 (智能免 403 探测)
+   * 测试连接与鉴权 (真实模型响应与延迟测试)
    */
   async checkConnection(providerId, apiKey, baseUrl, selectedModel) {
     if (providerId === 'mock') {
       return { ok: true, message: '离线确定性模拟引擎就绪！随时可启动演化。' };
     }
 
-    try {
-      // 1. 优先尝试自动拉取模型列表来作为鉴权成功的铁证
-      const models = await this.fetchRemoteModels(baseUrl, apiKey);
-      if (models && models.length > 0) {
-        return {
-          ok: true,
-          message: `✅ 鉴权成功！成功探测并识别到 ${models.length} 个可用模型。`,
-          models: models
-        };
-      }
-    } catch (fetchErr) {
-      // 若拉取模型失败，尝试向后端发送真实模型 ping
+    const pInfo = this.getProviderInfo(providerId);
+    const pName = pInfo ? pInfo.name : providerId;
+
+    // 1. 如果用户已选定了具体模型，优先向后端发起对该模型的真实 ping 探测
+    if (selectedModel && selectedModel !== 'custom-default') {
       try {
         const res = await fetch('/api/providers/check', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             provider_id: providerId,
+            provider_name: pName,
             api_key: apiKey,
             api_base: baseUrl,
             model_id: selectedModel
@@ -313,9 +307,27 @@ class ModelPlatformManager {
         });
         if (res.ok) {
           const data = await res.json();
-          return { ok: data.valid, message: data.message };
+          return { ok: data.valid, message: data.message, latency: data.latency_seconds };
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          return { ok: false, message: errData.message || `服务端检测失败 (HTTP ${res.status})` };
         }
-      } catch (e) {}
+      } catch (e) {
+        return { ok: false, message: `网络连接失败: ${e.message}` };
+      }
+    }
+
+    // 2. 若未选择具体模型，则通过拉取模型列表来验证平台连通性
+    try {
+      const models = await this.fetchRemoteModels(baseUrl, apiKey);
+      if (models && models.length > 0) {
+        return {
+          ok: true,
+          message: `✅ 平台连通成功！识别到 ${models.length} 个可用模型，请在下方选择模型后点击测试。`,
+          models: models
+        };
+      }
+    } catch (fetchErr) {
       return { ok: false, message: `连接失败: ${fetchErr.message}` };
     }
 
