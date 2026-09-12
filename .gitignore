@@ -1,4 +1,21 @@
-.DS_Store
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments & IDE
 .env
+.venv
+env/
+venv/
+.vscode/
+.idea/
+.DS_Store
+
+# Local Outputs & Logs
+*.log

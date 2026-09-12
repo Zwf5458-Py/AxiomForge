@@ -11,7 +11,7 @@ Cap Set（帽子集）是指不包含任何三点共线的点集 S ⊆ F_3^n。
 import itertools
 import math
 import sys
-from typing import Callable, List, Tuple, Set, Dict, Any
+from typing import Callable, List, Tuple, Set, Dict, Any, Sequence
 
 Point = Tuple[int, ...]
 
@@ -23,22 +23,26 @@ def is_collinear(p1: Point, p2: Point, p3: Point) -> bool:
     """判定三个点是否构成等差数列（即在 F_3^n 下三点共线）"""
     return all((x + y + z) % 3 == 0 for x, y, z in zip(p1, p2, p3))
 
-def is_valid_cap_set(points: List[Point]) -> bool:
+def is_valid_cap_set(points: Sequence[Point]) -> bool:
     """
     严格检验点集是否为合法的 Cap Set（不包含任何三点共线）。
-    时间复杂度优化：利用哈希表将三重循环优化为两重循环。
-    对于任意两点 p1, p2，若存在 p3 使得 p1 + p2 + p3 = 0 (mod 3)，
-    则必有 p3 = (-p1 - p2) mod 3 = (2 * (p1 + p2)) mod 3。
+    优化算法：从 O(k^3) 优化至 O(k^2) 哈希查找。
+    在 F_3 域中，p1 + p2 + p3 ≡ 0 (mod 3) <=> p3 ≡ (-p1 - p2) mod 3。
     """
-    pts_set = set(points)
+    if len(points) < 3:
+        return True
+
+    point_set: Set[Point] = set(points)
     n_points = len(points)
+
     for i in range(n_points):
         p1 = points[i]
         for j in range(i + 1, n_points):
             p2 = points[j]
             # 计算唯一能与 p1, p2 形成共线的第三点 p3
-            p3 = tuple((-(x + y)) % 3 for x, y in zip(p1, p2))
-            if p3 in pts_set and p3 != p1 and p3 != p2:
+            p3 = tuple((-a - b) % 3 for a, b in zip(p1, p2))
+            # 若 p3 存在于点集且不等于 p1, p2，则存在共线
+            if p3 in point_set and p3 != p1 and p3 != p2:
                 return False
     return True
 
@@ -50,7 +54,7 @@ def solve_cap_set_greedy(priority_fn: Callable[[Point, int], float], n: int) -> 
     3. 贪心加入点集，若与已选点不共线则保留
     """
     all_points = generate_all_points(n)
-    
+
     # 计算每个点的优先级得分并降序排序
     scored_points = []
     for p in all_points:
@@ -59,27 +63,27 @@ def solve_cap_set_greedy(priority_fn: Callable[[Point, int], float], n: int) -> 
         except Exception:
             score = 0.0
         scored_points.append((score, p))
-    
+
     # 稳定排序：优先根据评分，其次保留原有次序
     scored_points.sort(key=lambda x: x[0], reverse=True)
-    
+
     # 贪心选择
     selected_set: Set[Point] = set()
-    forbidden_pairs: Set[Point] = set() # 记录两点所唯一锁定的第三点禁区
+    forbidden_pairs: Set[Point] = set()  # 记录两点所唯一锁定的第三点禁区
     selected_list: List[Point] = []
-    
+
     for _, p in scored_points:
         if p in forbidden_pairs:
             continue
-        
+
         # 满足条件，加入集合并更新禁区
         for existing in selected_list:
-            needed = tuple((-(x + y)) % 3 for x, y in zip(p, existing))
+            needed = tuple((-a - b) % 3 for a, b in zip(p, existing))
             forbidden_pairs.add(needed)
-        
+
         selected_set.add(p)
         selected_list.append(p)
-        
+
     return selected_list
 
 # 内置的基础启发式 Baseline 函数（供对比与基准校准）
@@ -110,11 +114,11 @@ def evaluate_program(code_str: str, n: int) -> Dict[str, Any]:
         exec(code_str, {"math": math, "__builtins__": __builtins__}, local_scope)
         if "priority" not in local_scope or not callable(local_scope["priority"]):
             return {"valid": False, "score": 0, "error": "Function 'priority(p, n)' not found", "points": []}
-        
+
         priority_fn = local_scope["priority"]
         cap_set = solve_cap_set_greedy(priority_fn, n)
         is_valid = is_valid_cap_set(cap_set)
-        
+
         return {
             "valid": is_valid,
             "score": len(cap_set) if is_valid else 0,

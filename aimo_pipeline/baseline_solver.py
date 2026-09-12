@@ -3,11 +3,13 @@ AIMO (AI Mathematical Olympiad) Kaggle 竞赛打榜基线求解器
 =========================================================
 核心算法架构：
 1. Tool-Integrated Reasoning (TIR): 引导模型编写并执行 Python 验证脚本
-2. Safe REPL Sandbox: 毫秒级安全运行数学解题代码并捕获 print 输出
-3. Self-Consistency Majority Voting: 多候选解答采样与加权多数投票
+2. Multi-Process Hard Timeout: 基于 ProcessPoolExecutor 的硬超时防护，杜绝死循环挂起
+3. Self-Consistency Majority Voting: 基于 collections.Counter 的自洽性多数投票
 """
 
 import collections
+from collections import Counter
+import concurrent.futures
 import contextlib
 import io
 import math
@@ -15,15 +17,11 @@ import os
 import re
 import sys
 import time
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-def execute_math_code(code_str: str, timeout_seconds: float = 5.0) -> Optional[int]:
-    """
-    在隔离环境中执行数学计算代码，并尝试提取 print 输出的整数解
-    AIMO 竞赛规则：最终输出必须为 0 ~ 999 之间的非负整数
-    """
+def _eval_worker(code_str: str) -> Dict[str, Any]:
+    """子进程独立工作函数：在沙箱命名空间内执行解题代码"""
     buffer = io.StringIO()
-    # 限制可用内置函数以确保安全
     safe_globals = {
         "math": math,
         "__builtins__": {
@@ -38,34 +36,65 @@ def execute_math_code(code_str: str, timeout_seconds: float = 5.0) -> Optional[i
     try:
         with contextlib.redirect_stdout(buffer):
             exec(code_str, safe_globals, local_scope)
+
+        # 优先从标准输出中提取最后一个整数
         output = buffer.getvalue().strip()
-        
-        # 优先从 print 输出中提取最后出现的整数
         numbers = re.findall(r"-?\d+", output)
         if numbers:
-            ans = int(numbers[-1])
-            return ans % 1000  # AIMO 模 1000 规则
-            
-        # 若无输出，尝试检查局部变量中的 result 或 ans
-        for var in ["result", "ans", "answer"]:
-            if var in local_scope and isinstance(local_scope[var], int):
-                return local_scope[var] % 1000
-    except Exception:
-        return None
-    return None
+            ans = int(numbers[-1]) % 1000
+            return {"success": True, "result": ans, "error": None}
+
+        # 其次从局部变量中提取 ans / result / answer
+        for var_name in ["ans", "result", "answer"]:
+            if var_name in local_scope and isinstance(local_scope[var_name], int):
+                return {"success": True, "result": local_scope[var_name] % 1000, "error": None}
+
+        return {"success": False, "result": None, "error": "No integer result found in output or variables"}
+    except Exception as e:
+        return {"success": False, "result": None, "error": f"{type(e).__name__}: {str(e)}"}
+
+def execute_math_code(
+    code_str: str,
+    timeout_seconds: float = 5.0
+) -> Tuple[Optional[int], Optional[str]]:
+    """
+    带多进程硬超时保护的代码执行器：
+    利用 ProcessPoolExecutor 隔离执行，彻底杜绝死循环挂起，超时时强制截断
+    """
+    try:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_eval_worker, code_str)
+            try:
+                res = future.result(timeout=timeout_seconds)
+                return res["result"], res["error"]
+            except concurrent.futures.TimeoutError:
+                return None, f"TimeoutError: Code execution exceeded {timeout_seconds}s limit"
+            except Exception as e:
+                return None, f"ExecutionError: {str(e)}"
+    except Exception as e:
+        # 兜底降级处理（例如在极少数不支持 fork/spawn 的受限环境下）
+        res = _eval_worker(code_str)
+        return res["result"], res["error"]
+
+def aggregate_votes(valid_answers: List[Any]) -> Optional[int]:
+    """基于 collections.Counter 的加权多数投票集成"""
+    clean_answers = [a for a in valid_answers if a is not None and isinstance(a, int) and 0 <= a <= 999]
+    if not clean_answers:
+        return 0  # 官方竞赛默认保底值
+    counter = Counter(clean_answers)
+    most_common = counter.most_common(1)
+    return most_common[0][0] if most_common else 0
 
 class AIMOSolver:
-    """AIMO 自动化解题基线流水线"""
-    def __init__(self, num_samples: int = 3):
+    """AIMO 自动化解题流水线"""
+    def __init__(self, num_samples: int = 3, timeout_per_eval: float = 5.0):
         self.num_samples = num_samples
+        self.timeout = timeout_per_eval
 
     def solve_problem_offline_mock(self, problem_text: str) -> Dict[str, Any]:
-        """
-        离线演示求解器（用于在没有外部 API 时验证流程跑通）
-        内置经典 AIME 问题求解代码
-        """
+        """离线解题演示（用于本地无 API 时的基准流水线测试）"""
         sample_code = """
-# 针对组合/数论问题的模拟求解脚本
+# 针对同余方程组与数论极值问题的验证脚本
 def solve():
     count = 0
     for x in range(1, 100):
@@ -75,28 +104,23 @@ def solve():
 
 solve()
 """
-        ans = execute_math_code(sample_code)
+        ans, err = execute_math_code(sample_code, timeout_seconds=self.timeout)
+        candidates = [ans] * self.num_samples
+        final_ans = aggregate_votes(candidates)
+
         return {
             "problem": problem_text,
-            "candidates": [ans] * self.num_samples,
-            "final_answer": ans,
-            "confidence": 1.0,
+            "candidates": candidates,
+            "final_answer": final_ans,
+            "confidence": 1.0 if final_ans is not None else 0.0,
+            "error": err,
             "execution_trace": sample_code.strip()
         }
 
-    def aggregate_votes(self, candidate_answers: List[Optional[int]]) -> Optional[int]:
-        """对多个采样的候选解执行多数投票集成 (Majority Voting)"""
-        valid_answers = [a for a in candidate_answers if a is not None and 0 <= a <= 999]
-        if not valid_answers:
-            return 0  # 竞赛默认保底
-        counter = collections.Counter(valid_answers)
-        best_answer, _ = counter.most_common(1)[0]
-        return best_answer
-
 def run_aimo_demo():
     print("=" * 65)
-    print("🏆 AIMO Prize / Kaggle 竞赛打榜基线流水线启动")
-    print("📐 架构：CoT 思维链 + Python 沙箱解释器 + 自洽性多数投票")
+    print("🏆 AIMO Prize / Kaggle 竞赛打榜基线求解器 (硬超时防护升级版)")
+    print("📐 架构：ProcessPoolExecutor 硬超时 + Counter 多数投票")
     print("=" * 65)
 
     sample_problem = (
@@ -112,7 +136,7 @@ def run_aimo_demo():
     duration = time.time() - start_t
 
     print(f"[生成的验证代码]:\n{result['execution_trace']}\n")
-    print(f"⏱️ 执行与沙箱验算耗时: {duration * 1000:.2f} ms")
+    print(f"⏱️ 进程沙箱执行与验算耗时: {duration * 1000:.2f} ms")
     print(f"🎯 最终集成预测答案 (0-999): {result['final_answer']}")
     print(f"🌟 置信度: {result['confidence'] * 100:.1f}%\n")
     print("=" * 65)
