@@ -121,30 +121,54 @@ def sanitize_code_for_sandbox(code: str) -> str:
 
     code_candidate = "\n".join(clean_lines)
 
-    # 预编译检查与自动自愈
-    try:
-        ast.parse(code_candidate)
-        return code_candidate
-    except SyntaxError as e:
-        err_msg = str(e).lower()
-        # 处理 unterminated string literal 导致的代码错误
-        if "unterminated" in err_msg or "literal" in err_msg or "string" in err_msg or "quote" in err_msg:
-            fixed_lines = []
-            for l in clean_lines:
-                # 修复未闭合的三引号 docstring
-                if (l.count('"""') % 2 != 0) or (l.count("'''") % 2 != 0):
-                    fixed_lines.append("    # [Cleaned unclosed docstring]")
-                # 修复未闭合的单/双引号
-                elif not l.strip().startswith("#") and ((l.count('"') % 2 != 0) or (l.count("'") % 2 != 0)):
-                    fixed_lines.append("    # " + l.strip())
+    # 1. 修复数学省略乘号与非法数字字面量 (如 2p[0] -> 2 * p[0], 3x -> 3 * x, 2n -> 2 * n, 08 -> 8)
+    def repl_num_id(m):
+        full = m.group(0)
+        num = m.group(1)
+        ident = m.group(2)
+        if re.match(r'^[eE][+-]?\d+$', ident):
+            return full
+        if num == '0' and (re.match(r'^[xX][0-9a-fA-F]+$', ident) or re.match(r'^[bB][01]+$', ident) or re.match(r'^[oO][0-7]+$', ident)):
+            return full
+        return f'{num} * {ident}'
+
+    code_candidate = re.sub(r'(?<![0-9a-zA-Z_.])(\d+)([a-zA-Z_]\w*)', repl_num_id, code_candidate)
+    code_candidate = re.sub(r'(?<![0-9a-zA-Z_.])0+([1-9]\d*)(?![0-9a-zA-Z_.])', r'\1', code_candidate)
+    # 修复自然语言里的幂符号 ^ 为 Python 的 ** (如 x^2 -> x**2)
+    code_candidate = re.sub(r'([a-zA-Z0-9_\)\]])\s*\^\s*([a-zA-Z0-9_\(\[])', r'\1 ** \2', code_candidate)
+
+    # 2. 预编译检查与多轮循环自愈
+    for attempt in range(3):
+        try:
+            ast.parse(code_candidate)
+            return code_candidate
+        except SyntaxError as e:
+            err_msg = str(e).lower()
+            cur_lines = code_candidate.split("\n")
+            bad_lineno = e.lineno
+
+            # 处理 unterminated string literal 导致的代码错误
+            if "unterminated" in err_msg or "literal" in err_msg or "quote" in err_msg or "string" in err_msg:
+                fixed_lines = []
+                for idx, l in enumerate(cur_lines, 1):
+                    if (l.count('"""') % 2 != 0) or (l.count("'''") % 2 != 0):
+                        fixed_lines.append("    # [Cleaned unclosed docstring]")
+                    elif not l.strip().startswith("#") and ((l.count('"') % 2 != 0) or (l.count("'") % 2 != 0)):
+                        fixed_lines.append("    # [Cleaned unclosed quote] " + l.strip())
+                    elif idx == bad_lineno and not l.strip().startswith("def ") and not "return " in l:
+                        fixed_lines.append("    # [Cleaned syntax error line] " + l.strip())
+                    else:
+                        fixed_lines.append(l)
+                code_candidate = "\n".join(fixed_lines)
+            elif bad_lineno and 1 <= bad_lineno <= len(cur_lines):
+                target_l = cur_lines[bad_lineno - 1]
+                if not target_l.strip().startswith("def ") and not "return " in target_l:
+                    cur_lines[bad_lineno - 1] = "    # [Auto-fixed invalid syntax line] " + target_l.strip()
+                    code_candidate = "\n".join(cur_lines)
                 else:
-                    fixed_lines.append(l)
-            code_candidate = "\n".join(fixed_lines)
-            try:
-                ast.parse(code_candidate)
-                return code_candidate
-            except Exception:
-                pass
+                    break
+            else:
+                break
 
     return code_candidate
 
