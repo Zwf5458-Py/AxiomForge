@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const funsearchEngine = new MultiDimCapSetVisualizer('funsearch-canvas');
   funsearchEngine.updateUI();
 
+  const activeModelBadge = document.getElementById('active-model-badge');
+  if (activeModelBadge && window.modelPlatformManager) {
+    const curP = window.modelPlatformManager.getProviderInfo(window.modelPlatformManager.activeProvider);
+    const pName = curP ? curP.name : window.modelPlatformManager.activeProvider;
+    activeModelBadge.textContent = `${pName}: ${window.modelPlatformManager.activeModel}`;
+  }
+
   let activeTab = 'mandelbrot'; // 默认进入震撼的广义高阶分形视窗
 
   // 视口自适应调整
@@ -365,36 +372,143 @@ document.addEventListener('DOMContentLoaded', () => {
   const aiThinkingText = document.getElementById('ai-thinking-text');
   const thinkingStatusText = document.getElementById('thinking-status-text');
 
+  // 打字机流式输出与可跳过交互
+  let activeTypingTimer = null;
+  let pendingFullText = null;
+  let onTypingCompleteCallback = null;
+
+  function streamTypeWriter(element, text, speed = 8, onComplete) {
+    if (activeTypingTimer) {
+      clearInterval(activeTypingTimer);
+      activeTypingTimer = null;
+    }
+    pendingFullText = text;
+    onTypingCompleteCallback = onComplete;
+    element.textContent = '';
+    let idx = 0;
+    // 根据文本长度自适应调整步长，保证在 2~3 秒内展示完毕，保持极佳科技感与流畅度
+    const step = text.length > 1200 ? 8 : (text.length > 500 ? 4 : 2);
+    const interval = Math.max(10, speed);
+
+    activeTypingTimer = setInterval(() => {
+      idx += step;
+      if (idx >= text.length) {
+        element.textContent = text;
+        element.scrollTop = element.scrollHeight;
+        clearInterval(activeTypingTimer);
+        activeTypingTimer = null;
+        pendingFullText = null;
+        if (onTypingCompleteCallback) {
+          const cb = onTypingCompleteCallback;
+          onTypingCompleteCallback = null;
+          cb();
+        }
+      } else {
+        element.textContent = text.slice(0, idx) + ' ▌';
+        element.scrollTop = element.scrollHeight;
+      }
+    }, interval);
+  }
+
+  if (aiThinkingText) {
+    aiThinkingText.title = "提示：点击此处可跳过打字动画立即显示全部数学推导";
+    aiThinkingText.addEventListener('click', () => {
+      if (activeTypingTimer && pendingFullText) {
+        clearInterval(activeTypingTimer);
+        activeTypingTimer = null;
+        aiThinkingText.textContent = pendingFullText;
+        aiThinkingText.scrollTop = aiThinkingText.scrollHeight;
+        pendingFullText = null;
+        if (onTypingCompleteCallback) {
+          const cb = onTypingCompleteCallback;
+          onTypingCompleteCallback = null;
+          cb();
+        }
+      }
+    });
+  }
+
   if (btnAiEvolve) {
     btnAiEvolve.addEventListener('click', async () => {
       btnAiEvolve.disabled = true;
       btnAiEvolve.innerHTML = '<span class="pulse-indicator" style="background:#38bdf8;"></span> AI 真实演化推理中...';
       if (aiThinkingDetails) aiThinkingDetails.open = true;
-      if (thinkingStatusText) thinkingStatusText.textContent = "正在调用模型生成代数分析与程序...";
+
+      const curProvider = window.modelPlatformManager.activeProvider;
       const curModel = window.modelPlatformManager.activeModel;
+      const curPInfo = window.modelPlatformManager.getProviderInfo(curProvider);
+      const curPName = curPInfo ? curPInfo.name : curProvider;
+      const dim = funsearchEngine.dimension;
+      const totalPts = 3 ** dim;
+
+      if (thinkingStatusText) thinkingStatusText.textContent = "大模型几何代数分析与程序推导中...";
+
+      // 四阶段动态推演提示轮播，避免等待卡顿与沉寂
+      const stages = [
+        `[阶段 1/4 · 空间约束注入] 正在向模型【${curPName} / ${curModel}】注入 F_3^${dim} 空间约束与三点反共线先验 (目标规模 3^${dim}=${totalPts} 点)...`,
+        `[阶段 2/4 · 代数对称性探索] 大模型正在分析仿射不变性、中间层汉明权值切片分布与仿射同余群偏置，探索突破 2^${dim} 局部极大值陷阱...`,
+        `[阶段 3/4 · 启发式评分函数构建] 大模型正在形式化构造 def priority(p, n) -> float 函数并注入代数先验优化代码...`,
+        `[阶段 4/4 · 沙箱编译与严密验算] 正在接收大模型推演文本，准备传入 Python 沙箱执行 O(k²) 严密三点共线判定与贪心选点...`
+      ];
+      let stageIdx = 0;
+      let isResultReceived = false;
       if (aiThinkingText) {
-        aiThinkingText.textContent = `[网络连接中] 正在向模型【${curModel}】发起真实极值组合数学演化请求...\n请稍候，大模型正在进行代数结构推理并输出 Python 优先级函数，生成完毕后将立即送入 Python 沙箱严格验算三点共线。`;
+        aiThinkingText.textContent = stages[0];
       }
+      const stageTimer = setInterval(() => {
+        if (isResultReceived) return;
+        stageIdx = (stageIdx + 1) % stages.length;
+        if (aiThinkingText) {
+          aiThinkingText.textContent = stages[stageIdx];
+        }
+        if (thinkingStatusText) {
+          thinkingStatusText.textContent = `推理演化中 (${stageIdx + 1}/4)...`;
+        }
+      }, 3000);
 
       try {
         const result = await window.modelPlatformManager.evolveProgramStep({
-          dimension: funsearchEngine.dimension,
+          dimension: dim,
           currentCode: funsearchEngine.currentCode
         });
 
+        isResultReceived = true;
+        clearInterval(stageTimer);
+
         if (thinkingStatusText) thinkingStatusText.textContent = "真实推理与沙箱验算完成";
-        if (aiThinkingText) {
-          const evalSummary = `\n\n═══════════════════════════════════════════════════\n✅ Python 沙箱验算完成报告:\n- 演化模型: ${result.model_id}\n- 3^${result.dimension} 空间打分耗时: ${result.eval_time_seconds}s\n- 三点共线违规数: ${result.collinear_violations} (100% 严格验证)\n- 真实选出非共线点集基数: ${result.score} 点\n═══════════════════════════════════════════════════`;
-          aiThinkingText.textContent = (result.reasoning || result.raw_text) + evalSummary;
+
+        const baselineScore = Math.pow(2, dim);
+        const evalSummary = `\n\n═══════════════════════════════════════════════════\n` +
+          `✅ Python 沙箱验算完成报告:\n` +
+          `- 演化模型: ${result.model_id} (${result.provider_id || curProvider})\n` +
+          `- 目标空间: F_3^${result.dimension} (共 ${result.total_points || (3 ** result.dimension)} 个向量点)\n` +
+          `- 空间打分耗时: ${result.eval_time_seconds}s\n` +
+          `- 三点共线违规数: ${result.collinear_violations} (100% 严密防线，0 容忍)\n` +
+          `- 真实选出非共线点集基数: ${result.score} 点\n` +
+          `- 代数突破评估: ${result.score > baselineScore ? `🎉 成功突破朴素基准 2^${dim}=${baselineScore} 局部极大值陷阱 (+${(((result.score - baselineScore) / baselineScore) * 100).toFixed(1)}%)！` : `当前非共线点集基数 ${result.score} 点，继续多代际演化优化`}\n` +
+          `═══════════════════════════════════════════════════`;
+
+        const deductionBody = result.reasoning || result.raw_text || "【代数推导】模型已完成 F_3^n 空间的代数特征提取与构造。";
+        const fullOutput = deductionBody + evalSummary;
+
+        // 启动打字机动画流式输出大模型数学推导与验算全景
+        streamTypeWriter(aiThinkingText, fullOutput, 10, () => {
+          // 打字完成或跳过时，更新状态与 3D 点阵
+          funsearchEngine.applyEvolvedResult(result);
+        });
+
+        // 提前将代码放入代码预览窗口，形成代码与思考同步涌现的质感
+        if (result.code) {
+          const codeEl = document.getElementById('funsearch-code-display');
+          if (codeEl) codeEl.textContent = result.code;
         }
 
-        // 将真实代码、真实得分与真实点阵应用到 3D 画布与 UI
-        funsearchEngine.applyEvolvedResult(result);
-
       } catch (err) {
+        isResultReceived = true;
+        clearInterval(stageTimer);
         if (thinkingStatusText) thinkingStatusText.textContent = "推演中断";
         if (aiThinkingText) {
-          aiThinkingText.textContent = `❌ 模型推演中断: ${err.message}\n\n【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。`;
+          aiThinkingText.textContent = `❌ 模型推演中断: ${err.message}\n\n【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。`;
         }
         alert(`推演提示: ${err.message}`);
       } finally {

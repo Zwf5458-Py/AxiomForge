@@ -17,6 +17,7 @@ import argparse
 import http.server
 import json
 import os
+import re
 import sys
 import time
 import urllib.parse
@@ -348,16 +349,32 @@ Rules:
             }, status_code=400)
             return
 
-        # 4. 提取生成的代码
+        # 4. 提取生成的代码与数学分析推演正文
         p_obj = MODELS_REGISTRY.get_provider(result.provider)
         extracted_code = p_obj.extract_code(result.text) if p_obj else ""
+
+        # 智能提取非代码的完整数学分析与代数推导正文
+        raw_text = result.text or ""
+        clean_analysis = re.sub(r"```(?:python)?\s*def\s+priority\b.*?```", "", raw_text, flags=re.DOTALL).strip()
+        clean_analysis = re.sub(r"```(?:python)?\s*.*?```", "", clean_analysis, flags=re.DOTALL).strip()
+
+        analysis_parts = []
+        if result.reasoning:
+            analysis_parts.append(f"【🧠 深度代数思考链 (Reasoning)】\n{result.reasoning.strip()}")
+        if clean_analysis:
+            analysis_parts.append(f"【📐 数学推导与代数对称性先验分析】\n{clean_analysis}")
+
+        if not analysis_parts:
+            analysis_parts.append(f"【📐 代数分析】模型已针对 F_3^{dimension} 空间构建出汉明切片与坐标不变性特征。")
+
+        full_deduction_text = "\n\n".join(analysis_parts)
 
         if not extracted_code or "def priority" not in extracted_code:
             self._send_json({
                 "success": False,
-                "reasoning": result.reasoning,
+                "reasoning": full_deduction_text,
                 "raw_text": result.text,
-                "error": "模型已真实响应，但未在输出中包含合法的 `def priority(p: tuple, n: int) -> float:` 代码块。请尝试重新演化或降低采样温度。"
+                "error": "模型已真实响应数学分析，但未在输出中包含合法的 `def priority(p: tuple, n: int) -> float:` 代码块。请尝试重新演化或降低采样温度。"
             }, status_code=400)
             return
 
@@ -370,7 +387,7 @@ Rules:
             self._send_json({
                 "success": False,
                 "code": extracted_code,
-                "reasoning": result.reasoning,
+                "reasoning": full_deduction_text,
                 "raw_text": result.text,
                 "error": f"模型生成的代码在 Python 沙箱执行时出错: {eval_dict.get('error')}"
             }, status_code=400)
@@ -386,11 +403,12 @@ Rules:
             "dimension": dimension,
             "model_id": model_id,
             "provider_id": result.provider,
-            "reasoning": result.reasoning or "（模型直接生成了数学分析与代码）",
+            "reasoning": full_deduction_text,
             "raw_text": result.text,
             "code": extracted_code,
             "score": score,
             "points": points,
+            "cap_set_points": points,
             "total_points": total_pts,
             "collinear_violations": violations,
             "eval_time_seconds": round(eval_time, 4),

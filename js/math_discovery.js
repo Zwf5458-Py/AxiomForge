@@ -297,7 +297,7 @@ class MultiDimCapSetVisualizer {
     this.isEvolved = true;
     this.evolvedModel = data.model_id;
     this.currentCode = data.code;
-    this.selectedPoints = data.points || [];
+    this.selectedPoints = (data.points && data.points.length > 0) ? data.points : (data.cap_set_points || []);
     this.lastEvalResult = {
       score: data.score,
       evalTime: data.eval_time_seconds || 0.001,
