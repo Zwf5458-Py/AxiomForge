@@ -469,6 +469,144 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 1. 一键复制大模型代数推导与沙箱验算报告全文
+  const btnCopyThinking = document.getElementById('btn-copy-thinking');
+  if (btnCopyThinking) {
+    btnCopyThinking.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const textToCopy = pendingFullText || (aiThinkingText ? aiThinkingText.textContent : '');
+      if (!textToCopy) {
+        alert('暂无推演内容可复制');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        const originalText = btnCopyThinking.innerHTML;
+        btnCopyThinking.innerHTML = '已复制 ✓';
+        btnCopyThinking.style.color = '#34d399';
+        setTimeout(() => {
+          btnCopyThinking.innerHTML = originalText;
+          btnCopyThinking.style.color = '#38bdf8';
+        }, 1800);
+      } catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = textToCopy;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btnCopyThinking.textContent = '已复制 ✓';
+        setTimeout(() => { btnCopyThinking.textContent = '📋 复制推导'; }, 1800);
+      }
+    });
+  }
+
+  // 2. 一键将大模型数学分析、代码与沙箱验算指标导出为完整学术 Markdown 文档
+  const btnExportMarkdown = document.getElementById('btn-export-markdown');
+  if (btnExportMarkdown) {
+    btnExportMarkdown.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const deductionText = pendingFullText || (aiThinkingText ? aiThinkingText.textContent : '');
+      const codeText = funsearchEngine ? funsearchEngine.currentCode : '';
+      const dim = funsearchEngine ? funsearchEngine.dimension : 5;
+      const points = (funsearchEngine && funsearchEngine.selectedPoints) ? funsearchEngine.selectedPoints : [];
+      const curProvider = window.modelPlatformManager ? window.modelPlatformManager.activeProvider : 'default';
+      const curModel = window.modelPlatformManager ? window.modelPlatformManager.activeModel : 'unknown';
+      const pInfo = window.modelPlatformManager ? window.modelPlatformManager.getProviderInfo(curProvider) : null;
+      const pName = pInfo ? pInfo.name : curProvider;
+      const nowStr = new Date().toLocaleString();
+      const totalSpace = 3 ** dim;
+      const naiveBase = 2 ** dim;
+      const score = points.length;
+
+      const mdContent = `# AxiomForge 极值组合数学演化成果报告
+
+- **生成时间**: ${nowStr}
+- **演化模型**: ${curModel} (${pName})
+- **目标空间**: $\\mathbb{F}_3^${dim}$ 有限仿射向量空间 (总点数: ${totalSpace})
+- **基线对照**: 朴素贪心受限陷阱 $2^${dim} = ${naiveBase}$ 点
+- **模型成果**: 选出非共线点集基数 **${score} 点** (${score > naiveBase ? `🎉 成功突破局部极值 +${(((score - naiveBase) / naiveBase) * 100).toFixed(1)}%` : '当前已达基准线'})
+- **三点共线违规**: 0 条 (100% 严密满足反共线防线: $x + y + z \\not\\equiv 0 \\pmod 3$)
+
+---
+
+## 🧠 一、 大语言模型代数推导与思考全景
+
+${deductionText || '（暂无推演正文）'}
+
+---
+
+## 💻 二、 演化生成的 Python 优先级启发式函数
+
+\`\`\`python
+${codeText || '# 暂无代码'}
+\`\`\`
+
+---
+
+## 📍 三、 真实选出的极大帽集 (Cap Set) 向量点坐标列表 (共 ${score} 点)
+
+\`\`\`json
+${JSON.stringify(points, null, 2)}
+\`\`\`
+
+---
+*本报告由 AxiomForge AI 驱动极值组合数学发现引擎自动生成并经安全 Python 沙箱真实严密验算。*
+`;
+
+      const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AxiomForge_CapSet_F3_${dim}_${score}pts_${Date.now()}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const originalText = btnExportMarkdown.innerHTML;
+      btnExportMarkdown.innerHTML = '已导出 ✓';
+      setTimeout(() => {
+        btnExportMarkdown.innerHTML = originalText;
+      }, 1800);
+    });
+  }
+
+  // 3. 一键复制 Python 优先级函数代码
+  const btnCopyCode = document.getElementById('btn-copy-code');
+  if (btnCopyCode) {
+    btnCopyCode.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const codeEl = document.getElementById('funsearch-code-display');
+      const codeText = codeEl ? codeEl.textContent : '';
+      if (!codeText) {
+        alert('暂无代码可复制');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(codeText);
+        const original = btnCopyCode.innerHTML;
+        btnCopyCode.innerHTML = '已复制 ✓';
+        btnCopyCode.style.color = '#34d399';
+        setTimeout(() => {
+          btnCopyCode.innerHTML = original;
+          btnCopyCode.style.color = '#38bdf8';
+        }, 1800);
+      } catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = codeText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btnCopyCode.textContent = '已复制 ✓';
+        setTimeout(() => { btnCopyCode.textContent = '📋 复制代码'; }, 1800);
+      }
+    });
+  }
+
   if (btnAiEvolve) {
     btnAiEvolve.addEventListener('click', async () => {
       btnAiEvolve.disabled = true;

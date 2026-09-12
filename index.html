@@ -174,22 +174,7 @@
       <div class="canvas-wrapper">
         <canvas id="funsearch-canvas" class="render-canvas"></canvas>
 
-        <!-- 浮动信息条 (HUD) -->
-        <div class="hud-overlay">
-          <div class="hud-pill">
-            <span class="pulse-indicator" style="background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
-            <span>目标空间：<strong id="hud-target-space">F_3^5 五维空间 (243 点)</strong></span>
-          </div>
-          <div class="hud-pill">
-            <span class="hud-tag" style="background: rgba(234, 179, 8, 0.2); color: #fef08a;">PoW 验证</span>
-            <span>三点共线：<strong id="hud-collinear-stat">100% 严格无共线 (0 条线)</strong></span>
-          </div>
-          <div class="hud-pill">
-            <span class="hud-tag" id="funsearch-improvement-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: bold;">突破局部陷阱 +18.75%</span>
-          </div>
-        </div>
-
-        <!-- 画面顶部快捷：维度切换与投影模式工具条 -->
+        <!-- 画面顶部快捷：维度切换与投影模式工具条 (首层顶级控制台) -->
         <div class="funsearch-top-toolbar">
           <div class="dim-selector-group">
             <span class="toolbar-label">探索空间:</span>
@@ -204,6 +189,21 @@
             <span class="toolbar-label">高维投影:</span>
             <button class="proj-pill-btn active" data-mode="hypersphere">超球拓扑投影</button>
             <button class="proj-pill-btn" data-mode="slices">3D 切片阵列</button>
+          </div>
+        </div>
+
+        <!-- 浮动信息条 (HUD，水平排列在工具栏正下方，绝无任何遮挡与重叠) -->
+        <div class="hud-overlay funsearch-hud-row">
+          <div class="hud-pill">
+            <span class="pulse-indicator" style="background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
+            <span>目标空间：<strong id="hud-target-space">F_3^5 五维空间 (243 点)</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag" style="background: rgba(234, 179, 8, 0.2); color: #fef08a;">PoW 验证</span>
+            <span>三点共线：<strong id="hud-collinear-stat">100% 严格无共线 (0 条线)</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag" id="funsearch-improvement-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: bold;">突破局部陷阱 +18.75%</span>
           </div>
         </div>
 
@@ -470,8 +470,12 @@
             </div>
             <details id="ai-thinking-details" open style="margin-top: 6px;">
               <summary style="color: #f59e0b; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-                <span>🧠 大模型代数分析与推演全景 (<span id="thinking-status-text">就绪</span>)</span>
-                <button type="button" id="btn-skip-typing" style="display: none; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.6); color: #fef08a; padding: 2px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: normal; transition: all 0.2s ease;">⚡ 立即展开全部</button>
+                <span>🧠 大模型代数推演全景 (<span id="thinking-status-text">就绪</span>)</span>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <button type="button" id="btn-skip-typing" style="display: none; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.6); color: #fef08a; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: normal;" title="跳过打字动画立即展示全文">⚡ 展开</button>
+                  <button type="button" id="btn-copy-thinking" class="btn-tool-link" style="font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="一键复制大模型代数推导与沙箱验算报告全文">📋 复制推导</button>
+                  <button type="button" id="btn-export-markdown" class="btn-tool-link" style="font-size: 10px; color: #34d399; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="将大模型数学分析、代码与沙箱验算指标导出为完整学术 Markdown 文档">📥 导出报告</button>
+                </div>
               </summary>
               <pre id="ai-thinking-text" style="background: rgba(0,0,0,0.65); border: 1px solid rgba(245,158,11,0.25); padding: 10px; border-radius: 6px; color: #e2e8f0; font-size: 11px; white-space: pre-wrap; margin-top: 6px; max-height: 260px; overflow-y: auto; line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">点击“AI 大模型生成演化”将向当前配置的模型发起真实请求，由模型实时推理并生成代数分析与代码，并在 Python 沙箱中完成严格三点共线验算。系统坚决杜绝任何未经模型真实推演的预定结果。</pre>
             </details>
@@ -481,7 +485,12 @@
             </div>
           </div>
 
-          <div class="section-title" id="title-code-display" style="margin-top: 12px;">当前运行的 Python 优先级函数</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 4px;">
+            <div class="section-title" id="title-code-display" style="margin: 0;">当前运行的 Python 优先级函数</div>
+            <button type="button" id="btn-copy-code" class="btn-tool-link" style="font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="复制 Python priority 优先级函数代码">
+              📋 复制代码
+            </button>
+          </div>
           <pre id="funsearch-code-display" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 12px; font-size: 11px; color: #38bdf8; overflow-x: auto; font-family: monospace; line-height: 1.4; max-height: 180px;"></pre>
         </div>
       </div>

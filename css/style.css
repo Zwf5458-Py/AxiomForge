@@ -649,18 +649,44 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
 }
 
-/* 视窗顶部维度切换工具条 */
+/* 视窗顶部维度切换工具条 (首层顶级控制台) */
 .funsearch-top-toolbar {
   position: absolute;
-  top: 60px;
-  left: 20px;
-  right: 20px;
-  z-index: 15;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  z-index: 20;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+/* FunSearch 视窗浮动 HUD (次层状态栏，水平横向展开，彻底消除纵向遮挡与重叠) */
+#view-funsearch .hud-overlay {
+  position: absolute;
+  top: 54px;
+  left: 16px;
+  right: auto;
+  z-index: 15;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+#view-funsearch .hud-pill {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   pointer-events: auto;
 }
 
