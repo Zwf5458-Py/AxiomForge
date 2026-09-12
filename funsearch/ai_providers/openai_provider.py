@@ -31,7 +31,11 @@ class OpenAICompatibleProvider(BaseProvider):
     def _build_headers(self, auth: Optional[ProviderAuth], extra_headers: Optional[Dict[str, str]] = None) -> Dict[str, str]:
         headers = {
             "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            "Sec-Ch-Ua": '"Chromium";v="128", "Not;A=Brand";v="24"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"macOS"'
         }
         headers.update(self.default_headers)
         if auth and auth.headers:
@@ -110,6 +114,20 @@ class OpenAICompatibleProvider(BaseProvider):
                     ),
                     raw_response=data
                 )
+        except urllib.error.HTTPError as he:
+            err_detail = ""
+            try:
+                raw_err = he.read().decode("utf-8", errors="ignore")
+                err_json = json.loads(raw_err)
+                if "error" in err_json:
+                    err_obj = err_json["error"]
+                    err_detail = err_obj.get("message", str(err_obj)) if isinstance(err_obj, dict) else str(err_obj)
+                else:
+                    err_detail = raw_err[:200]
+            except Exception:
+                err_detail = str(he)
+            detail_str = f" - {err_detail}" if err_detail else ""
+            raise RuntimeError(f"[{self.name}] API 请求失败: HTTP {he.code} {he.reason}{detail_str}")
         except Exception as e:
             raise RuntimeError(f"[{self.name}] API 请求失败: {e}")
 

@@ -281,7 +281,7 @@ class ModelPlatformManager {
   }
 
   /**
-   * 测试连接与鉴权 (真实模型响应与延迟测试)
+   * 测试连接与鉴权 (双轨连通性测试：浏览器直通 + 后端中转双保险)
    */
   async checkConnection(providerId, apiKey, baseUrl, selectedModel) {
     if (providerId === 'mock') {
@@ -291,8 +291,58 @@ class ModelPlatformManager {
     const pInfo = this.getProviderInfo(providerId);
     const pName = pInfo ? pInfo.name : providerId;
 
-    // 1. 如果用户已选定了具体模型，优先向后端发起对该模型的真实 ping 探测
+    // 1. 如果用户已选定了具体模型，优先进行双轨真实 ping 探测
     if (selectedModel && selectedModel !== 'custom-default') {
+      // 轨道 A: 优先尝试浏览器原生 fetch 直接探测 (100% 免疫 Cloudflare 爬虫拦截，利用端点已开放的 CORS)
+      if (baseUrl && baseUrl.startsWith('http')) {
+        let chatUrl = baseUrl.replace(/\/+$/, '');
+        if (!chatUrl.endsWith('/chat/completions')) {
+          chatUrl = `${chatUrl}/chat/completions`;
+        }
+        try {
+          const t0 = performance.now();
+          const directHeaders = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          };
+          if (apiKey) directHeaders['Authorization'] = `Bearer ${apiKey}`;
+
+          const directResp = await fetch(chatUrl, {
+            method: 'POST',
+            headers: directHeaders,
+            body: JSON.stringify({
+              model: selectedModel,
+              messages: [{ role: 'user', content: "Hello! Reply 'OK' to test connectivity." }],
+              max_tokens: 15,
+              temperature: 0.1
+            })
+          });
+
+          const latencySec = ((performance.now() - t0) / 1000).toFixed(2);
+          if (directResp.ok) {
+            const data = await directResp.json();
+            const reply = data.choices?.[0]?.message?.content || 'OK';
+            const snippet = reply.trim().replace(/\n/g, ' ').substring(0, 30);
+            return {
+              ok: true,
+              message: `✅ 模型【${selectedModel}】连通测试成功！响应延迟: ${latencySec}s | 回复: "${snippet}"`,
+              latency: parseFloat(latencySec)
+            };
+          } else {
+            // 详细提取服务端返回的错误信息
+            const errJson = await directResp.json().catch(() => null);
+            const errMsg = errJson?.error?.message || errJson?.error || directResp.statusText;
+            return {
+              ok: false,
+              message: `❌ 模型【${selectedModel}】调用失败: HTTP ${directResp.status} - ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`
+            };
+          }
+        } catch (directErr) {
+          console.warn('浏览器直连探测遇到跨域或网络中断，无缝降级走本地后端中转探测:', directErr);
+        }
+      }
+
+      // 轨道 B: 降级走本地后端中转探测 (已伪装完整标准浏览器请求头)
       try {
         const res = await fetch('/api/providers/check', {
           method: 'POST',
