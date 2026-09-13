@@ -217,6 +217,49 @@
           </div>
         </div>
 
+        <!-- 主图框：大模型推演成果与代数洞察悬浮看板 (演化完成后主窗口高亮展示) -->
+        <div id="funsearch-evolution-hero" class="funsearch-hero-card" style="display: none;">
+          <div class="hero-header">
+            <div class="hero-title-group">
+              <span class="pulse-indicator" style="background: #10b981;"></span>
+              <strong id="hero-model-badge">AI Evolved Model Result</strong>
+            </div>
+            <button id="btn-close-hero" class="hero-close-btn" title="Hide Card">✕</button>
+          </div>
+          <div class="hero-body">
+            <div class="hero-metrics-row">
+              <div class="hero-metric-item">
+                <span class="hero-metric-label" data-i18n="hero_metric_score">Cap Set Cardinality</span>
+                <span class="hero-metric-val" id="hero-score-val" style="color: #fde047;">36 / 45 pts</span>
+              </div>
+              <div class="hero-metric-item">
+                <span class="hero-metric-label" data-i18n="hero_metric_gain">Algebraic Gain</span>
+                <span class="hero-metric-val" id="hero-gain-val" style="color: #34d399;">+12.5% (Break 2ⁿ)</span>
+              </div>
+              <div class="hero-metric-item">
+                <span class="hero-metric-label" data-i18n="hero_metric_latency">Latency Breakdown</span>
+                <span class="hero-metric-val" id="hero-latency-val" style="color: #38bdf8;">LLM 2.15s + CPU 0.002s</span>
+              </div>
+            </div>
+            <div class="hero-insight-box">
+              <div class="hero-insight-header">
+                <span data-i18n="hero_insight_title">🧠 Key Algebraic Insight Discovered:</span>
+              </div>
+              <div id="hero-insight-text" class="hero-insight-content">
+                Intermediate Hamming slice combined with affine modulo-3 invariant. Zero collinear violations verified in isolated sandbox.
+              </div>
+            </div>
+            <div class="hero-footer-actions">
+              <button id="hero-btn-view-reasoning" class="btn-hero-action primary" data-i18n="hero_btn_view_reasoning">
+                🔍 View Full Reasoning Chain
+              </button>
+              <button id="hero-btn-copy-report" class="btn-hero-action secondary" data-i18n="hero_btn_copy_report">
+                📋 Copy Markdown Report
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- 底部快捷操作 -->
         <div class="canvas-bottom-controls">
           <button class="quick-action-btn" id="btn-fast-deduction" data-i18n-title="btn_fast_deduction_title" title="Quickly evaluate deterministic heuristic in Python sandbox">

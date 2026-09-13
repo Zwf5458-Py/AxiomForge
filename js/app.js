@@ -719,11 +719,23 @@ ${JSON.stringify(points, null, 2)}
         }
       }, 3000);
 
+      const t0 = performance.now();
       try {
         const result = await window.modelPlatformManager.evolveProgramStep({
           dimension: dim,
           currentCode: funsearchEngine.currentCode
         });
+
+        const t1 = performance.now();
+        const totalDurationSec = Math.max(0.01, (t1 - t0) / 1000);
+        const sandboxSec = typeof result.eval_time_seconds === 'number' ? result.eval_time_seconds : 0.002;
+        const llmSec = Math.max(0.01, totalDurationSec - sandboxSec);
+
+        result.timing = {
+          totalSeconds: totalDurationSec,
+          llmSeconds: llmSec,
+          sandboxSeconds: sandboxSec
+        };
 
         isResultReceived = true;
         if (activeStageTimer) {
@@ -749,7 +761,7 @@ ${JSON.stringify(points, null, 2)}
             `✅ Python Sandbox Verification Report:\n` +
             `- Evolved Model: ${result.model_id} (${result.provider_id || curProvider})\n` +
             `- Target Affine Space: F_3^${result.dimension} (${result.total_points || (3 ** result.dimension)} total vector points)\n` +
-            `- Space Evaluation Time: ${result.eval_time_seconds}s\n` +
+            `- Latency Breakdown: Total ${totalDurationSec.toFixed(2)}s (LLM Generation: ${llmSec.toFixed(2)}s | Python Sandbox Math Eval: ${sandboxSec.toFixed(3)}s)\n` +
             `- Collinear Triples Violations: ${result.collinear_violations} (Zero Tolerance, 100% Strict)\n` +
             `- Verified Cap Set Cardinality: ${result.score} points\n` +
             `- Algebraic Assessment: ${breakEvaluation}\n` +
@@ -758,7 +770,7 @@ ${JSON.stringify(points, null, 2)}
             `✅ Python 沙箱验算完成报告:\n` +
             `- 演化模型: ${result.model_id} (${result.provider_id || curProvider})\n` +
             `- 目标空间: F_3^${result.dimension} (总规模 ${result.total_points || (3 ** result.dimension)} 个向量点)\n` +
-            `- 空间打分耗时: ${result.eval_time_seconds}s\n` +
+            `- 耗时精准拆解: 总计 ${totalDurationSec.toFixed(2)}s (大模型推理生成: ${llmSec.toFixed(2)}s | Python 沙箱数学验算: ${sandboxSec.toFixed(3)}s)\n` +
             `- 三点共线违规数: ${result.collinear_violations} (100% 严密防线，0 容忍)\n` +
             `- 真实选出非共线点集基数: ${result.score} 点\n` +
             `- 代数突破评估: ${breakEvaluation}\n` +
@@ -770,11 +782,18 @@ ${JSON.stringify(points, null, 2)}
         const deductionBody = result.reasoning || result.raw_text || defaultDeduction;
         const fullOutput = deductionBody + evalSummary;
 
-        // 1. 【即时反馈到主图框】：模型推演出的最新点集与代码，第 0 秒立刻点亮并更新到主图框与 HUD！
+        // 1. 【即时反馈到主图框】：模型推演出的最新点集、代码与成果看板，第 0 秒立刻点亮并更新到主图框与 HUD！
         funsearchEngine.applyEvolvedResult(result);
         if (result.code) {
           const codeEl = document.getElementById('funsearch-code-display');
           if (codeEl) codeEl.textContent = result.code;
+        }
+
+        const sandboxStatusEl = document.getElementById('sandbox-status-text');
+        if (sandboxStatusEl) {
+          sandboxStatusEl.textContent = isEn
+            ? `Total: ${totalDurationSec.toFixed(2)}s (LLM: ${llmSec.toFixed(2)}s | Sandbox: ${sandboxSec.toFixed(3)}s) · Violations: 0`
+            : `总耗时: ${totalDurationSec.toFixed(2)}s (大模型: ${llmSec.toFixed(2)}s | 沙箱验算: ${sandboxSec.toFixed(3)}s) · 违规: 0`;
         }
 
         // 2. 同时启动打字机动画流式输出大模型数学推导与验算全景

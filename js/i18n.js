@@ -224,7 +224,17 @@
       funsearch_sandbox_result: 'Sandbox: {time}s | Collinear violations: {violations} (100% Verified)',
       funsearch_target_desc: '【Exploration Target: F_3^{dim} Space ({count} Points)】\n- Theoretical Max: {known} pts | Naive Trap: 2^{dim} = {baseline} pts\n\nClick [Evolve via AI Model] below to dispatch a combinatorial reasoning request. The model will analyze Hamming slices and modular invariants, with strict collinearity verification in a Python sandbox.',
       funsearch_err_failed: '❌ Model generation unsuccessful: {err}\n\n{guidance}',
-      funsearch_err_guidance: '【Academic Rigor Note】: The system refuses to display pre-baked results without authentic model computation and sandbox verification.\nFor an instant offline experience, switch to the Reproducible Mock engine in Model Platform settings.'
+      funsearch_err_guidance: '【Academic Rigor Note】: The system refuses to display pre-baked results without authentic model computation and sandbox verification.\nFor an instant offline experience, switch to the Reproducible Mock engine in Model Platform settings.',
+
+      // 主窗口推演成果浮层看板
+      hero_metric_score: 'Cap Set Cardinality',
+      hero_metric_gain: 'Algebraic Gain',
+      hero_metric_latency: 'Latency Breakdown',
+      hero_insight_title: '🧠 Key Algebraic Insight Discovered:',
+      hero_btn_view_reasoning: '🔍 View Full Reasoning Chain',
+      hero_btn_copy_report: '📋 Copy Markdown Report',
+      hero_title_prefix: 'AI Model Evolution Result',
+      hero_latency_detail: 'LLM {llm}s + CPU {sandbox}s (Total {total}s)'
     },
 
     zh: {
@@ -441,7 +451,17 @@
       funsearch_sandbox_result: '沙箱验算: 耗时 {time}s | 三点共线违规: {violations} (100% 严格验证)',
       funsearch_target_desc: '【当前探索目标：F_3^{dim} 空间 (共 {count} 点)】\n- 已知理论极值: {known} 点 | 朴素贪心受限陷阱: 2^{dim} = {baseline} 点\n\n点击下方【AI 大模型生成演化】，将向配置的模型发起 {dim} 维极值组合推演请求，大模型将分析汉明切片与仿射同余不变性，并在 Python 沙箱中完成严格三点共线验算。',
       funsearch_err_failed: '❌ 模型推演未成功: {err}\n\n{guidance}',
-      funsearch_err_guidance: '【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。'
+      funsearch_err_guidance: '【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。',
+
+      // 主窗口推演成果浮层看板
+      hero_metric_score: '有效帽集点数',
+      hero_metric_gain: '代数增益评估',
+      hero_metric_latency: '耗时明细拆解',
+      hero_insight_title: '🧠 大模型提炼的核心代数特征:',
+      hero_btn_view_reasoning: '🔍 展开完整推导思考链',
+      hero_btn_copy_report: '📋 复制推演报告',
+      hero_title_prefix: '大模型推演成果',
+      hero_latency_detail: '模型推理 {llm}s + 沙箱验算 {sandbox}s (总计 {total}s)'
     }
   };
 
