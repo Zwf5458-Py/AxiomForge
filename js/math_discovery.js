@@ -447,26 +447,28 @@ class MultiDimCapSetVisualizer {
       }
     }
 
-    // 4. 耗时拆解 (清晰呈现大模型生成与 CPU 沙箱验算耗时)
+    // 4. 耗时拆解 (清晰呈现大模型生成与沙箱验算耗时，无多余英文)
     const latencyVal = document.getElementById('hero-latency-val');
     if (latencyVal) {
       if (data.timing) {
-        const llm = data.timing.llmSeconds.toFixed(2);
+        const llm = data.timing.llmSeconds.toFixed(1);
         const cpu = data.timing.sandboxSeconds.toFixed(3);
-        latencyVal.textContent = isEn ? `LLM ${llm}s + CPU ${cpu}s` : `大模型 ${llm}s + CPU ${cpu}s`;
+        latencyVal.textContent = isEn ? `LLM ${llm}s | Sandbox ${cpu}s` : `模型 ${llm}s | 沙箱 ${cpu}s`;
       } else {
         const cpu = (data.eval_time_seconds || 0.002).toFixed(3);
-        latencyVal.textContent = isEn ? `CPU Sandbox ${cpu}s` : `CPU 沙箱 ${cpu}s`;
+        latencyVal.textContent = isEn ? `Sandbox ${cpu}s` : `沙箱验算 ${cpu}s`;
       }
     }
 
-    // 5. 核心代数特征提取
+    // 5. 核心代数特征提取 (滤除内部自愈报错日志，保留纯粹代数推导精髓)
     const insightText = document.getElementById('hero-insight-text');
     if (insightText) {
       let insight = "";
       const rawText = data.reasoning || data.raw_text || "";
       if (rawText) {
         const cleaned = rawText
+          .replace(/【🔧\s*代码语法自动自愈说明】[\s\S]*?(?=【|$)/g, '')
+          .replace(/\[🔧\s*Code auto-healing notice\][\s\S]*?(?=\[|$)/gi, '')
           .replace(/<think>[\s\S]*?<\/think>/gi, '')
           .replace(/```[\s\S]*?```/g, '')
           .replace(/^[#\-*>\s]+/gm, '')

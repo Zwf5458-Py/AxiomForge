@@ -898,9 +898,9 @@ ${JSON.stringify(points, null, 2)}
     ctx.fillStyle = '#64748b';
     ctx.font = '9px monospace';
     ctx.fillText(`${Math.round(maxScore)}`, 4, padTop + 8);
-    ctx.fillText(`${Math.round(minScore)}`, 4, h - padBottom);
-    ctx.fillText(`Gen 1`, padLeft, h - 6);
-    ctx.fillText(`Gen ${history.generations.length}`, w - 40, h - 6);
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
+    ctx.fillText(isEn ? 'Gen 1' : '第 1 代', padLeft, h - 6);
+    ctx.fillText(isEn ? `Gen ${history.generations.length}` : `第 ${history.generations.length} 代`, w - (isEn ? 40 : 50), h - 6);
 
     function getX(i) {
       return padLeft + (i / (history.generations.length - 1)) * plotW;

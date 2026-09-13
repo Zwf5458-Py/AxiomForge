@@ -18,7 +18,7 @@
       // 模式切换选项卡
       tab_koch: 'Koch Snowflake · Self-Similarity',
       tab_mandelbrot: 'Mandelbrot · Complex Dynamics',
-      tab_funsearch: 'AI Math Discovery · Cap Set',
+      tab_funsearch: 'Cap Set · Program Evolution',
 
       // 顶部导航按钮
       btn_model_settings: 'AI Model Platform',
@@ -111,7 +111,7 @@
       funsearch_proj_sphere: 'Hypersphere Topology',
       funsearch_proj_slices: '3D Array Slices',
       funsearch_target_space_label: 'Target Space: ',
-      funsearch_pow_tag: 'PoW Verification',
+      funsearch_pow_tag: 'Algebraic Verification',
       funsearch_collinear_stat: '100% Collinear Free (0 lines)',
       funsearch_trap_break: 'Break 2ⁿ Local Trap',
       btn_fast_deduction: 'Verify in Sandbox',
@@ -120,7 +120,7 @@
       btn_ai_evolve_title: 'Query configured LLM to synthesize and evolve priority programs',
       btn_reset_benchmark: 'Reset Benchmark',
       btn_reset_benchmark_title: 'Restore known best / breakthrough point set',
-      funsearch_sidebar_pow_title: 'High-Dimensional Space & Proof-of-Work (PoW)',
+      funsearch_sidebar_pow_title: 'High-Dimensional Space & Algebraic Verification',
       funsearch_card_max_score: 'Max Cap Set Cardinality',
       funsearch_card_points_count: 'Cap Set Size',
       funsearch_ab_chart_title: 'A/B Evolutionary Convergence (Breaking 2ⁿ Trap)',
@@ -244,8 +244,8 @@
 
       // 模式切换选项卡
       tab_koch: '科赫雪花 · 几何自相似',
-      tab_mandelbrot: '曼德勃罗集 · 广义高阶动力学',
-      tab_funsearch: 'AI 数学发现 · Cap Set (FunSearch)',
+      tab_mandelbrot: '曼德勃罗 · 复杂动力学',
+      tab_funsearch: '极值帽集 · 启发式演化',
 
       // 顶部导航按钮
       btn_model_settings: 'AI 模型平台配置',
@@ -338,7 +338,7 @@
       funsearch_proj_sphere: '超球拓扑投影',
       funsearch_proj_slices: '3D 切片阵列',
       funsearch_target_space_label: '目标空间：',
-      funsearch_pow_tag: 'PoW 验证',
+      funsearch_pow_tag: '代数严密验算',
       funsearch_collinear_stat: '100% 严格无共线 (0 条线)',
       funsearch_trap_break: '突破局部陷阱',
       btn_fast_deduction: '启动即时推演',
@@ -347,8 +347,8 @@
       btn_ai_evolve_title: '调用配置的大语言模型平台进行程序变异生成',
       btn_reset_benchmark: '重置基准点',
       btn_reset_benchmark_title: '恢复为已知最佳/突破点集',
-      funsearch_sidebar_pow_title: '高维空间与突破工作量证明 (PoW)',
-      funsearch_card_max_score: 'Cap Set 最大基数',
+      funsearch_sidebar_pow_title: '高维空间与代数严格验算',
+      funsearch_card_max_score: '有效帽集最大基数',
       funsearch_card_points_count: '空间点集规模',
       funsearch_ab_chart_title: 'A/B 对抗演化收敛曲线 (突破 2ⁿ 局部陷阱)',
       funsearch_ab_legend_naive: '对照组 (朴素盲目演化)',
@@ -454,14 +454,14 @@
       funsearch_err_guidance: '【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。',
 
       // 主窗口推演成果浮层看板
-      hero_metric_score: '有效帽集点数',
-      hero_metric_gain: '代数增益评估',
-      hero_metric_latency: '耗时明细拆解',
+      hero_metric_score: '有效帽集基数',
+      hero_metric_gain: '代数突破增益',
+      hero_metric_latency: '推演验算耗时',
       hero_insight_title: '🧠 大模型提炼的核心代数特征:',
       hero_btn_view_reasoning: '🔍 展开完整推导思考链',
       hero_btn_copy_report: '📋 复制推演报告',
       hero_title_prefix: '大模型推演成果',
-      hero_latency_detail: '模型推理 {llm}s + 沙箱验算 {sandbox}s (总计 {total}s)'
+      hero_latency_detail: '模型 {llm}s + 沙箱 {sandbox}s (总计 {total}s)'
     }
   };
 
