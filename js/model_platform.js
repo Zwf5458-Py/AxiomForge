@@ -561,15 +561,23 @@ class ModelPlatformManager {
       if (models && models.length > 0) {
         return {
           ok: true,
-          message: `✅ 平台连通成功！识别到 ${models.length} 个可用模型，请在下方选择模型后点击测试。`,
+          message: isEn
+            ? `✅ Platform connection successful! Detected ${models.length} available models. Please select a model below and test.`
+            : `✅ 平台连通成功！识别到 ${models.length} 个可用模型，请在下方选择模型后点击测试。`,
           models: models
         };
       }
     } catch (fetchErr) {
-      return { ok: false, message: `连接失败: ${fetchErr.message}` };
+      return {
+        ok: false,
+        message: isEn ? `Connection failed: ${fetchErr.message}` : `连接失败: ${fetchErr.message}`
+      };
     }
 
-    return { ok: true, message: '配置已就绪！' };
+    return {
+      ok: true,
+      message: isEn ? 'Configuration ready!' : '配置已就绪！'
+    };
   }
 
   /**
@@ -581,10 +589,14 @@ class ModelPlatformManager {
     const credKey = pInfo ? pInfo.apiKey : '';
     const credBase = pInfo ? pInfo.baseUrl : '';
     const providerName = pInfo ? pInfo.name : this.activeProvider;
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
 
     // 非 Mock 引擎必须检查有效凭证，拒绝虚假结果
     if (this.activeProvider !== 'mock' && !credKey && !credBase) {
-      throw new Error(`当前平台【${providerName}】未配置 API Key 或 Base URL。请点击右上角【AI 模型平台配置】填入真实凭据，或选用 Reproducible Mock 离线引擎。系统拒绝输出未经模型真实计算的虚假结果。`);
+      const msg = isEn
+        ? `Current provider [${providerName}] lacks an API Key or Base URL. Please configure authentic credentials in [AI Model Platform] or switch to Reproducible Mock offline engine. The system refuses to fabricate unverified results.`
+        : `当前平台【${providerName}】未配置 API Key 或 Base URL。请点击右上角【AI 模型平台配置】填入真实凭据，或选用 Reproducible Mock 离线引擎。系统拒绝输出未经模型真实计算的虚假结果。`;
+      throw new Error(msg);
     }
 
     const res = await fetch('/api/funsearch/evolve_step', {
@@ -604,7 +616,8 @@ class ModelPlatformManager {
 
     const data = await res.json();
     if (!res.ok || !data.success) {
-      const err = new Error(data.error || `服务端推演验算失败 (HTTP ${res.status})`);
+      const failMsg = isEn ? `Server execution failed (HTTP ${res.status})` : `服务端推演验算失败 (HTTP ${res.status})`;
+      const err = new Error(data.error || failMsg);
       err.reasoning = data.reasoning;
       err.raw_text = data.raw_text;
       throw err;

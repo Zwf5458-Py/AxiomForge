@@ -174,7 +174,55 @@
       stage_1: 'Phase 1: Loading Hyperplane Constraints & L0 Slices...',
       stage_2: 'Phase 2: Exploring Non-Collinear Symmetries & Modulo Rules...',
       stage_3: 'Phase 3: Synthesizing Python Priority Heuristic Function...',
-      stage_4: 'Phase 4: Python Sandbox Verification & Collision Checking...'
+      stage_4: 'Phase 4: Python Sandbox Verification & Collision Checking...',
+
+      // 曼德勃罗 HUD 与指标
+      mb_orbit_escaped_title: 'Escaping Point (Diverges to ∞ ∉ M)',
+      mb_orbit_escaped_step: 'Escaped at step {step} |z|>4',
+      mb_orbit_bounded_title: 'Bounded Point (Mandelbrot Set ∈ M)',
+      mb_orbit_bounded_step: 'Remains bounded after {step} steps',
+      mb_iter_unit: 'iters',
+      mb_stat_passes_label: 'GPU Parallel Passes',
+
+      // 科赫雪花 HUD 与指标
+      koch_hud_order_progress: 'Order {order} (Growth: {growth}%)',
+      koch_hud_area_diff: 'Diff to theoretical limit 8/5 (1.6): {diff}',
+
+      // 模型配置中心弹窗
+      model_group_builtin: 'Official Built-in Providers',
+      model_group_custom: 'Custom Providers',
+      model_opt_empty: 'No models retrieved (Click auto-fetch or input manually)',
+      model_opt_reasoning: '🧠 (Reasoning Chain)',
+      model_opt_configured: '⭐ {model} (Currently Configured)',
+      model_confirm_delete: 'Are you sure you want to delete custom provider [{name}]?',
+      model_alert_no_base_url: 'Please enter the API Endpoint (Base URL) first.',
+      model_fetch_success: '🎉 Auto-fetch successful! Synced {count} available models and saved. Please select below.',
+      model_fetch_fail: 'Auto-fetch failed: {err} (You can enter model name manually below)',
+      btn_toggle_select_mode: 'Switch to Dropdown Selection',
+      btn_toggle_manual_mode: 'Enter Model Name Manually',
+      btn_testing_response: 'Testing model response...',
+      model_testing_signal: '⏳ Sending probe signal to [{model}], testing end-to-end latency...',
+      model_test_fail: '❌ Probe failed: {err}',
+      model_test_success: '✅ Model [{model}] connected! Latency: {latency}s | Response: "{snippet}"',
+      model_default_custom_name: 'Custom Provider',
+
+      // Cap Set 数学发现
+      funsearch_stat_points: '{count} pts ({pct}%)',
+      funsearch_points_unit: 'pts',
+      funsearch_target_space: 'Target: {dim}D · {count} pts',
+      funsearch_space_label: 'F_3^{dim} Space ({count} pts)',
+      funsearch_total_space: 'Total Space: {count} pts (3^{dim})',
+      funsearch_break_trap: 'Broken 2^{dim}={baseline} Local Trap!',
+      funsearch_trapped: 'Trapped at 2^{dim}={baseline} Local Trap',
+      funsearch_break_gain: 'Break 2^{dim} trap +{gain}% ({model})',
+      funsearch_real_score: 'Score: {count} pts ({model})',
+      funsearch_naive_baseline: 'Naive Baseline (Trapped at 2^{dim}={baseline})',
+      funsearch_ai_priority_title: 'Optimal Priority Function Evolved ({model})',
+      funsearch_baseline_priority_title: 'Active Priority Function (Baseline)',
+      funsearch_sandbox_result: 'Sandbox: {time}s | Collinear violations: {violations} (100% Verified)',
+      funsearch_target_desc: '【Exploration Target: F_3^{dim} Space ({count} Points)】\n- Theoretical Max: {known} pts | Naive Trap: 2^{dim} = {baseline} pts\n\nClick [Evolve via AI Model] below to dispatch a combinatorial reasoning request. The model will analyze Hamming slices and modular invariants, with strict collinearity verification in a Python sandbox.',
+      funsearch_err_failed: '❌ Model generation unsuccessful: {err}\n\n{guidance}',
+      funsearch_err_guidance: '【Academic Rigor Note】: The system refuses to display pre-baked results without authentic model computation and sandbox verification.\nFor an instant offline experience, switch to the Reproducible Mock engine in Model Platform settings.'
     },
 
     zh: {
@@ -341,7 +389,55 @@
       stage_1: '阶段一：装载超平面约束与 L0 汉明切片...',
       stage_2: '阶段二：探索非共线对称性与同余偏置...',
       stage_3: '阶段三：大模型合成 Python 优先级启发式函数...',
-      stage_4: '阶段四：Python 沙箱极速碰撞校验与贪心选择...'
+      stage_4: '阶段四：Python 沙箱极速碰撞校验与贪心选择...',
+
+      // 曼德勃罗 HUD 与指标
+      mb_orbit_escaped_title: '逃逸点 (飞向无穷 ∉ 集合)',
+      mb_orbit_escaped_step: '迭代 {step} 步脱离 |z|>4',
+      mb_orbit_bounded_title: '有界点 (属于曼德勃罗集 ∈ M)',
+      mb_orbit_bounded_step: '迭代 {step} 步始终有界收敛/闭合',
+      mb_iter_unit: '次',
+      mb_stat_passes_label: 'GPU 并行迭代',
+
+      // 科赫雪花 HUD 与指标
+      koch_hud_order_progress: '第 {order} 阶 (生长进度 {growth}%)',
+      koch_hud_area_diff: '距理论极限 8/5(1.6) 差: {diff}',
+
+      // 模型配置中心弹窗
+      model_group_builtin: '官方内置平台',
+      model_group_custom: '用户自定义平台',
+      model_opt_empty: '未检索到模型 (请点击自动拉取或手动输入)',
+      model_opt_reasoning: '🧠 (Reasoning 思考链)',
+      model_opt_configured: '⭐ {model} (当前配置模型)',
+      model_confirm_delete: '确定要删除自定义平台 [{name}] 吗？',
+      model_alert_no_base_url: '请先输入接口端点 (Base URL)',
+      model_fetch_success: '🎉 自动拉取成功！已同步 {count} 个可用模型并已永久保存，请在下方选择。',
+      model_fetch_fail: '自动拉取失败: {err} (您可点击下方“手动输入模型名”直接填写)',
+      btn_toggle_select_mode: '切换为下拉选择',
+      btn_toggle_manual_mode: '手动输入模型名',
+      btn_testing_response: '正在测试模型响应...',
+      model_testing_signal: '⏳ 正在向模型【{model}】发送测试信号，测试实际端到端响应延迟...',
+      model_test_fail: '❌ 检测失败: {err}',
+      model_test_success: '✅ 模型【{model}】连通测试成功！响应延迟: {latency}s | 回复: "{snippet}"',
+      model_default_custom_name: '新自定义平台',
+
+      // Cap Set 数学发现
+      funsearch_stat_points: '{count} 点 ({pct}%)',
+      funsearch_points_unit: '点',
+      funsearch_target_space: '目标: {dim} 维 · {count} 点',
+      funsearch_space_label: 'F_3^{dim} 空间 ({count} 点)',
+      funsearch_total_space: '总空间 {count} 点 (3^{dim})',
+      funsearch_break_trap: '成功打破 2^{dim}={baseline} 局部最优！',
+      funsearch_trapped: '受限于 2^{dim}={baseline} 局部极值',
+      funsearch_break_gain: '打破 2^{dim} 陷阱 +{gain}% ({model} 真实推演)',
+      funsearch_real_score: '模型真实得分: {count} 点 ({model})',
+      funsearch_naive_baseline: '朴素基线 (受限于 2^{dim}={baseline})',
+      funsearch_ai_priority_title: 'AI 演化出的最优 Python 优先级函数 ({model} 真实生成)',
+      funsearch_baseline_priority_title: '当前运行的 Python 优先级函数 (基准基线)',
+      funsearch_sandbox_result: '沙箱验算: 耗时 {time}s | 三点共线违规: {violations} (100% 严格验证)',
+      funsearch_target_desc: '【当前探索目标：F_3^{dim} 空间 (共 {count} 点)】\n- 已知理论极值: {known} 点 | 朴素贪心受限陷阱: 2^{dim} = {baseline} 点\n\n点击下方【AI 大模型生成演化】，将向配置的模型发起 {dim} 维极值组合推演请求，大模型将分析汉明切片与仿射同余不变性，并在 Python 沙箱中完成严格三点共线验算。',
+      funsearch_err_failed: '❌ 模型推演未成功: {err}\n\n{guidance}',
+      funsearch_err_guidance: '【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。'
     }
   };
 
@@ -372,16 +468,23 @@
       return target;
     }
 
-    t(key, fallback = '') {
+    t(key, params = {}, fallback = '') {
+      if (typeof params === 'string') {
+        fallback = params;
+        params = {};
+      }
       const pack = this.dict[this.currentLang] || this.dict[DEFAULT_LANG];
-      if (pack && pack[key] !== undefined) {
-        return pack[key];
+      let str = (pack && pack[key] !== undefined) ? pack[key] : '';
+      if (!str) {
+        const defaultPack = this.dict[DEFAULT_LANG];
+        str = (defaultPack && defaultPack[key] !== undefined) ? defaultPack[key] : (fallback || key);
       }
-      const defaultPack = this.dict[DEFAULT_LANG];
-      if (defaultPack && defaultPack[key] !== undefined) {
-        return defaultPack[key];
+      if (params && typeof params === 'object') {
+        Object.keys(params).forEach(k => {
+          str = str.replaceAll(`{${k}}`, params[k]);
+        });
       }
-      return fallback || key;
+      return str;
     }
 
     applyToDOM() {

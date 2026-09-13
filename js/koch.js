@@ -76,6 +76,10 @@ class KochSnowflake {
       const factor = Math.exp(-delta * 0.002);
       this.zoomBy(factor);
     }, { passive: false });
+
+    window.addEventListener('axiomforge:lang_changed', () => {
+      this.updateHUD();
+    });
   }
 
   /**
@@ -265,12 +269,15 @@ class KochSnowflake {
     const sliderOrder = document.getElementById('koch-order-slider');
     const valOrder = document.getElementById('koch-order-val');
 
-    if (elOrder) elOrder.textContent = `第 ${N} 阶 (生长进度 ${(this.growth * 100).toFixed(0)}%)`;
+    const t = (k, params, fallback) => (window.I18N ? window.I18N.t(k, params) : fallback);
+    const growthPct = (this.growth * 100).toFixed(0);
+
+    if (elOrder) elOrder.textContent = t('koch_hud_order_progress', { order: N, growth: growthPct }, `Order ${N} (Growth: ${growthPct}%)`);
     if (elSegments) elSegments.textContent = segmentCount.toLocaleString();
     if (elPerimeter) elPerimeter.textContent = perimeterRatio.toFixed(3) + ' × P₀';
     if (elArea) elArea.textContent = areaRatio.toFixed(4) + ' × A₀';
     if (elAreaBar) elAreaBar.style.width = `${limitPercent}%`;
-    if (elAreaDiff) elAreaDiff.textContent = `距理论极限 8/5(1.6) 差: ${limitDiff}`;
+    if (elAreaDiff) elAreaDiff.textContent = t('koch_hud_area_diff', { diff: limitDiff }, `Diff to theoretical limit 8/5 (1.6): ${limitDiff}`);
     if (elDim) elDim.textContent = 'D ≈ 1.26186';
     if (sliderOrder && !this.isPlaying) sliderOrder.value = N;
     if (valOrder) valOrder.textContent = N;

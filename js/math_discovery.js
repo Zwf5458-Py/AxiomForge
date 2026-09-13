@@ -55,6 +55,17 @@ class MultiDimCapSetVisualizer {
     window.addEventListener('mouseup', () => {
       this.isDragging = false;
     });
+
+    window.addEventListener('axiomforge:lang_changed', () => {
+      this.updateUI();
+      const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
+      const thinkingStatusEl = document.getElementById('thinking-status-text');
+      if (thinkingStatusEl && !this.isEvolving) {
+        thinkingStatusEl.textContent = isEn
+          ? `Ready (Target: ${this.dimension}D · ${this.allPoints.length} pts)`
+          : `就绪 (目标: ${this.dimension} 维 · ${this.allPoints.length} 点)`;
+      }
+    });
   }
 
   resize() {
@@ -292,13 +303,14 @@ class MultiDimCapSetVisualizer {
       body: JSON.stringify({ code: code, dimension: this.dimension })
     });
 
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
     if (!res.ok) {
-      throw new Error(`沙箱评测服务异常 (HTTP ${res.status})`);
+      throw new Error(isEn ? `Sandbox service exception (HTTP ${res.status})` : `沙箱评测服务异常 (HTTP ${res.status})`);
     }
 
     const data = await res.json();
     if (!data.valid) {
-      throw new Error(data.error || "沙箱执行错误");
+      throw new Error(data.error || (isEn ? "Sandbox execution error" : "沙箱执行错误"));
     }
 
     this.selectedPoints = data.points || [];

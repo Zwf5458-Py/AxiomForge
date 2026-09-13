@@ -712,7 +712,10 @@ ${JSON.stringify(points, null, 2)}
           aiThinkingText.textContent = stages[stageIdx];
         }
         if (thinkingStatusText) {
-          thinkingStatusText.textContent = `推理演化中 (阶段 ${stageIdx + 1}/4 · 目标 ${dim} 维)...`;
+          const isEnNow = !window.I18N || window.I18N.getLanguage() === 'en';
+          thinkingStatusText.textContent = isEnNow
+            ? `Reasoning Evolution (Stage ${stageIdx + 1}/4 · Target ${dim}D)...`
+            : `推理演化中 (阶段 ${stageIdx + 1}/4 · 目标 ${dim} 维)...`;
         }
       }, 3000);
 
@@ -728,20 +731,43 @@ ${JSON.stringify(points, null, 2)}
           activeStageTimer = null;
         }
 
-        if (thinkingStatusText) thinkingStatusText.textContent = `真实推理与沙箱验算完成 (${dim} 维 · ${result.score} 点)`;
+        const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
+        if (thinkingStatusText) {
+          thinkingStatusText.textContent = isEn
+            ? `Reasoning & Sandbox Verification Complete (${dim}D · ${result.score} pts)`
+            : `真实推理与沙箱验算完成 (${dim} 维 · ${result.score} 点)`;
+        }
 
         const baselineScore = Math.pow(2, dim);
-        const evalSummary = `\n\n═══════════════════════════════════════════════════\n` +
-          `✅ Python 沙箱验算完成报告:\n` +
-          `- 演化模型: ${result.model_id} (${result.provider_id || curProvider})\n` +
-          `- 目标空间: F_3^${result.dimension} (总规模 ${result.total_points || (3 ** result.dimension)} 个向量点)\n` +
-          `- 空间打分耗时: ${result.eval_time_seconds}s\n` +
-          `- 三点共线违规数: ${result.collinear_violations} (100% 严密防线，0 容忍)\n` +
-          `- 真实选出非共线点集基数: ${result.score} 点\n` +
-          `- 代数突破评估: ${result.score > baselineScore ? `🎉 成功突破朴素基准 2^${dim}=${baselineScore} 局部极大值陷阱 (+${(((result.score - baselineScore) / baselineScore) * 100).toFixed(1)}%)！` : `当前非共线点集基数 ${result.score} 点，继续多代际演化优化`}\n` +
-          `═══════════════════════════════════════════════════`;
+        const gainPct = (((result.score - baselineScore) / baselineScore) * 100).toFixed(1);
+        const breakEvaluation = result.score > baselineScore
+          ? (isEn ? `🎉 Broke naive 2^${dim}=${baselineScore} local trap (+${gainPct}%)!` : `🎉 成功突破朴素基准 2^${dim}=${baselineScore} 局部极大值陷阱 (+${gainPct}%)！`)
+          : (isEn ? `Current cap cardinality ${result.score} pts, continuing multi-generation optimization` : `当前非共线点集基数 ${result.score} 点，继续多代际演化优化`);
 
-        const deductionBody = result.reasoning || result.raw_text || "【代数推导】模型已完成 F_3^n 空间的代数特征提取与构造。";
+        const evalSummary = isEn
+          ? `\n\n═══════════════════════════════════════════════════\n` +
+            `✅ Python Sandbox Verification Report:\n` +
+            `- Evolved Model: ${result.model_id} (${result.provider_id || curProvider})\n` +
+            `- Target Affine Space: F_3^${result.dimension} (${result.total_points || (3 ** result.dimension)} total vector points)\n` +
+            `- Space Evaluation Time: ${result.eval_time_seconds}s\n` +
+            `- Collinear Triples Violations: ${result.collinear_violations} (Zero Tolerance, 100% Strict)\n` +
+            `- Verified Cap Set Cardinality: ${result.score} points\n` +
+            `- Algebraic Assessment: ${breakEvaluation}\n` +
+            `═══════════════════════════════════════════════════`
+          : `\n\n═══════════════════════════════════════════════════\n` +
+            `✅ Python 沙箱验算完成报告:\n` +
+            `- 演化模型: ${result.model_id} (${result.provider_id || curProvider})\n` +
+            `- 目标空间: F_3^${result.dimension} (总规模 ${result.total_points || (3 ** result.dimension)} 个向量点)\n` +
+            `- 空间打分耗时: ${result.eval_time_seconds}s\n` +
+            `- 三点共线违规数: ${result.collinear_violations} (100% 严密防线，0 容忍)\n` +
+            `- 真实选出非共线点集基数: ${result.score} 点\n` +
+            `- 代数突破评估: ${breakEvaluation}\n` +
+            `═══════════════════════════════════════════════════`;
+
+        const defaultDeduction = isEn
+          ? "【Algebraic Deduction】The model completed invariant extraction and construction in F_3^n."
+          : "【代数推导】模型已完成 F_3^n 空间的代数特征提取与构造。";
+        const deductionBody = result.reasoning || result.raw_text || defaultDeduction;
         const fullOutput = deductionBody + evalSummary;
 
         // 1. 【即时反馈到主图框】：模型推演出的最新点集与代码，第 0 秒立刻点亮并更新到主图框与 HUD！
@@ -760,33 +786,50 @@ ${JSON.stringify(points, null, 2)}
           clearInterval(activeStageTimer);
           activeStageTimer = null;
         }
-        if (thinkingStatusText) thinkingStatusText.textContent = "推演中断 (请查看下方诊断)";
+        const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
+        if (thinkingStatusText) {
+          thinkingStatusText.textContent = isEn
+            ? "Evolution Interrupted (See diagnostics below)"
+            : "推演中断 (请查看下方诊断)";
+        }
 
         const errStr = err.message || String(err);
         const isTimeout = /timed?\s*out|超时/i.test(errStr);
 
         let guidance = "";
         if (isTimeout) {
-          guidance = `【⏱️ 超时根因与解决方案】：\n` +
-            `1. 当前驱动模型【${curModel}】生成长篇数学推演耗时较长，或中转聚合节点网络排队较慢。\n` +
-            `2. 解决方案 A：点击右上角【AI 模型平台配置】，切换为响应更快的轻量模型 (如 deepseek-chat 或 聚合平台的 flash 模型)；\n` +
-            `3. 解决方案 B：切换至内置的【Reproducible Mock 确定性离线引擎】，毫秒级体验完整的代数推演与沙箱验算闭环；\n` +
-            `4. 服务端已将连接超时放宽至 180 秒并精炼了 prompt，您也可以直接再次点击重试。`;
+          guidance = isEn
+            ? `【⏱️ Timeout Cause & Solutions】:\n` +
+              `1. The model [${curModel}] took longer to generate mathematical reasoning, or the provider network queued up.\n` +
+              `2. Solution A: Open [AI Model Platform] in header, switch to a faster model (e.g. deepseek-chat or flash models);\n` +
+              `3. Solution B: Switch to the built-in [Reproducible Mock] offline engine for instant sub-millisecond evaluation;\n` +
+              `4. The server timeout is set to 180s. You can also click retry directly.`
+            : `【⏱️ 超时根因与解决方案】：\n` +
+              `1. 当前驱动模型【${curModel}】生成长篇数学推演耗时较长，或中转聚合节点网络排队较慢。\n` +
+              `2. 解决方案 A：点击右上角【AI 模型平台配置】，切换为响应更快的轻量模型 (如 deepseek-chat 或 聚合平台的 flash 模型)；\n` +
+              `3. 解决方案 B：切换至内置的【Reproducible Mock 确定性离线引擎】，毫秒级体验完整的代数推演与沙箱验算闭环；\n` +
+              `4. 服务端已将连接超时放宽至 180 秒并精炼了 prompt，您也可以直接再次点击重试。`;
         } else {
-          guidance = `【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n` +
-            `若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。`;
+          guidance = isEn
+            ? `【Academic Rigor Note】: The system strictly refuses to output fabricated pre-determined results without authentic model computation and sandbox verification.\nFor instant offline testing, click [AI Model Platform] in top right and choose Reproducible Mock engine.`
+            : `【学术严谨性声明】：系统坚决拒绝在未获得模型真实计算与沙箱验算的前提下给出虚假预定结果。\n若需离线测试体验，请点击右上角【AI 模型平台配置】选择 Reproducible Mock 确定性离线引擎。`;
         }
 
         if (aiThinkingText) {
           if (err.reasoning) {
-            aiThinkingText.textContent = `${err.reasoning}\n\n═══════════════════════════════════════════════════\n⚠️ 推演提示: ${errStr}\n系统已启用强化型代码容错提取，请再次点击【AI 大模型生成演化】重试。\n═══════════════════════════════════════════════════`;
+            aiThinkingText.textContent = isEn
+              ? `${err.reasoning}\n\n═══════════════════════════════════════════════════\n⚠️ Evolution Notice: ${errStr}\nFault-tolerant extraction enabled. Please click [Evolve via AI Model] to retry.\n═══════════════════════════════════════════════════`
+              : `${err.reasoning}\n\n═══════════════════════════════════════════════════\n⚠️ 推演提示: ${errStr}\n系统已启用强化型代码容错提取，请再次点击【AI 大模型生成演化】重试。\n═══════════════════════════════════════════════════`;
           } else {
-            aiThinkingText.textContent = `❌ 模型推演未成功: ${errStr}\n\n${guidance}`;
+            aiThinkingText.textContent = isEn
+              ? `❌ Model generation unsuccessful: ${errStr}\n\n${guidance}`
+              : `❌ 模型推演未成功: ${errStr}\n\n${guidance}`;
           }
         }
       } finally {
         btnAiEvolve.disabled = false;
-        btnAiEvolve.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> AI 大模型生成演化';
+        const evolveBtnLabel = window.I18N ? window.I18N.t('btn_ai_evolve') : 'Evolve via AI Model';
+        btnAiEvolve.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> ${evolveBtnLabel}`;
       }
     });
   }
@@ -915,12 +958,15 @@ ${JSON.stringify(points, null, 2)}
   function refreshProviderDropdown() {
     if (!selectProvider) return;
     const providers = window.modelPlatformManager.getAllProviders();
+    const currentVal = selectProvider.value;
     selectProvider.innerHTML = '';
 
+    const t = (k, fallback) => (window.I18N ? window.I18N.t(k) : fallback);
+
     const groupBuiltin = document.createElement('optgroup');
-    groupBuiltin.label = '官方内置平台';
+    groupBuiltin.label = t('model_group_builtin', 'Official Built-in Providers');
     const groupCustom = document.createElement('optgroup');
-    groupCustom.label = '用户自定义平台';
+    groupCustom.label = t('model_group_custom', 'Custom Providers');
 
     providers.forEach(p => {
       const opt = document.createElement('option');
@@ -937,24 +983,30 @@ ${JSON.stringify(points, null, 2)}
     if (groupCustom.children.length > 0) {
       selectProvider.appendChild(groupCustom);
     }
+    if (currentVal) {
+      selectProvider.value = currentVal;
+    }
   }
 
   function updateModelDropdown(models, selectedModelId) {
     if (!selectModel) return;
     selectModel.innerHTML = '';
+    const t = (k, params, fallback) => (window.I18N ? window.I18N.t(k, params) : fallback);
+
     if (!models || models.length === 0) {
       const opt = document.createElement('option');
       opt.value = 'default';
-      opt.textContent = '未检索到模型 (请点击自动拉取或手动输入)';
+      opt.textContent = t('model_opt_empty', {}, 'No models retrieved (Click auto-fetch or input manually)');
       selectModel.appendChild(opt);
       return;
     }
 
     let isSelectedMatched = false;
+    const reasoningTag = t('model_opt_reasoning', {}, '🧠 (Reasoning Chain)');
     models.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m.id;
-      opt.textContent = `${m.name || m.id} ${m.reasoning ? '🧠 (Reasoning 思考链)' : ''}`;
+      opt.textContent = `${m.name || m.id} ${m.reasoning ? reasoningTag : ''}`;
       if (m.id === selectedModelId) {
         opt.selected = true;
         isSelectedMatched = true;
@@ -966,7 +1018,7 @@ ${JSON.stringify(points, null, 2)}
     if (selectedModelId && selectedModelId !== 'default' && !isSelectedMatched) {
       const opt = document.createElement('option');
       opt.value = selectedModelId;
-      opt.textContent = `⭐ ${selectedModelId} (当前配置模型)`;
+      opt.textContent = t('model_opt_configured', { model: selectedModelId }, `⭐ ${selectedModelId} (Currently Configured)`);
       opt.selected = true;
       selectModel.insertBefore(opt, selectModel.firstChild);
     }
@@ -1023,7 +1075,8 @@ ${JSON.stringify(points, null, 2)}
   // 添加自定义平台
   if (btnAddCustomProvider) {
     btnAddCustomProvider.addEventListener('click', () => {
-      const newId = window.modelPlatformManager.addCustomPlatform('自定义聚合平台', 'https://');
+      const defaultName = window.I18N ? window.I18N.t('model_default_custom_name') : 'Custom Provider';
+      const newId = window.modelPlatformManager.addCustomPlatform(defaultName, 'https://');
       refreshProviderDropdown();
       selectProvider.value = newId;
       loadProviderIntoForm(newId);
@@ -1035,7 +1088,10 @@ ${JSON.stringify(points, null, 2)}
   if (btnDeleteProvider) {
     btnDeleteProvider.addEventListener('click', () => {
       const pid = selectProvider.value;
-      if (confirm(`确定要删除自定义平台 [${inputPlatformName.value}] 吗？`)) {
+      const confirmMsg = window.I18N
+        ? window.I18N.t('model_confirm_delete', { name: inputPlatformName.value })
+        : `Are you sure you want to delete custom provider [${inputPlatformName.value}]?`;
+      if (confirm(confirmMsg)) {
         window.modelPlatformManager.deleteCustomPlatform(pid);
         refreshProviderDropdown();
         const activePid = window.modelPlatformManager.activeProvider;
@@ -1053,7 +1109,7 @@ ${JSON.stringify(points, null, 2)}
       const pid = selectProvider.value;
 
       if (!base) {
-        alert('请先输入接口端点 (Base URL)');
+        alert(window.I18N ? window.I18N.t('model_alert_no_base_url') : 'Please enter the API Endpoint (Base URL) first.');
         return;
       }
 
@@ -1073,13 +1129,17 @@ ${JSON.stringify(points, null, 2)}
         if (checkResultBox) {
           checkResultBox.style.display = 'block';
           checkResultBox.className = 'status-box success';
-          checkResultBox.textContent = `🎉 自动拉取成功！已同步 ${models.length} 个可用模型并已永久保存，请在下方选择。`;
+          checkResultBox.textContent = window.I18N
+            ? window.I18N.t('model_fetch_success', { count: models.length })
+            : `🎉 Auto-fetch successful! Synced ${models.length} available models.`;
         }
       } catch (err) {
         if (checkResultBox) {
           checkResultBox.style.display = 'block';
           checkResultBox.className = 'status-box error';
-          checkResultBox.textContent = `自动拉取失败: ${err.message} (您可点击下方“手动输入模型名”直接填写)`;
+          checkResultBox.textContent = window.I18N
+            ? window.I18N.t('model_fetch_fail', { err: err.message })
+            : `Auto-fetch failed: ${err.message}`;
         }
       } finally {
         btnFetchModels.disabled = false;
@@ -1092,15 +1152,16 @@ ${JSON.stringify(points, null, 2)}
   if (btnToggleManualModel) {
     btnToggleManualModel.addEventListener('click', () => {
       isManualModelMode = !isManualModelMode;
+      const t = (k, fallback) => (window.I18N ? window.I18N.t(k) : fallback);
       if (isManualModelMode) {
         containerSelectModel.style.display = 'none';
         containerInputModel.style.display = 'block';
-        btnToggleManualModel.textContent = '切换为下拉选择';
+        btnToggleManualModel.textContent = t('btn_toggle_select_mode', 'Switch to Dropdown Selection');
         if (inputCustomModel) inputCustomModel.focus();
       } else {
         containerSelectModel.style.display = 'block';
         containerInputModel.style.display = 'none';
-        btnToggleManualModel.textContent = '手动输入模型名';
+        btnToggleManualModel.textContent = t('btn_toggle_manual_mode', 'Enter Model Name Manually');
       }
     });
   }
@@ -1117,7 +1178,8 @@ ${JSON.stringify(points, null, 2)}
   if (btnTestAuth) {
     btnTestAuth.addEventListener('click', async () => {
       btnTestAuth.disabled = true;
-      btnTestAuth.innerHTML = '<span class="pulse-indicator"></span> 正在测试模型响应...';
+      const t = (k, params, fallback) => (window.I18N ? window.I18N.t(k, params) : fallback);
+      btnTestAuth.innerHTML = `<span class="pulse-indicator"></span> ${t('btn_testing_response', {}, 'Testing model response...')}`;
       const pid = selectProvider.value;
       const key = inputApiKey.value.trim();
       const base = inputBaseUrl.value.trim();
@@ -1128,7 +1190,7 @@ ${JSON.stringify(points, null, 2)}
         checkResultBox.className = 'status-box';
         checkResultBox.style.borderLeftColor = '#38bdf8';
         checkResultBox.style.color = '#38bdf8';
-        checkResultBox.textContent = `⏳ 正在向模型【${model || '默认'}】发送测试信号，测试实际端到端响应延迟...`;
+        checkResultBox.textContent = t('model_testing_signal', { model: model || 'default' }, `⏳ Sending probe signal to [${model || 'default'}]...`);
       }
 
       try {
@@ -1155,11 +1217,12 @@ ${JSON.stringify(points, null, 2)}
           checkResultBox.className = 'status-box error';
           checkResultBox.style.borderLeftColor = '#ef4444';
           checkResultBox.style.color = '#fca5a5';
-          checkResultBox.textContent = `❌ 检测失败: ${err.message}`;
+          checkResultBox.textContent = t('model_test_fail', { err: err.message }, `❌ Probe failed: ${err.message}`);
         }
       } finally {
         btnTestAuth.disabled = false;
-        btnTestAuth.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 测试连接 (Check Auth)';
+        const testAuthLabel = window.I18N ? window.I18N.t('btn_test_auth') : 'Check Auth';
+        btnTestAuth.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> ${testAuthLabel}`;
       }
     });
   }
@@ -1200,5 +1263,21 @@ ${JSON.stringify(points, null, 2)}
       closeModal();
     });
   }
+
+  // 语言切换时自动重绘模型配置弹窗内的分组标签及下拉项
+  window.addEventListener('axiomforge:lang_changed', () => {
+    refreshProviderDropdown();
+    if (selectProvider) {
+      const pid = selectProvider.value;
+      const pInfo = window.modelPlatformManager.getProviderInfo(pid);
+      if (pInfo && pInfo.models) {
+        updateModelDropdown(pInfo.models, pInfo.selectedModel);
+      }
+    }
+    if (btnToggleManualModel) {
+      const t = (k, fallback) => (window.I18N ? window.I18N.t(k) : fallback);
+      btnToggleManualModel.textContent = isManualModelMode ? t('btn_toggle_select_mode', 'Switch to Dropdown Selection') : t('btn_toggle_manual_mode', 'Enter Model Name Manually');
+    }
+  });
 });
 

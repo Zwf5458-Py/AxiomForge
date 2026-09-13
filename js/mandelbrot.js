@@ -380,6 +380,13 @@ class MandelbrotViewer {
 
       this.zoomBy(factor);
     }, { passive: false });
+
+    window.addEventListener('axiomforge:lang_changed', () => {
+      this.updateStatsUI();
+      if (this.lastOrbitData) {
+        this.updateOrbitHUD(this.lastOrbitData);
+      }
+    });
   }
 
   /**
@@ -498,18 +505,22 @@ class MandelbrotViewer {
   }
 
   updateOrbitHUD(orbitData) {
+    this.lastOrbitData = orbitData;
     const elStatus = document.getElementById('orbit-status');
     const elStep = document.getElementById('orbit-step');
     if (!elStatus || !elStep) return;
 
+    const t = (k, params, fallback) => (window.I18N ? window.I18N.t(k, params) : fallback);
+
     if (orbitData.escaped) {
-      elStatus.textContent = '逃逸点 (飞向无穷 ∉ 集合)';
+      elStatus.textContent = t('mb_orbit_escaped_title', {}, 'Escaping Point (Diverges to ∞ ∉ M)');
       elStatus.style.color = 'var(--accent-rose)';
-      elStep.textContent = `迭代 ${orbitData.escapeStep} 步脱离 |z|>4`;
+      elStep.textContent = t('mb_orbit_escaped_step', { step: orbitData.escapeStep }, `Escaped at step ${orbitData.escapeStep} |z|>4`);
     } else {
-      elStatus.textContent = '有界点 (属于曼德勃罗集 ∈ M)';
+      elStatus.textContent = t('mb_orbit_bounded_title', {}, 'Bounded Point (Mandelbrot Set ∈ M)');
       elStatus.style.color = 'var(--accent-emerald)';
-      elStep.textContent = `迭代 ${this.orbitTracer.maxSteps} 步始终有界收敛/闭合`;
+      const maxSteps = this.orbitTracer ? this.orbitTracer.maxSteps : 45;
+      elStep.textContent = t('mb_orbit_bounded_step', { step: maxSteps }, `Remains bounded after ${maxSteps} steps`);
     }
   }
 
@@ -524,7 +535,8 @@ class MandelbrotViewer {
       }
     }
     if (elIter) {
-      elIter.textContent = `${this.maxIterations} 次`;
+      const unit = window.I18N ? window.I18N.t('mb_iter_unit') : 'iters';
+      elIter.textContent = `${this.maxIterations} ${unit}`;
     }
   }
 
