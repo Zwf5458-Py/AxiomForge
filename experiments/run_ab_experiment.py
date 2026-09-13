@@ -155,6 +155,7 @@ def main():
     parser.add_argument("--iterations", "-i", type=int, default=30, help="每组迭代轮数 (默认 30)")
     parser.add_argument("--seeds", "-s", type=int, default=10, help="随机种子运行次数 (默认 10)")
     parser.add_argument("--output-json", "-o", type=str, default=None, help="导出实验数据路径")
+    parser.add_argument("--no-report", action="store_true", help="不更新全局 EXPERIMENT_CAPSET.md 报告")
     args = parser.parse_args()
 
     n = args.dimension
@@ -216,10 +217,11 @@ def main():
     print(f"\n💾 统计评测原始数据已导出至: {out_file}")
 
     # 5. 更新学术实验报告
-    report_content = generate_markdown_report(summary_data)
-    with open("EXPERIMENT_CAPSET.md", "w", encoding="utf-8") as f:
-        f.write(report_content)
-    print("📝 严谨学术实验报告已更新至: EXPERIMENT_CAPSET.md\n")
+    if not args.no_report:
+        report_content = generate_markdown_report(summary_data)
+        with open("EXPERIMENT_CAPSET.md", "w", encoding="utf-8") as f:
+            f.write(report_content)
+        print("📝 严谨学术实验报告已更新至: EXPERIMENT_CAPSET.md\n")
 
 def generate_markdown_report(data: dict) -> str:
     n = data["dimension"]

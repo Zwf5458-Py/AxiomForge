@@ -1,0 +1,580 @@
+{
+  "dimension": 7,
+  "benchmark_target": 236,
+  "benchmark_type": "best_known_lower_bound",
+  "benchmark_reference": "Edel (2004)",
+  "iterations_per_trial": 50,
+  "num_seeds": 5,
+  "naive_stats": {
+    "name": "对照组: 朴素启发式 (Naive Heuristic)",
+    "num_seeds": 5,
+    "scores": [
+      128,
+      128,
+      128,
+      128,
+      128
+    ],
+    "mean_score": 128,
+    "std_score": 0.0,
+    "median_score": 128,
+    "min_score": 128,
+    "max_score": 128,
+    "mean_time_seconds": 0.7183,
+    "best_trial": {
+      "seed": 42,
+      "best_score": 128,
+      "best_code": "def priority(p: tuple, n: int) -> float:\n    return float(sum(p))",
+      "elapsed_seconds": 0.708261251449585,
+      "history": [
+        {
+          "gen": 1,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 2,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 3,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 4,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 5,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 6,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 7,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 8,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 9,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 10,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 11,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 12,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 13,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 14,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 15,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 16,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 17,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 18,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 19,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 20,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 21,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 22,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 23,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 24,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 25,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 26,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 27,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 28,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 29,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 30,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 31,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 32,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 33,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 34,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 35,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 36,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 37,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 38,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 39,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 40,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 41,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 42,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 43,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 44,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 45,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 46,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 47,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 48,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 49,
+          "best_score": 128,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 50,
+          "best_score": 128,
+          "current_eval_score": 128
+        }
+      ],
+      "top_programs": [
+        {
+          "score": 128,
+          "code": "def priority(p: tuple, n: int) -> float:\n    return float(sum(p))"
+        }
+      ],
+      "points_count": 128,
+      "is_valid": true
+    }
+  },
+  "symmetry_stats": {
+    "name": "实验组: 对称性先验 (Symmetry Prior)",
+    "num_seeds": 5,
+    "scores": [
+      157,
+      157,
+      157,
+      157,
+      157
+    ],
+    "mean_score": 157,
+    "std_score": 0.0,
+    "median_score": 157,
+    "min_score": 157,
+    "max_score": 157,
+    "mean_time_seconds": 0.9229,
+    "best_trial": {
+      "seed": 42,
+      "best_score": 157,
+      "best_code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 1) * 30.0 + p[0] * 1.11)",
+      "elapsed_seconds": 0.8761389255523682,
+      "history": [
+        {
+          "gen": 1,
+          "best_score": 144,
+          "current_eval_score": 144
+        },
+        {
+          "gen": 2,
+          "best_score": 144,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 3,
+          "best_score": 144,
+          "current_eval_score": 139
+        },
+        {
+          "gen": 4,
+          "best_score": 148,
+          "current_eval_score": 148
+        },
+        {
+          "gen": 5,
+          "best_score": 157,
+          "current_eval_score": 157
+        },
+        {
+          "gen": 6,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 7,
+          "best_score": 157,
+          "current_eval_score": 138
+        },
+        {
+          "gen": 8,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 9,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 10,
+          "best_score": 157,
+          "current_eval_score": 144
+        },
+        {
+          "gen": 11,
+          "best_score": 157,
+          "current_eval_score": 148
+        },
+        {
+          "gen": 12,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 13,
+          "best_score": 157,
+          "current_eval_score": 140
+        },
+        {
+          "gen": 14,
+          "best_score": 157,
+          "current_eval_score": 148
+        },
+        {
+          "gen": 15,
+          "best_score": 157,
+          "current_eval_score": 144
+        },
+        {
+          "gen": 16,
+          "best_score": 157,
+          "current_eval_score": 140
+        },
+        {
+          "gen": 17,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 18,
+          "best_score": 157,
+          "current_eval_score": 153
+        },
+        {
+          "gen": 19,
+          "best_score": 157,
+          "current_eval_score": 144
+        },
+        {
+          "gen": 20,
+          "best_score": 157,
+          "current_eval_score": 138
+        },
+        {
+          "gen": 21,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 22,
+          "best_score": 157,
+          "current_eval_score": 153
+        },
+        {
+          "gen": 23,
+          "best_score": 157,
+          "current_eval_score": 148
+        },
+        {
+          "gen": 24,
+          "best_score": 157,
+          "current_eval_score": 142
+        },
+        {
+          "gen": 25,
+          "best_score": 157,
+          "current_eval_score": 157
+        },
+        {
+          "gen": 26,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 27,
+          "best_score": 157,
+          "current_eval_score": 139
+        },
+        {
+          "gen": 28,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 29,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 30,
+          "best_score": 157,
+          "current_eval_score": 136
+        },
+        {
+          "gen": 31,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 32,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 33,
+          "best_score": 157,
+          "current_eval_score": 144
+        },
+        {
+          "gen": 34,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 35,
+          "best_score": 157,
+          "current_eval_score": 148
+        },
+        {
+          "gen": 36,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 37,
+          "best_score": 157,
+          "current_eval_score": 144
+        },
+        {
+          "gen": 38,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 39,
+          "best_score": 157,
+          "current_eval_score": 157
+        },
+        {
+          "gen": 40,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 41,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 42,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 44,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 45,
+          "best_score": 157,
+          "current_eval_score": 155
+        },
+        {
+          "gen": 46,
+          "best_score": 157,
+          "current_eval_score": 139
+        },
+        {
+          "gen": 47,
+          "best_score": 157,
+          "current_eval_score": 153
+        },
+        {
+          "gen": 48,
+          "best_score": 157,
+          "current_eval_score": 157
+        },
+        {
+          "gen": 49,
+          "best_score": 157,
+          "current_eval_score": 128
+        },
+        {
+          "gen": 50,
+          "best_score": 157,
+          "current_eval_score": 155
+        }
+      ],
+      "top_programs": [
+        {
+          "score": 157,
+          "code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 1) * 30.0 + p[0] * 1.11)"
+        },
+        {
+          "score": 148,
+          "code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 0) * 30.0 + p[0] * 3.39)"
+        },
+        {
+          "score": 144,
+          "code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 0) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 2) * 30.0 + p[0] * 1.06)"
+        }
+      ],
+      "points_count": 157,
+      "is_valid": true
+    }
+  },
+  "mean_gain": 29,
+  "mean_gain_pct": 22.66,
+  "timestamp": "2026-09-13 08:18:51"
+}
