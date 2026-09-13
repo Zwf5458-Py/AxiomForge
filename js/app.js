@@ -1337,11 +1337,11 @@ ${JSON.stringify(points, null, 2)}
 
   function getActiveLogo() {
     const saved = localStorage.getItem(STORAGE_LOGO_KEY);
-    return (saved && LOGO_MAP[saved]) ? saved : 'logo-1-core';
+    return (saved && LOGO_MAP[saved]) ? saved : 'logo-3-spark';
   }
 
   function applyLogo(logoId) {
-    if (!LOGO_MAP[logoId]) logoId = 'logo-1-core';
+    if (!LOGO_MAP[logoId]) logoId = 'logo-3-spark';
     localStorage.setItem(STORAGE_LOGO_KEY, logoId);
 
     const logoSrc = LOGO_MAP[logoId];

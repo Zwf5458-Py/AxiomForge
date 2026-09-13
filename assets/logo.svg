@@ -1,58 +1,83 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
   <defs>
-    <!-- 渐变定义 -->
-    <linearGradient id="coreGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#06b6d4" />
-      <stop offset="50%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#8b5cf6" />
+    <!-- 极光与海天青渐变 -->
+    <linearGradient id="sparkGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#6366f1" />
     </linearGradient>
-    <linearGradient id="coreGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#a855f7" />
-      <stop offset="100%" stop-color="#06b6d4" />
+    <linearGradient id="sparkGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#3b82f6" />
     </linearGradient>
-    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8" />
-      <stop offset="40%" stop-color="#818cf8" stop-opacity="0.3" />
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+    <radialGradient id="sparkHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#022c22" stop-opacity="0" />
     </radialGradient>
-    <!-- 发光滤镜 -->
-    <filter id="bloom" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
+    <radialGradient id="coreDarkGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0e1726" />
+      <stop offset="70%" stop-color="#080c14" />
+      <stop offset="100%" stop-color="#030712" />
+    </radialGradient>
+    <!-- 极光高光滤镜 -->
+    <filter id="sparkGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.8" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
 
-  <!-- 背景暗调光晕 -->
-  <circle cx="60" cy="60" r="54" fill="url(#centerGlow)" />
+  <!-- 背景柔和极光光晕 -->
+  <circle cx="60" cy="60" r="54" fill="url(#sparkHalo)" />
 
-  <!-- 外围超环流形导轨 (高维投影) -->
-  <circle cx="60" cy="60" r="46" fill="none" stroke="url(#coreGrad1)" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.4" />
-  <circle cx="60" cy="60" r="50" fill="none" stroke="url(#coreGrad2)" stroke-width="0.75" stroke-opacity="0.5" />
+  <!-- 外围曼德博相空间同心约束环 -->
+  <circle cx="60" cy="60" r="48" fill="none" stroke="url(#sparkGrad1)" stroke-width="1" stroke-dasharray="2 6" opacity="0.5" />
+  <circle cx="60" cy="60" r="52" fill="none" stroke="url(#sparkGrad2)" stroke-width="0.75" opacity="0.3" />
 
-  <!-- 莫比乌斯 / 双双纽线公理轨道 1 -->
-  <ellipse cx="60" cy="60" rx="42" ry="18" fill="none" stroke="url(#coreGrad1)" stroke-width="3" transform="rotate(-30 60 60)" filter="url(#bloom)" opacity="0.9" />
-  
-  <!-- 莫比乌斯 / 双双纽线公理轨道 2 -->
-  <ellipse cx="60" cy="60" rx="42" ry="18" fill="none" stroke="url(#coreGrad2)" stroke-width="3" transform="rotate(30 60 60)" filter="url(#bloom)" opacity="0.9" />
+  <!-- 主级科赫/星芒对称骨架 (六向自相似展开) -->
+  <!-- 三角形 A (主公理) -->
+  <polygon points="60,18 96,80 24,80" fill="none" stroke="url(#sparkGrad1)" stroke-width="2.5" filter="url(#sparkGlow)" />
+  <!-- 反向三角形 B (对称锻造) -->
+  <polygon points="60,102 96,40 24,40" fill="none" stroke="url(#sparkGrad2)" stroke-width="2.5" filter="url(#sparkGlow)" />
 
-  <!-- 莫比乌斯 / 第三维正交轨道 -->
-  <ellipse cx="60" cy="60" rx="42" ry="18" fill="none" stroke="#38bdf8" stroke-width="2" transform="rotate(90 60 60)" opacity="0.75" />
+  <!-- 次级自相似迭代星芒晶格 (Recursive Sub-lattice) -->
+  <g stroke="#a7f3d0" stroke-width="1.2" opacity="0.85">
+    <!-- 6 个顶尖分形节点分枝 -->
+    <line x1="60" y1="18" x2="60" y2="34" />
+    <line x1="60" y1="102" x2="60" y2="86" />
+    <line x1="96" y1="40" x2="82" y2="48" />
+    <line x1="24" y1="40" x2="38" y2="48" />
+    <line x1="96" y1="80" x2="82" y2="72" />
+    <line x1="24" y1="80" x2="38" y2="72" />
 
-  <!-- 有限域 Cap Set 极值节点阵列 -->
-  <g fill="#e0f2fe">
-    <circle cx="60" cy="18" r="3" fill="#38bdf8" filter="url(#bloom)" />
-    <circle cx="96" cy="39" r="3.5" fill="#818cf8" filter="url(#bloom)" />
-    <circle cx="96" cy="81" r="3" fill="#c084fc" filter="url(#bloom)" />
-    <circle cx="60" cy="102" r="3.5" fill="#38bdf8" filter="url(#bloom)" />
-    <circle cx="24" cy="81" r="3" fill="#818cf8" filter="url(#bloom)" />
-    <circle cx="24" cy="39" r="3.5" fill="#c084fc" filter="url(#bloom)" />
+    <!-- 内部次级正六边形连通核 -->
+    <polygon points="60,38 79,49 79,71 60,82 41,71 41,49" fill="url(#sparkGrad1)" fill-opacity="0.15" />
   </g>
 
-  <!-- 中心公理正八面体晶核 -->
-  <polygon points="60,38 78,60 60,82 42,60" fill="none" stroke="#f8fafc" stroke-width="2" filter="url(#bloom)" />
-  <polygon points="60,38 60,82 50,60" fill="url(#coreGrad1)" opacity="0.7" />
-  <polygon points="60,38 60,82 70,60" fill="url(#coreGrad2)" opacity="0.7" />
+  <!-- 突触连接高维节点 (AI Neural Synapses) -->
+  <circle cx="60" cy="18" r="3.5" fill="#6ee7b7" filter="url(#sparkGlow)" />
+  <circle cx="96" cy="40" r="3.5" fill="#67e8f9" filter="url(#sparkGlow)" />
+  <circle cx="96" cy="80" r="3.5" fill="#93c5fd" filter="url(#sparkGlow)" />
+  <circle cx="60" cy="102" r="3.5" fill="#6ee7b7" filter="url(#sparkGlow)" />
+  <circle cx="24" cy="80" r="3.5" fill="#67e8f9" filter="url(#sparkGlow)" />
+  <circle cx="24" cy="40" r="3.5" fill="#93c5fd" filter="url(#sparkGlow)" />
 
-  <!-- 中心能量奇点 -->
-  <circle cx="60" cy="60" r="4.5" fill="#ffffff" filter="url(#bloom)" />
+  <!-- 内部中心公理晶核底座 (Deep Cosmic Core) -->
+  <circle cx="60" cy="60" r="16.5" fill="url(#coreDarkGlow)" stroke="url(#sparkGrad1)" stroke-width="2" />
+  <circle cx="60" cy="60" r="14" fill="none" stroke="url(#sparkGrad2)" stroke-width="0.75" opacity="0.45" />
+
+  <!-- AF 精密公理与熔炉连字 (AxiomForge AF Monogram) -->
+  <g stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#sparkGlow)">
+    <!-- A 的左斜支撑柱 (Axiom Slanted Pillar) -->
+    <line x1="51.5" y1="69" x2="59.5" y2="51" />
+    <!-- F 的垂直主轴 (Forge Vertical Axis, 与 A 顶部精密闭合交汇) -->
+    <line x1="59.5" y1="51" x2="59.5" y2="69" />
+    <!-- F 的顶横翼 (Forge Upper Wing) -->
+    <line x1="59.5" y1="52.5" x2="68.5" y2="52.5" />
+    <!-- A 的公理横梁，贯通向右衍生为 F 的中横翼 (Unified Axiom-Forge Bridge) -->
+    <line x1="55" y1="61" x2="67" y2="61" />
+  </g>
+
+  <!-- AF 核心奇点微光 -->
+  <circle cx="59.5" cy="61" r="1.3" fill="#38bdf8" />
 </svg>

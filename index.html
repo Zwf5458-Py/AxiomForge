@@ -12,7 +12,7 @@
   <header class="app-header">
     <div class="brand-area">
       <button id="btn-open-logo-modal" class="brand-logo-btn" title="Choose Project Logo / 切换项目 LOGO" aria-label="Brand Logo Selector" data-i18n-title="btn_logo_picker_title">
-        <img id="app-brand-logo" src="assets/logo-1-core.svg" alt="AxiomForge Logo" class="brand-logo-img">
+        <img id="app-brand-logo" src="assets/logo.svg" alt="AxiomForge Logo" class="brand-logo-img">
         <span class="logo-badge-overlay" title="Select Logo">✦</span>
       </button>
       <div class="brand-title-wrap">
@@ -700,7 +700,7 @@
       <div class="modal-body">
         <div class="logo-grid-options">
           <!-- Option 1 -->
-          <div class="logo-option-card active" data-logo-id="logo-1-core" data-logo-file="assets/logo-1-core.svg">
+          <div class="logo-option-card" data-logo-id="logo-1-core" data-logo-file="assets/logo-1-core.svg">
             <div class="logo-preview-box">
               <img src="assets/logo-1-core.svg" alt="Option A: Hyper-Torus Core" class="logo-preview-img">
             </div>
@@ -712,7 +712,7 @@
               <p class="logo-desc" data-i18n="logo_opt1_desc">High-dimensional torus manifold with Cap Set affine points in neon cyan & violet gradient. Pure mathematical rigor.</p>
             </div>
             <div class="logo-actions">
-              <button class="btn btn-sm btn-logo-apply" data-i18n="logo_btn_active">✓ Active Logo</button>
+              <button class="btn btn-sm btn-secondary btn-logo-apply" data-i18n="logo_btn_apply">Select This Logo</button>
               <a href="assets/logo-1-core.svg" download="AxiomForge_Logo_OptionA.svg" class="btn btn-sm btn-secondary" data-i18n="logo_btn_download">Download SVG</a>
             </div>
           </div>
@@ -735,20 +735,20 @@
             </div>
           </div>
 
-          <!-- Option 3 -->
-          <div class="logo-option-card" data-logo-id="logo-3-spark" data-logo-file="assets/logo-3-spark.svg">
+          <!-- Option 3 (Official Active Logo) -->
+          <div class="logo-option-card active" data-logo-id="logo-3-spark" data-logo-file="assets/logo-3-spark.svg">
             <div class="logo-preview-box">
-              <img src="assets/logo-3-spark.svg" alt="Option C: Fractal Recursion" class="logo-preview-img">
+              <img src="assets/logo-3-spark.svg" alt="Option C: Fractal Spark (AF Core)" class="logo-preview-img">
             </div>
             <div class="logo-info">
               <div class="logo-header-row">
-                <span class="logo-name" data-i18n="logo_opt3_title">Option C · Fractal Recursion</span>
-                <span class="badge badge-emerald" data-i18n="logo_opt3_badge">Self-Similarity</span>
+                <span class="logo-name" data-i18n="logo_opt3_title">Option C · Fractal Spark (AF Core)</span>
+                <span class="badge badge-emerald" data-i18n="logo_opt3_badge">Official Brand · AF Core</span>
               </div>
-              <p class="logo-desc" data-i18n="logo_opt3_desc">Self-similar Koch snowflake lattice & neural synapses in aurora green & ocean azure. Infinite exploratory vitality.</p>
+              <p class="logo-desc" data-i18n="logo_opt3_desc">Self-similar Koch snowflake lattice & neural synapses with geometric AF monogram in deep cosmic core. Aurora green & ocean azure.</p>
             </div>
             <div class="logo-actions">
-              <button class="btn btn-sm btn-secondary btn-logo-apply" data-i18n="logo_btn_apply">Select This Logo</button>
+              <button class="btn btn-sm btn-logo-apply" data-i18n="logo_btn_active">✓ Active Logo</button>
               <a href="assets/logo-3-spark.svg" download="AxiomForge_Logo_OptionC.svg" class="btn btn-sm btn-secondary" data-i18n="logo_btn_download">Download SVG</a>
             </div>
           </div>
@@ -762,13 +762,13 @@
   </div>
 
   <!-- 脚本加载 (i18n 率先加载完成字典注入，防缓存版本号确保即时生效) -->
-  <script src="js/i18n.js?v=20260913_6"></script>
-  <script src="js/koch.js?v=20260913_6"></script>
-  <script src="js/orbit.js?v=20260913_6"></script>
-  <script src="js/mandelbrot.js?v=20260913_6"></script>
-  <script src="js/cap_set_data.js?v=20260913_6"></script>
-  <script src="js/model_platform.js?v=20260913_6"></script>
-  <script src="js/math_discovery.js?v=20260913_6"></script>
-  <script src="js/app.js?v=20260913_6"></script>
+  <script src="js/i18n.js?v=20260913_7"></script>
+  <script src="js/koch.js?v=20260913_7"></script>
+  <script src="js/orbit.js?v=20260913_7"></script>
+  <script src="js/mandelbrot.js?v=20260913_7"></script>
+  <script src="js/cap_set_data.js?v=20260913_7"></script>
+  <script src="js/model_platform.js?v=20260913_7"></script>
+  <script src="js/math_discovery.js?v=20260913_7"></script>
+  <script src="js/app.js?v=20260913_7"></script>
 </body>
 </html>
