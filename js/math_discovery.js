@@ -107,15 +107,24 @@ class MultiDimCapSetVisualizer {
     };
 
     // 重置思考链与推演视窗提示，消除上一维度的残留文本与误解
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
     const thinkingTextEl = document.getElementById('ai-thinking-text');
     const thinkingStatusEl = document.getElementById('thinking-status-text');
     if (thinkingStatusEl) {
-      thinkingStatusEl.textContent = `就绪 (目标: ${dim} 维 · ${this.allPoints.length} 点)`;
+      thinkingStatusEl.textContent = isEn
+        ? `Ready (Target: ${dim}D · ${this.allPoints.length} pts)`
+        : `就绪 (目标: ${dim} 维 · ${this.allPoints.length} 点)`;
     }
     if (thinkingTextEl) {
-      thinkingTextEl.textContent = `【当前探索目标：F_3^${dim} 空间 (共 ${this.allPoints.length} 点)】\n` +
-        `- 已知理论极值: ${bench.knownBest || '待探索'} 点 | 朴素贪心受限陷阱: 2^${dim} = ${Math.pow(2, dim)} 点\n\n` +
-        `点击下方【AI 大模型生成演化】，将向配置的模型发起 ${dim} 维极值组合推演请求，大模型将分析汉明切片与仿射同余不变性，并在 Python 沙箱中完成严格三点共线验算。`;
+      if (isEn) {
+        thinkingTextEl.textContent = `[Current Search Target: F_3^${dim} affine space (${this.allPoints.length} total points)]\n` +
+          `- Known theoretical best: ${bench.knownBest || 'TBD'} pts | Naive greedy barrier: 2^${dim} = ${Math.pow(2, dim)} pts\n\n` +
+          `Click "AI Model Evolution" below to request extremal combinatorial program evolution from the configured LLM. The model will analyze Hamming weight slices and affine modulo invariants, followed by rigorous zero-collinear Python sandbox evaluation.`;
+      } else {
+        thinkingTextEl.textContent = `【当前探索目标：F_3^${dim} 空间 (共 ${this.allPoints.length} 点)】\n` +
+          `- 已知理论极值: ${bench.knownBest || '待探索'} 点 | 朴素贪心受限陷阱: 2^${dim} = ${Math.pow(2, dim)} 点\n\n` +
+          `点击下方【AI 大模型生成演化】，将向配置的模型发起 ${dim} 维极值组合推演请求，大模型将分析汉明切片与仿射同余不变性，并在 Python 沙箱中完成严格三点共线验算。`;
+      }
     }
 
     // 异步在真实沙箱中验算基准代码
@@ -329,13 +338,16 @@ class MultiDimCapSetVisualizer {
   }
 
   updateUI() {
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
     const bench = CAP_SET_BENCHMARKS[this.dimension] || {};
     const baseline = bench.naiveBaseline || Math.pow(2, this.dimension);
 
     // 顶部 HUD 动态文本
     const hudSpaceEl = document.getElementById('hud-target-space');
     if (hudSpaceEl) {
-      hudSpaceEl.textContent = `F_3^${this.dimension} 空间 (${this.allPoints.length} 点)`;
+      hudSpaceEl.textContent = isEn
+        ? `F_3^${this.dimension} (${this.allPoints.length} pts)`
+        : `F_3^${this.dimension} 空间 (${this.allPoints.length} 点)`;
     }
 
     const scoreEl = document.getElementById('funsearch-best-score');
@@ -346,34 +358,50 @@ class MultiDimCapSetVisualizer {
     const countEl = document.getElementById('funsearch-points-count');
     if (countEl) {
       const pct = this.allPoints.length > 0 ? ((this.selectedPoints.length / this.allPoints.length) * 100).toFixed(1) : 0;
-      countEl.textContent = `${this.selectedPoints.length} 点 (${pct}%)`;
+      countEl.textContent = isEn
+        ? `${this.selectedPoints.length} pts (${pct}%)`
+        : `${this.selectedPoints.length} 点 (${pct}%)`;
     }
 
     const totalSpaceDescEl = document.getElementById('funsearch-total-space-desc');
     if (totalSpaceDescEl) {
-      totalSpaceDescEl.textContent = `总空间 ${this.allPoints.length} 点 (3^${this.dimension})`;
+      totalSpaceDescEl.textContent = isEn
+        ? `Total Space ${this.allPoints.length} pts (3^${this.dimension})`
+        : `总空间 ${this.allPoints.length} 点 (3^${this.dimension})`;
     }
 
     const baselineSubEl = document.getElementById('funsearch-baseline-sub');
     if (baselineSubEl) {
-      baselineSubEl.textContent = this.isEvolved && this.selectedPoints.length > baseline
-        ? `成功打破 2^${this.dimension}=${baseline} 局部最优！`
-        : `受限于 2^${this.dimension}=${baseline} 局部极值`;
+      if (isEn) {
+        baselineSubEl.textContent = this.isEvolved && this.selectedPoints.length > baseline
+          ? `Broke 2^${this.dimension}=${baseline} Local Trap!`
+          : `Bounded by 2^${this.dimension}=${baseline} Local Barrier`;
+      } else {
+        baselineSubEl.textContent = this.isEvolved && this.selectedPoints.length > baseline
+          ? `成功打破 2^${this.dimension}=${baseline} 局部最优！`
+          : `受限于 2^${this.dimension}=${baseline} 局部极值`;
+      }
     }
 
     const impEl = document.getElementById('funsearch-improvement-badge');
     if (impEl) {
       if (this.isEvolved && this.selectedPoints.length > baseline) {
         const gain = (((this.selectedPoints.length - baseline) / baseline) * 100).toFixed(1);
-        impEl.textContent = `打破 2^${this.dimension} 陷阱 +${gain}% (${this.evolvedModel} 真实推演)`;
+        impEl.textContent = isEn
+          ? `Broke 2^${this.dimension} Trap +${gain}% (${this.evolvedModel})`
+          : `打破 2^${this.dimension} 陷阱 +${gain}% (${this.evolvedModel} 真实推演)`;
         impEl.style.background = 'rgba(234, 179, 8, 0.2)';
         impEl.style.color = '#fef08a';
       } else if (this.isEvolved) {
-        impEl.textContent = `模型真实得分: ${this.selectedPoints.length} 点 (${this.evolvedModel})`;
+        impEl.textContent = isEn
+          ? `Model Score: ${this.selectedPoints.length} pts (${this.evolvedModel})`
+          : `模型真实得分: ${this.selectedPoints.length} 点 (${this.evolvedModel})`;
         impEl.style.background = 'rgba(56, 189, 248, 0.15)';
         impEl.style.color = '#38bdf8';
       } else {
-        impEl.textContent = `朴素基线 (受限于 2^${this.dimension}=${baseline})`;
+        impEl.textContent = isEn
+          ? `Naive Baseline (Trapped at 2^${this.dimension}=${baseline})`
+          : `朴素基线 (受限于 2^${this.dimension}=${baseline})`;
         impEl.style.background = 'rgba(148, 163, 184, 0.15)';
         impEl.style.color = '#94a3b8';
       }
@@ -386,14 +414,22 @@ class MultiDimCapSetVisualizer {
 
     const titleEl = document.getElementById('title-code-display');
     if (titleEl) {
-      titleEl.textContent = this.isEvolved
-        ? `AI 演化出的最优 Python 优先级函数 (${this.evolvedModel} 真实生成)`
-        : `当前运行的 Python 优先级函数 (基准基线)`;
+      if (isEn) {
+        titleEl.textContent = this.isEvolved
+          ? `AI Synthesized Python Priority Program (${this.evolvedModel})`
+          : `Current Python Priority Program (Baseline)`;
+      } else {
+        titleEl.textContent = this.isEvolved
+          ? `AI 演化出的最优 Python 优先级函数 (${this.evolvedModel} 真实生成)`
+          : `当前运行的 Python 优先级函数 (基准基线)`;
+      }
     }
 
     const sandboxStatusEl = document.getElementById('sandbox-status-text');
     if (sandboxStatusEl && this.lastEvalResult) {
-      sandboxStatusEl.textContent = `沙箱验算: 耗时 ${this.lastEvalResult.evalTime}s | 三点共线违规: ${this.lastEvalResult.violations} (100% 严格验证)`;
+      sandboxStatusEl.textContent = isEn
+        ? `Sandbox: ${this.lastEvalResult.evalTime}s | Collinear Violations: ${this.lastEvalResult.violations} (100% Strict Verified)`
+        : `沙箱验算: 耗时 ${this.lastEvalResult.evalTime}s | 三点共线违规: ${this.lastEvalResult.violations} (100% 严格验证)`;
     }
 
     // 触发图表重新绘制

@@ -1,0 +1,440 @@
+/**
+ * AxiomForge 国际化 (i18n) 引擎与双语字典
+ * 默认语言：English ('en')，支持即时切换为 简体中文 ('zh')
+ */
+
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'axiomforge_lang';
+  const DEFAULT_LANG = 'en';
+
+  const DICTIONARY = {
+    en: {
+      // 品牌与标题
+      brand_title: 'AxiomForge · AI Math Discovery',
+      brand_subtitle: 'Autonomous Program Evolution · Extremal Combinatorics · Complex Dynamics',
+      
+      // 模式切换选项卡
+      tab_koch: 'Koch Snowflake · Self-Similarity',
+      tab_mandelbrot: 'Mandelbrot · Complex Dynamics',
+      tab_funsearch: 'AI Math Discovery · Cap Set',
+
+      // 顶部导航按钮
+      btn_model_settings: 'AI Model Platform',
+      btn_model_settings_title: 'Configure AI Model Providers (DeepSeek / OpenAI / Ollama / Custom)',
+      btn_fullscreen_title: 'Toggle Fullscreen',
+      btn_lang_title: 'Switch Language / 切换语言',
+      lang_name: 'English',
+
+      // 模块 1：科赫雪花
+      koch_stat_order: 'Order: ',
+      koch_stat_order_val: 'Order 3',
+      koch_hud_action_tag: 'Controls',
+      koch_hud_action_desc: 'Wheel to Zoom | Drag to Pan | Auto Budding Evolution',
+      btn_koch_zoom_out: 'Zoom Out',
+      btn_koch_reset: 'Reset Center',
+      btn_koch_zoom_in: 'Zoom In',
+      koch_sidebar_ctrl_title: 'Growth & Evolution Controls',
+      koch_label_order: 'Iteration Order',
+      btn_koch_pause: 'Pause Evolution',
+      btn_koch_play: 'Play Evolution',
+      koch_sidebar_dashboard_title: 'Dynamic Mathematical Dashboard',
+      koch_stat_segments_label: 'Total Segments (×4)',
+      koch_stat_perimeter_label: 'Total Perimeter (4/3 Diverges)',
+      koch_stat_area_label: 'Enclosed Area (Converges to 8/5)',
+      koch_stat_dimension_label: 'Hausdorff Dimension',
+      koch_stat_dim_sub: 'D = log(4) / log(3) ≈ 1.262',
+      koch_stat_perimeter_sub: 'P_n → ∞ (Tends to infinity)',
+      koch_diff_prefix: 'Diff from limit 8/5(1.6): ',
+      koch_limit_target: 'Limit 1.6000',
+      koch_theory_title: 'Key Mathematical Insights:',
+      koch_theory_1: '• Construction: Equilateral triangle → Trisection → Add smaller triangle outwards on each middle segment.',
+      koch_theory_2: '• Perimeter: Each step side × 1/3, segments × 4. Ratio 4/3 > 1; under infinite steps, **perimeter diverges to infinity**.',
+      koch_theory_3: '• Area: Added area converges via geometric series ratio 4/9. Strictly approaches **8/5 (1.6x) of initial area**.',
+      koch_theory_4: '• Philosophical Takeaway: **"Infinite perimeter, finite bounded area"**.',
+      koch_theme_title: 'Visual Themes',
+      koch_theme_cyan: 'Cyan Glow',
+      koch_theme_aurora: 'Cosmic Aurora',
+      koch_theme_wireframe: 'Wireframe',
+
+      // 模块 2：曼德勃罗集
+      mb_hud_status_tag: 'Dynamics State',
+      mb_hud_status_ready: 'Ready (Move mouse to sample)',
+      mb_hud_orbit_tag: 'Orbit State',
+      mb_hud_orbit_desc: 'Hover cursor to trace complex orbit',
+      mb_watermark_title: 'Fractal Geometry',
+      btn_mb_zoom_out: 'Zoom Out',
+      btn_mb_reset: 'Reset View',
+      btn_mb_zoom_in: 'Zoom In',
+      mb_section_power_title: 'Higher-Order Morphing (z ↦ zᵈ + c)',
+      mb_label_power: 'Power Exponent (d)',
+      btn_power_morph_start: 'Start Morphing Animation',
+      btn_power_morph_pause: 'Pause Morphing Animation',
+      mb_section_prec_title: 'Compute Precision & Deep Dive',
+      mb_label_iter: 'GPU Iteration Depth',
+      btn_mb_tour_start: 'Auto Deep-Dive Cruise',
+      btn_mb_tour_pause: 'Pause Cruise',
+      mb_preset_spiral: '✨ Infinite Spiral (Multi-arm)',
+      mb_preset_seahorse: 'Seahorse Valley',
+      mb_preset_elephant: 'Elephant Valley',
+      mb_preset_mini: 'Mini-Mandelbrot',
+      mb_section_metrics_title: 'Real-Time Dynamics Metrics',
+      mb_stat_zoom_label: 'Viewport Magnification',
+      mb_stat_zoom_sub: '100% Full Panoramic View',
+      mb_stat_iter_label: 'GPU Parallel Iterations',
+      mb_stat_iter_sub: 'Smooth 60 FPS Rendering',
+      mb_chk_orbit: 'Enable Complex Orbit Tracer (Hover to inspect trajectory)',
+      mb_theory_title: 'Mathematical Mechanism (God\'s Fingerprint):',
+      mb_theory_1: '• Iteration: z_{n+1} = z^d + c (starting at z_0 = 0)',
+      mb_theory_2: '• At exponent d = 5.08, symmetric petals equal d - 1 ≈ 4 main lobes, blossoming like an organic entity!',
+      mb_theory_3: '• Set Definition: If sequence remains bounded |z| ≤ 2, then c ∈ M (black interior).',
+      mb_theory_4: '• Smooth Shading: If sequence escapes, record escape step count and apply continuous smooth potential.',
+      mb_theory_5: '• Not hand-designed, but purely computed!',
+      mb_section_palette_title: 'Color Palettes',
+      mb_palette_gold: 'Fractal Blue-Gold',
+      mb_palette_purple: 'Dreamy Violet',
+      mb_palette_neon: 'Cyber Neon',
+      mb_palette_ice: 'Deep Space Ice',
+      mb_palette_magma: 'Fiery Magma',
+      mb_palette_aurora: 'Emerald Aurora',
+      mb_palette_darkgold: 'Luxury Dark Gold',
+
+      // 模块 3：FunSearch 帽集探索
+      funsearch_toolbar_dim: 'Search Space:',
+      funsearch_dim_3: '3D (27 pts)',
+      funsearch_dim_4: '4D (81 pts)',
+      funsearch_dim_5: '⭐ 5D (243 pts · Focus)',
+      funsearch_dim_6: '6D (729 pts)',
+      funsearch_dim_7: '7D (2187 pts)',
+      funsearch_toolbar_proj: 'Projection:',
+      funsearch_proj_sphere: 'Hypersphere Topology',
+      funsearch_proj_slices: '3D Array Slices',
+      funsearch_target_space_label: 'Target Space: ',
+      funsearch_pow_tag: 'PoW Verification',
+      funsearch_collinear_stat: '100% Collinear Free (0 lines)',
+      funsearch_trap_break: 'Break 2ⁿ Local Trap',
+      btn_fast_deduction: 'Verify in Sandbox',
+      btn_fast_deduction_title: 'Quickly evaluate deterministic heuristic in Python sandbox',
+      btn_ai_evolve: 'AI Model Evolution',
+      btn_ai_evolve_title: 'Query configured LLM to synthesize and evolve priority programs',
+      btn_reset_benchmark: 'Reset Benchmark',
+      btn_reset_benchmark_title: 'Restore known best / breakthrough point set',
+      funsearch_sidebar_pow_title: 'High-Dimensional Space & Proof-of-Work (PoW)',
+      funsearch_card_max_score: 'Max Cap Set Cardinality',
+      funsearch_card_points_count: 'Cap Set Size',
+      funsearch_ab_chart_title: 'A/B Evolutionary Convergence (Breaking 2ⁿ Trap)',
+      funsearch_ab_legend_naive: 'Control Group (Naive Search)',
+      funsearch_ab_legend_sym: 'Experimental Group (Symmetry Prior)',
+      funsearch_ai_section_title: 'LLM Reasoning & Evolution Engine',
+      funsearch_active_model_label: 'Active Model:',
+      funsearch_deduction_title: '🧠 LLM Algebraic Reasoning (',
+      funsearch_status_ready: 'Ready',
+      funsearch_status_running: 'Reasoning...',
+      funsearch_status_evaluating: 'Evaluating in Sandbox...',
+      btn_skip_typing: '⚡ Expand',
+      btn_copy_thinking: '📋 Copy Reasoning',
+      btn_export_markdown: '📥 Export Report',
+      btn_copy_code: '📋 Copy Code',
+      funsearch_code_title: 'Current Python Priority Heuristic Function',
+      funsearch_default_thinking: 'Click "AI Model Evolution" to dispatch a verified request to the configured LLM. The model will reason algebraically, output priority code, and be validated in the Python sandbox with zero-collinear checking. We strictly prohibit fake pre-determined results.',
+      funsearch_sandbox_ready: 'Sandbox Engine: Ready (O(k²) fast non-collinear collision check)',
+      funsearch_verifying: 'Verifying in sandbox...',
+      funsearch_copied: 'Copied ✓',
+      funsearch_no_content: 'No reasoning content to copy yet',
+      funsearch_export_filename_prefix: 'AxiomForge_CapSet_',
+
+      // 模态弹窗：AI 模型设置
+      modal_title: 'AI Model Provider Studio',
+      modal_subtitle: 'Full support for dynamic model fetch, custom endpoints, and encrypted local key storage',
+      label_provider: 'Select Provider',
+      btn_add_provider: '+ Add Custom Provider',
+      btn_delete_provider: '🗑️ Delete Provider',
+      label_platform_name: 'Platform Display Name',
+      placeholder_platform_name: 'e.g. DST Gateway / Company Cluster',
+      label_base_url: 'API Endpoint (Base URL)',
+      btn_fetch_models: 'Fetch Models',
+      tip_base_url: 'Supports any OpenAI / Claude compatible Base URL. Enter endpoint & key, then click "Fetch Models".',
+      label_api_key: 'API Key',
+      tip_api_key: 'Credentials are encrypted and saved solely in your browser LocalStorage. Never uploaded.',
+      label_model_select: 'Model Selection',
+      btn_manual_model: 'Enter Model Manually',
+      btn_dropdown_model: 'Choose from List',
+      btn_test_auth: 'Check Auth',
+      btn_cancel: 'Cancel',
+      btn_save: 'Save & Apply',
+      auth_checking: 'Testing connection...',
+      auth_success: '✓ Connected successfully! Found {count} available models.',
+      auth_error: '✗ Connection failed: ',
+      toast_provider_saved: 'Provider configuration saved successfully!',
+      toast_provider_deleted: 'Custom provider deleted.',
+      prompt_new_provider_name: 'Enter a name for the new custom provider:',
+
+      // 演化四阶段
+      stage_1: 'Phase 1: Loading Hyperplane Constraints & L0 Slices...',
+      stage_2: 'Phase 2: Exploring Non-Collinear Symmetries & Modulo Rules...',
+      stage_3: 'Phase 3: Synthesizing Python Priority Heuristic Function...',
+      stage_4: 'Phase 4: Python Sandbox Verification & Collision Checking...'
+    },
+
+    zh: {
+      // 品牌与标题
+      brand_title: 'AxiomForge · AI 数学发现',
+      brand_subtitle: '自主程序演化 · 极值组合 · 复杂动力学',
+
+      // 模式切换选项卡
+      tab_koch: '科赫雪花 · 几何自相似',
+      tab_mandelbrot: '曼德勃罗集 · 广义高阶动力学',
+      tab_funsearch: 'AI 数学发现 · Cap Set (FunSearch)',
+
+      // 顶部导航按钮
+      btn_model_settings: 'AI 模型平台配置',
+      btn_model_settings_title: '配置大模型平台 (DeepSeek / OpenAI / Ollama / 自定义)',
+      btn_fullscreen_title: '全屏沉浸模式',
+      btn_lang_title: '切换语言 / Switch Language',
+      lang_name: '中文',
+
+      // 模块 1：科赫雪花
+      koch_stat_order: '演化状态：',
+      koch_stat_order_val: '第 3 阶',
+      koch_hud_action_tag: '操作',
+      koch_hud_action_desc: '滚轮缩放 | 拖拽漫游 | 自动连续萌芽演化',
+      btn_koch_zoom_out: '中心缩小',
+      btn_koch_reset: '中心全貌',
+      btn_koch_zoom_in: '中心放大',
+      koch_sidebar_ctrl_title: '生长与演化控制',
+      koch_label_order: '迭代阶数 (Order)',
+      btn_koch_pause: '暂停演化',
+      btn_koch_play: '播放演化',
+      koch_sidebar_dashboard_title: '数学推导动态仪表盘',
+      koch_stat_segments_label: '线段总数 (×4 递增)',
+      koch_stat_perimeter_label: '总周长 (4/3 发散)',
+      koch_stat_area_label: '包围面积 (收敛至 8/5 倍)',
+      koch_stat_dimension_label: '豪斯多夫分形维数',
+      koch_stat_dim_sub: 'D = log(4) / log(3) ≈ 1.262',
+      koch_stat_perimeter_sub: 'P_n → ∞ (趋于无穷)',
+      koch_diff_prefix: '距理论极限 8/5(1.6) 差: ',
+      koch_limit_target: '极限 1.6000',
+      koch_theory_title: '核心数学结论：',
+      koch_theory_1: '• 构造：正三角形 → 每边三等分 → 中间向外补等边三角形。',
+      koch_theory_2: '• 周长：每次边长 × 1/3，边数 × 4，周长公比为 4/3 > 1，无限迭代下**周长发散至无穷大**。',
+      koch_theory_3: '• 面积：新增小三角形面积按公比 4/9 几何级数收敛，总面积有限，严格趋向于**初始三角形的 8/5 倍**。',
+      koch_theory_4: '• 哲理：**“无限周长，包围有限面积”**。',
+      koch_theme_title: '视觉与色彩主题',
+      koch_theme_cyan: '青蓝光晕',
+      koch_theme_aurora: '星空极光',
+      koch_theme_wireframe: '几何线框',
+
+      // 模块 2：曼德勃罗集
+      mb_hud_status_tag: '动力学判定',
+      mb_hud_status_ready: '探测就绪 (移动鼠标取样)',
+      mb_hud_orbit_tag: '轨道状态',
+      mb_hud_orbit_desc: '移动鼠标观察复数轨道',
+      mb_watermark_title: '分形几何学',
+      btn_mb_zoom_out: '中心缩小',
+      btn_mb_reset: '中心全景',
+      btn_mb_zoom_in: '中心放大',
+      mb_section_power_title: '分形高阶幂次演化 (z ↦ zᵈ + c)',
+      mb_label_power: '分形指数幂次 (Power d)',
+      btn_power_morph_start: '开启开花形变动画',
+      btn_power_morph_pause: '暂停形变演化',
+      mb_section_prec_title: '计算精度与深潜巡航',
+      mb_label_iter: 'GPU 迭代精度',
+      btn_mb_tour_start: '自动深潜巡航',
+      btn_mb_tour_pause: '暂停巡航',
+      mb_preset_spiral: '✨ 以为走到了尽头 (绝美多臂螺旋)',
+      mb_preset_seahorse: '海马谷 (Seahorse)',
+      mb_preset_elephant: '象谷 (Elephant)',
+      mb_preset_mini: '迷你微型体',
+      mb_section_metrics_title: '实时动力学指标',
+      mb_stat_zoom_label: '当前视口放大倍率',
+      mb_stat_zoom_sub: '100% 完整全貌展现',
+      mb_stat_iter_label: 'GPU 并行迭代',
+      mb_stat_iter_sub: '60 FPS 丝滑渲染',
+      mb_chk_orbit: '启用复数轨道探测器 (鼠标悬停跟踪轨迹)',
+      mb_theory_title: '核心数学机理（上帝指纹）：',
+      mb_theory_1: '• 迭代方程：z_{n+1} = z^d + c (从 z_0 = 0 开始)',
+      mb_theory_2: '• 当幂次 d = 5.08 时，对称花瓣数量为 d - 1 ≈ 4 个主瓣，如同生命有机体绽放！',
+      mb_theory_3: '• 集合定义：若数列模长始终 |z| ≤ 2 有界，则 c ∈ M（黑色内部）。',
+      mb_theory_4: '• 上色依据：若数列发散脱离，记录逃逸前步数并进行平滑连续势着色。',
+      mb_theory_5: '• 不是设计出来的，是算出来的！',
+      mb_section_palette_title: '色彩艺术方案',
+      mb_palette_gold: '分形蓝金(截图同款)',
+      mb_palette_purple: '梦幻紫金(螺旋同款)',
+      mb_palette_neon: '赛博霓虹',
+      mb_palette_ice: '深空冰蓝',
+      mb_palette_magma: '炽烈熔岩',
+      mb_palette_aurora: '翡翠极光',
+      mb_palette_darkgold: '奢华黑金',
+
+      // 模块 3：FunSearch 帽集探索
+      funsearch_toolbar_dim: '探索空间:',
+      funsearch_dim_3: '3 维 (27点)',
+      funsearch_dim_4: '4 维 (81点)',
+      funsearch_dim_5: '⭐ 5 维 (243点 · 重点)',
+      funsearch_dim_6: '6 维 (729点)',
+      funsearch_dim_7: '7 维 (2187点)',
+      funsearch_toolbar_proj: '高维投影:',
+      funsearch_proj_sphere: '超球拓扑投影',
+      funsearch_proj_slices: '3D 切片阵列',
+      funsearch_target_space_label: '目标空间：',
+      funsearch_pow_tag: 'PoW 验证',
+      funsearch_collinear_stat: '100% 严格无共线 (0 条线)',
+      funsearch_trap_break: '突破局部陷阱',
+      btn_fast_deduction: '启动即时推演',
+      btn_fast_deduction_title: '在前端快速运行确定性对称性启发式推演',
+      btn_ai_evolve: 'AI 大模型生成演化',
+      btn_ai_evolve_title: '调用配置的大语言模型平台进行程序变异生成',
+      btn_reset_benchmark: '重置基准点',
+      btn_reset_benchmark_title: '恢复为已知最佳/突破点集',
+      funsearch_sidebar_pow_title: '高维空间与突破工作量证明 (PoW)',
+      funsearch_card_max_score: 'Cap Set 最大基数',
+      funsearch_card_points_count: '空间点集规模',
+      funsearch_ab_chart_title: 'A/B 对抗演化收敛曲线 (突破 2ⁿ 局部陷阱)',
+      funsearch_ab_legend_naive: '对照组 (朴素盲目演化)',
+      funsearch_ab_legend_sym: '实验组 (对称性先验突破)',
+      funsearch_ai_section_title: '大语言模型演化与思考过程',
+      funsearch_active_model_label: '当前驱动模型:',
+      funsearch_deduction_title: '🧠 大模型代数推演全景 (',
+      funsearch_status_ready: '就绪',
+      funsearch_status_running: '深度推演中...',
+      funsearch_status_evaluating: '沙箱严密验算中...',
+      btn_skip_typing: '⚡ 展开',
+      btn_copy_thinking: '📋 复制推导',
+      btn_export_markdown: '📥 导出报告',
+      btn_copy_code: '📋 复制代码',
+      funsearch_code_title: '当前运行的 Python 优先级函数',
+      funsearch_default_thinking: '点击“AI 大模型生成演化”将向当前配置的模型发起真实请求，由模型实时推理并生成代数分析与代码，并在 Python 沙箱中完成严格三点共线验算。系统坚决杜绝任何未经模型真实推演的预定结果。',
+      funsearch_sandbox_ready: '沙箱验算引擎: 就绪 (O(k²) 极速无共线碰撞判定)',
+      funsearch_verifying: '正在验算...',
+      funsearch_copied: '已复制 ✓',
+      funsearch_no_content: '暂无推演内容可复制',
+      funsearch_export_filename_prefix: 'AxiomForge_帽集报告_',
+
+      // 模态弹窗：AI 模型设置
+      modal_title: 'AI 模型平台与自定义配置',
+      modal_subtitle: '完整支持动态模型抓取、自定义端点、多平台命名与密钥隔离',
+      label_provider: '选择或切换平台 (Provider)',
+      btn_add_provider: '+ 添加新平台',
+      btn_delete_provider: '🗑️ 删除平台',
+      label_platform_name: '平台显示名称 (Platform Name)',
+      placeholder_platform_name: '例如：DST 聚合中转 / 公司内部私有集群',
+      label_base_url: '接口端点 (Base URL)',
+      btn_fetch_models: '自动拉取模型',
+      tip_base_url: '支持任意 OpenAI / Claude 兼容的 Base URL。输入端点和 Key 后点击“自动拉取模型”即可同步全部可用模型。',
+      label_api_key: 'API 密钥 (API Key)',
+      tip_api_key: '凭据仅安全保存在本地（Local Storage），绝不向任何第三方服务上报。',
+      label_model_select: '模型选择 (Model)',
+      btn_manual_model: '手动输入模型名',
+      btn_dropdown_model: '从列表选择模型',
+      btn_test_auth: '测试连接 (Check Auth)',
+      btn_cancel: '取消',
+      btn_save: '保存并应用配置',
+      auth_checking: '正在向端点发送测试请求...',
+      auth_success: '✓ 鉴权成功！已连通，成功探测到 {count} 个模型。',
+      auth_error: '✗ 连接或鉴权失败: ',
+      toast_provider_saved: '平台配置已保存并生效！',
+      toast_provider_deleted: '自定义平台已删除。',
+      prompt_new_provider_name: '请输入新自定义平台的显示名称：',
+
+      // 演化四阶段
+      stage_1: '阶段一：装载超平面约束与 L0 汉明切片...',
+      stage_2: '阶段二：探索非共线对称性与同余偏置...',
+      stage_3: '阶段三：大模型合成 Python 优先级启发式函数...',
+      stage_4: '阶段四：Python 沙箱极速碰撞校验与贪心选择...'
+    }
+  };
+
+  class I18nManager {
+    constructor() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      this.currentLang = (saved === 'zh' || saved === 'en') ? saved : DEFAULT_LANG;
+      this.dict = DICTIONARY;
+    }
+
+    getLanguage() {
+      return this.currentLang;
+    }
+
+    setLanguage(lang) {
+      if (lang !== 'en' && lang !== 'zh') {
+        lang = DEFAULT_LANG;
+      }
+      this.currentLang = lang;
+      localStorage.setItem(STORAGE_KEY, lang);
+      this.applyToDOM();
+      window.dispatchEvent(new CustomEvent('axiomforge:lang_changed', { detail: { lang } }));
+    }
+
+    toggleLanguage() {
+      const target = this.currentLang === 'en' ? 'zh' : 'en';
+      this.setLanguage(target);
+      return target;
+    }
+
+    t(key, fallback = '') {
+      const pack = this.dict[this.currentLang] || this.dict[DEFAULT_LANG];
+      if (pack && pack[key] !== undefined) {
+        return pack[key];
+      }
+      const defaultPack = this.dict[DEFAULT_LANG];
+      if (defaultPack && defaultPack[key] !== undefined) {
+        return defaultPack[key];
+      }
+      return fallback || key;
+    }
+
+    applyToDOM() {
+      document.documentElement.lang = this.currentLang === 'zh' ? 'zh-CN' : 'en';
+
+      // 1. data-i18n 替换 innerText
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const translated = this.t(key);
+        if (translated) {
+          el.textContent = translated;
+        }
+      });
+
+      // 2. data-i18n-title 替换 title 属性
+      const titleElements = document.querySelectorAll('[data-i18n-title]');
+      titleElements.forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        const translated = this.t(key);
+        if (translated) {
+          el.setAttribute('title', translated);
+        }
+      });
+
+      // 3. data-i18n-placeholder 替换 placeholder
+      const phElements = document.querySelectorAll('[data-i18n-placeholder]');
+      phElements.forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        const translated = this.t(key);
+        if (translated) {
+          el.setAttribute('placeholder', translated);
+        }
+      });
+
+      // 4. 更新语言切换按钮上的文字指示
+      const langIndicator = document.getElementById('lang-indicator');
+      if (langIndicator) {
+        langIndicator.textContent = this.currentLang === 'en' ? 'English' : '中文';
+      }
+    }
+
+    init() {
+      this.applyToDOM();
+    }
+  }
+
+  window.I18N = new I18nManager();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.I18N.init();
+    });
+  } else {
+    window.I18N.init();
+  }
+})();

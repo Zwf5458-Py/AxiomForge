@@ -1,5 +1,10 @@
 # Manifund Fast Grant Application: Exploratory Research Proposal
 
+<p align="center">
+  <strong>English</strong> | 
+  <a href="manifund_grant_pitch_CN.md">简体中文</a>
+</p>
+
 > **Project Title**: AxiomForge: Exploring Algebraic Structural Priors in Heuristic Search for Extremal Combinatorics  
 > **Applicant Category**: Independent Open-Source AI & Math Researcher  
 > **Requested Funding**: $4,000 USD (3-Month Small Exploratory Grant)  

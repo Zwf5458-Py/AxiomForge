@@ -649,6 +649,19 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
 }
 
+/* 语言切换专用微调 */
+#btn-lang-toggle {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #bae6fd;
+}
+
+#btn-lang-toggle:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
 /* 视窗顶部维度切换工具条 (首层顶级控制台) */
 .funsearch-top-toolbar {
   position: absolute;

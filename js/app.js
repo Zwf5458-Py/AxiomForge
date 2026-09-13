@@ -20,6 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   window.updateActiveModelBadge();
 
+  // 语言切换按钮绑定与事件监听
+  const btnLangToggle = document.getElementById('btn-lang-toggle');
+  if (btnLangToggle) {
+    btnLangToggle.addEventListener('click', () => {
+      if (window.I18N) {
+        window.I18N.toggleLanguage();
+      }
+    });
+  }
+
+  window.addEventListener('axiomforge:lang_changed', (e) => {
+    // 语言改变时刷新各个引擎的动态状态
+    if (funsearchEngine && typeof funsearchEngine.updateUI === 'function') {
+      funsearchEngine.updateUI();
+    }
+  });
+
   let activeTab = 'mandelbrot'; // 默认进入震撼的广义高阶分形视窗
 
   // 视口自适应调整
@@ -101,7 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const order = parseInt(e.target.value, 10);
       valOrder.textContent = order;
       kochEngine.isPlaying = false;
-      btnPlayKoch.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> 播放演化';
+      const playText = window.I18N ? window.I18N.t('btn_koch_play') : 'Play Evolution';
+      btnPlayKoch.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ${playText}`;
       btnPlayKoch.classList.remove('btn-active');
       kochEngine.setOrder(order);
     });
@@ -111,10 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPlayKoch.addEventListener('click', () => {
       kochEngine.isPlaying = !kochEngine.isPlaying;
       if (kochEngine.isPlaying) {
-        btnPlayKoch.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> 暂停演化';
+        const pauseText = window.I18N ? window.I18N.t('btn_koch_pause') : 'Pause Evolution';
+        btnPlayKoch.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> ${pauseText}`;
         btnPlayKoch.classList.add('btn-active');
       } else {
-        btnPlayKoch.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> 播放演化';
+        const playText = window.I18N ? window.I18N.t('btn_koch_play') : 'Play Evolution';
+        btnPlayKoch.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ${playText}`;
         btnPlayKoch.classList.remove('btn-active');
       }
     });
@@ -169,7 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mandelbrotEngine.stopTour();
       mandelbrotEngine.isMorphingPower = false;
       if (btnPowerMorph) {
-        btnPowerMorph.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> 开启开花形变动画';
+        const morphText = window.I18N ? window.I18N.t('btn_power_morph_start') : 'Start Morphing Animation';
+        btnPowerMorph.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> ${morphText}`;
         btnPowerMorph.classList.remove('btn-active');
       }
       mandelbrotEngine.setPower(e.target.value);
@@ -182,10 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
       mandelbrotEngine.stopTour();
       mandelbrotEngine.isMorphingPower = !mandelbrotEngine.isMorphingPower;
       if (mandelbrotEngine.isMorphingPower) {
-        btnPowerMorph.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> 暂停形变演化';
+        const pauseText = window.I18N ? window.I18N.t('btn_power_morph_pause') : 'Pause Morphing Animation';
+        btnPowerMorph.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> ${pauseText}`;
         btnPowerMorph.classList.add('btn-active');
       } else {
-        btnPowerMorph.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> 开启开花形变动画';
+        const morphText = window.I18N ? window.I18N.t('btn_power_morph_start') : 'Start Morphing Animation';
+        btnPowerMorph.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> ${morphText}`;
         btnPowerMorph.classList.remove('btn-active');
       }
     });
@@ -202,7 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       mandelbrotEngine.isMorphingPower = false;
       if (btnPowerMorph) {
-        btnPowerMorph.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> 开启开花形变动画';
+        const morphText = window.I18N ? window.I18N.t('btn_power_morph_start') : 'Start Morphing Animation';
+        btnPowerMorph.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> ${morphText}`;
         btnPowerMorph.classList.remove('btn-active');
       }
       mandelbrotEngine.setPower(pVal);
@@ -226,7 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (mandelbrotEngine.isTouring) {
         mandelbrotEngine.stopTour();
       } else {
-        btnTour.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> 暂停巡航';
+        const pauseTour = window.I18N ? window.I18N.t('btn_mb_tour_pause') : 'Pause Cruise';
+        btnTour.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> ${pauseTour}`;
         btnTour.classList.add('btn-active');
         mandelbrotEngine.startTour('infinite_spiral');
       }
@@ -345,7 +370,8 @@ document.addEventListener('DOMContentLoaded', () => {
       onTypingCompleteCallback = null;
       if (btnAiEvolve) {
         btnAiEvolve.disabled = false;
-        btnAiEvolve.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> AI 大模型生成演化';
+        const evolveText = window.I18N ? window.I18N.t('btn_ai_evolve') : 'AI Model Evolution';
+        btnAiEvolve.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> ${evolveText}`;
       }
 
       funsearchEngine.switchDimension(dim);
@@ -367,14 +393,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnFastDeduction) {
     btnFastDeduction.addEventListener('click', async () => {
       btnFastDeduction.disabled = true;
-      btnFastDeduction.innerHTML = '<span class="pulse-indicator"></span> 正在验算...';
+      const verifyingText = window.I18N ? window.I18N.t('funsearch_verifying') : 'Verifying in sandbox...';
+      btnFastDeduction.innerHTML = `<span class="pulse-indicator"></span> ${verifyingText}`;
       try {
         await funsearchEngine.runSandboxEvaluation();
       } catch (err) {
-        alert(`沙箱验算错误: ${err.message}`);
+        alert(`Sandbox error: ${err.message}`);
       } finally {
         btnFastDeduction.disabled = false;
-        btnFastDeduction.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> 启动即时推演';
+        const deduceText = window.I18N ? window.I18N.t('btn_fast_deduction') : 'Verify in Sandbox';
+        btnFastDeduction.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> ${deduceText}`;
       }
     });
   }
@@ -477,16 +505,17 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
       const textToCopy = pendingFullText || (aiThinkingText ? aiThinkingText.textContent : '');
       if (!textToCopy) {
-        alert('暂无推演内容可复制');
+        alert(window.I18N ? window.I18N.t('funsearch_no_content') : 'No content to copy');
         return;
       }
+      const copiedText = window.I18N ? window.I18N.t('funsearch_copied') : 'Copied ✓';
+      const normalText = window.I18N ? window.I18N.t('btn_copy_thinking') : '📋 Copy Reasoning';
       try {
         await navigator.clipboard.writeText(textToCopy);
-        const originalText = btnCopyThinking.innerHTML;
-        btnCopyThinking.innerHTML = '已复制 ✓';
+        btnCopyThinking.textContent = copiedText;
         btnCopyThinking.style.color = '#34d399';
         setTimeout(() => {
-          btnCopyThinking.innerHTML = originalText;
+          btnCopyThinking.textContent = normalText;
           btnCopyThinking.style.color = '#38bdf8';
         }, 1800);
       } catch (err) {
@@ -496,8 +525,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        btnCopyThinking.textContent = '已复制 ✓';
-        setTimeout(() => { btnCopyThinking.textContent = '📋 复制推导'; }, 1800);
+        btnCopyThinking.textContent = copiedText;
+        setTimeout(() => { btnCopyThinking.textContent = normalText; }, 1800);
       }
     });
   }
@@ -508,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportMarkdown.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
       const deductionText = pendingFullText || (aiThinkingText ? aiThinkingText.textContent : '');
       const codeText = funsearchEngine ? funsearchEngine.currentCode : '';
       const dim = funsearchEngine ? funsearchEngine.dimension : 5;
@@ -516,12 +546,49 @@ document.addEventListener('DOMContentLoaded', () => {
       const curModel = window.modelPlatformManager ? window.modelPlatformManager.activeModel : 'unknown';
       const pInfo = window.modelPlatformManager ? window.modelPlatformManager.getProviderInfo(curProvider) : null;
       const pName = pInfo ? pInfo.name : curProvider;
-      const nowStr = new Date().toLocaleString();
+      const nowStr = new Date().toISOString();
       const totalSpace = 3 ** dim;
       const naiveBase = 2 ** dim;
       const score = points.length;
 
-      const mdContent = `# AxiomForge 极值组合数学演化成果报告
+      let mdContent = '';
+      if (isEn) {
+        mdContent = `# AxiomForge Extremal Combinatorics Evolution Report
+
+- **Generated At**: ${nowStr}
+- **LLM Model**: ${curModel} (${pName})
+- **Target Space**: $\\mathbb{F}_3^${dim}$ Finite Affine Vector Space (Total Points: ${totalSpace})
+- **Baseline Reference**: Naive Greedy Hypercube Barrier $2^${dim} = ${naiveBase}$ points
+- **Model Score**: Non-collinear Cap Set Cardinality **${score} points** (${score > naiveBase ? `🎉 Successfully broke 2ⁿ local trap +${(((score - naiveBase) / naiveBase) * 100).toFixed(1)}%` : 'Baseline reached'})
+- **Collinear Violations**: 0 lines (100% strictly satisfies non-collinear condition: $x + y + z \\not\\equiv 0 \\pmod 3$)
+
+---
+
+## 🧠 1. Large Language Model Algebraic Reasoning & Derivations
+
+${deductionText || '(No deduction text)'}
+
+---
+
+## 💻 2. Synthesized Python Priority Heuristic Program
+
+\`\`\`python
+${codeText || '# No code'}
+\`\`\`
+
+---
+
+## 📍 3. Verified Maximal Cap Set Vector Coordinates (${score} points)
+
+\`\`\`json
+${JSON.stringify(points, null, 2)}
+\`\`\`
+
+---
+*This report was automatically generated by AxiomForge and rigorously verified in an isolated Python mathematical sandbox.*
+`;
+      } else {
+        mdContent = `# AxiomForge 极值组合数学演化成果报告
 
 - **生成时间**: ${nowStr}
 - **演化模型**: ${curModel} (${pName})
@@ -555,12 +622,14 @@ ${JSON.stringify(points, null, 2)}
 ---
 *本报告由 AxiomForge AI 驱动极值组合数学发现引擎自动生成并经安全 Python 沙箱真实严密验算。*
 `;
+      }
 
+      const filename = isEn ? `AxiomForge_CapSet_F3_${dim}_${score}pts.md` : `AxiomForge_帽集报告_F3_${dim}_${score}点.md`;
       const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `AxiomForge_CapSet_F3_${dim}_${score}pts_${Date.now()}.md`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

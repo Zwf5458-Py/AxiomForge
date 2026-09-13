@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AxiomForge · AI 数学发现与复杂动力学模拟系统</title>
+  <title data-i18n="brand_title">AxiomForge · AI Math Discovery</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
   <header class="app-header">
     <div class="brand-area">
       <span class="logo-badge" style="background: linear-gradient(135deg, #f59e0b, #ec4899); color: #fff;">AXIOM FORGE</span>
-      <h1 class="app-title">AxiomForge · AI 数学发现</h1>
-      <span class="app-subtitle">自主程序演化 · 极值组合 · 复杂动力学</span>
+      <h1 class="app-title" data-i18n="brand_title">AxiomForge · AI Math Discovery</h1>
+      <span class="app-subtitle" data-i18n="brand_subtitle">Autonomous Program Evolution · Extremal Combinatorics · Complex Dynamics</span>
     </div>
 
     <!-- 模式切换选项卡 -->
@@ -22,32 +22,42 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="12 2 22 19.5 2 19.5 12 2"></polygon>
         </svg>
-        科赫雪花 · 几何自相似
+        <span data-i18n="tab_koch">Koch Snowflake · Self-Similarity</span>
       </button>
       <button id="tab-mandelbrot" class="tab-btn active">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
           <path d="M12 2a10 10 0 0 0 0 20"></path>
         </svg>
-        曼德勃罗集 · 广义高阶动力学
+        <span data-i18n="tab_mandelbrot">Mandelbrot · Complex Dynamics</span>
       </button>
       <button id="tab-funsearch" class="tab-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
         </svg>
-        AI 数学发现 · Cap Set (FunSearch)
+        <span data-i18n="tab_funsearch">AI Math Discovery · Cap Set</span>
       </button>
     </div>
 
     <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
-      <button id="btn-model-settings" class="btn-settings-pill" title="配置大模型平台 (DeepSeek / OpenAI / Ollama / 自定义)">
+      <!-- 语言切换按钮 (默认 English) -->
+      <button id="btn-lang-toggle" class="btn-settings-pill" data-i18n-title="btn_lang_title" title="Switch Language / 切换语言">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span id="lang-indicator">English</span>
+      </button>
+
+      <button id="btn-model-settings" class="btn-settings-pill" data-i18n-title="btn_model_settings_title" title="Configure AI Model Providers (DeepSeek / OpenAI / Ollama / Custom)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
-        <span>AI 模型平台配置</span>
+        <span data-i18n="btn_model_settings">AI Model Platform</span>
       </button>
-      <button id="btn-fullscreen" class="btn-icon" title="全屏沉浸模式">
+      <button id="btn-fullscreen" class="btn-icon" data-i18n-title="btn_fullscreen_title" title="Toggle Fullscreen">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
         </svg>
@@ -69,39 +79,39 @@
         <div class="hud-overlay">
           <div class="hud-pill">
             <span class="pulse-indicator"></span>
-            <span>演化状态：<strong id="stat-order">第 3 阶</strong></span>
+            <span><span data-i18n="koch_stat_order">Order: </span><strong id="stat-order">Order 3</strong></span>
           </div>
           <div class="hud-pill">
-            <span class="hud-tag">操作</span>
-            <span>滚轮缩放 | 拖拽漫游 | 自动连续萌芽演化</span>
+            <span class="hud-tag" data-i18n="koch_hud_action_tag">Controls</span>
+            <span data-i18n="koch_hud_action_desc">Wheel to Zoom | Drag to Pan | Auto Budding Evolution</span>
           </div>
         </div>
 
         <!-- 底部快捷操作 -->
         <div class="canvas-bottom-controls">
-          <button class="quick-action-btn" id="btn-koch-zoom-out" title="以图形中心缩小">
+          <button class="quick-action-btn" id="btn-koch-zoom-out" data-i18n-title="btn_koch_zoom_out" title="Zoom Out">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
-            中心缩小
+            <span data-i18n="btn_koch_zoom_out">Zoom Out</span>
           </button>
-          <button class="quick-action-btn" id="btn-koch-reset" title="重置居中全貌">
+          <button class="quick-action-btn" id="btn-koch-reset" data-i18n-title="btn_koch_reset" title="Reset Center">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
               <path d="M3 3v5h5"></path>
             </svg>
-            中心全貌
+            <span data-i18n="btn_koch_reset">Reset Center</span>
           </button>
-          <button class="quick-action-btn" id="btn-koch-zoom-in" title="以图形中心放大">
+          <button class="quick-action-btn" id="btn-koch-zoom-in" data-i18n-title="btn_koch_zoom_in" title="Zoom In">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               <line x1="11" y1="8" x2="11" y2="14"></line>
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
-            中心放大
+            <span data-i18n="btn_koch_zoom_in">Zoom In</span>
           </button>
         </div>
       </div>
@@ -122,46 +132,46 @@
             <span id="mb-coord">c = 0.00000 + 0.00000i</span>
           </div>
           <div class="hud-pill">
-            <span class="hud-tag">动力学判定</span>
-            <span id="orbit-status">探测就绪 (移动鼠标取样)</span>
+            <span class="hud-tag" data-i18n="mb_hud_status_tag">Dynamics State</span>
+            <span id="orbit-status" data-i18n="mb_hud_status_ready">Ready (Move mouse to sample)</span>
           </div>
           <div class="hud-pill">
-            <span class="hud-tag">轨道状态</span>
-            <span id="orbit-step">移动鼠标观察复数轨道</span>
+            <span class="hud-tag" data-i18n="mb_hud_orbit_tag">Orbit State</span>
+            <span id="orbit-step" data-i18n="mb_hud_orbit_desc">Hover cursor to trace complex orbit</span>
           </div>
         </div>
 
-        <!-- 画面左下角醒目大公式 (对应截图同款风格) -->
+        <!-- 画面左下角醒目大公式 -->
         <div class="hud-watermark">
-          <div class="watermark-title">分形几何学</div>
+          <div class="watermark-title" data-i18n="mb_watermark_title">Fractal Geometry</div>
           <div class="watermark-formula" id="mb-formula-display">z ↦ z<sup>2.00</sup> + c</div>
         </div>
 
         <!-- 底部快捷操作 -->
         <div class="canvas-bottom-controls">
-          <button class="quick-action-btn" id="btn-mb-zoom-out" title="以中心缩小">
+          <button class="quick-action-btn" id="btn-mb-zoom-out" data-i18n-title="btn_mb_zoom_out" title="Zoom Out">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
-            中心缩小
+            <span data-i18n="btn_mb_zoom_out">Zoom Out</span>
           </button>
-          <button class="quick-action-btn" id="btn-mb-reset" title="重置居中全景">
+          <button class="quick-action-btn" id="btn-mb-reset" data-i18n-title="btn_mb_reset" title="Reset View">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
               <path d="M3 3v5h5"></path>
             </svg>
-            中心全景
+            <span data-i18n="btn_mb_reset">Reset View</span>
           </button>
-          <button class="quick-action-btn" id="btn-mb-zoom-in" title="以中心放大">
+          <button class="quick-action-btn" id="btn-mb-zoom-in" data-i18n-title="btn_mb_zoom_in" title="Zoom In">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               <line x1="11" y1="8" x2="11" y2="14"></line>
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
-            中心放大
+            <span data-i18n="btn_mb_zoom_in">Zoom In</span>
           </button>
         </div>
       </div>
@@ -177,18 +187,18 @@
         <!-- 画面顶部快捷：维度切换与投影模式工具条 (首层顶级控制台) -->
         <div class="funsearch-top-toolbar">
           <div class="dim-selector-group">
-            <span class="toolbar-label">探索空间:</span>
-            <button class="dim-pill-btn" data-dim="3">3 维 (27点)</button>
-            <button class="dim-pill-btn" data-dim="4">4 维 (81点)</button>
-            <button class="dim-pill-btn active" data-dim="5">⭐ 5 维 (243点 · 重点)</button>
-            <button class="dim-pill-btn" data-dim="6">6 维 (729点)</button>
-            <button class="dim-pill-btn" data-dim="7">7 维 (2187点)</button>
+            <span class="toolbar-label" data-i18n="funsearch_toolbar_dim">Search Space:</span>
+            <button class="dim-pill-btn" data-dim="3" data-i18n="funsearch_dim_3">3D (27 pts)</button>
+            <button class="dim-pill-btn" data-dim="4" data-i18n="funsearch_dim_4">4D (81 pts)</button>
+            <button class="dim-pill-btn active" data-dim="5" data-i18n="funsearch_dim_5">⭐ 5D (243 pts · Focus)</button>
+            <button class="dim-pill-btn" data-dim="6" data-i18n="funsearch_dim_6">6D (729 pts)</button>
+            <button class="dim-pill-btn" data-dim="7" data-i18n="funsearch_dim_7">7D (2187 pts)</button>
           </div>
 
           <div class="proj-selector-group">
-            <span class="toolbar-label">高维投影:</span>
-            <button class="proj-pill-btn active" data-mode="hypersphere">超球拓扑投影</button>
-            <button class="proj-pill-btn" data-mode="slices">3D 切片阵列</button>
+            <span class="toolbar-label" data-i18n="funsearch_toolbar_proj">Projection:</span>
+            <button class="proj-pill-btn active" data-mode="hypersphere" data-i18n="funsearch_proj_sphere">Hypersphere Topology</button>
+            <button class="proj-pill-btn" data-mode="slices" data-i18n="funsearch_proj_slices">3D Array Slices</button>
           </div>
         </div>
 
@@ -196,38 +206,38 @@
         <div class="hud-overlay funsearch-hud-row">
           <div class="hud-pill">
             <span class="pulse-indicator" style="background: #eab308; box-shadow: 0 0 10px #eab308;"></span>
-            <span>目标空间：<strong id="hud-target-space">F_3^5 五维空间 (243 点)</strong></span>
+            <span><span data-i18n="funsearch_target_space_label">Target Space: </span><strong id="hud-target-space">F_3^5 (243 pts)</strong></span>
           </div>
           <div class="hud-pill">
-            <span class="hud-tag" style="background: rgba(234, 179, 8, 0.2); color: #fef08a;">PoW 验证</span>
-            <span>三点共线：<strong id="hud-collinear-stat">100% 严格无共线 (0 条线)</strong></span>
+            <span class="hud-tag" style="background: rgba(234, 179, 8, 0.2); color: #fef08a;" data-i18n="funsearch_pow_tag">PoW Verification</span>
+            <span id="hud-collinear-stat" data-i18n="funsearch_collinear_stat">100% Collinear Free (0 lines)</span>
           </div>
           <div class="hud-pill">
-            <span class="hud-tag" id="funsearch-improvement-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: bold;">突破局部陷阱 +18.75%</span>
+            <span class="hud-tag" id="funsearch-improvement-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-weight: bold;">Break 2ⁿ Local Trap +18.75%</span>
           </div>
         </div>
 
         <!-- 底部快捷操作 -->
         <div class="canvas-bottom-controls">
-          <button class="quick-action-btn" id="btn-fast-deduction" title="在前端快速运行确定性对称性启发式推演">
+          <button class="quick-action-btn" id="btn-fast-deduction" data-i18n-title="btn_fast_deduction_title" title="Quickly evaluate deterministic heuristic in Python sandbox">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
-            启动即时推演
+            <span data-i18n="btn_fast_deduction">Verify in Sandbox</span>
           </button>
-          <button class="quick-action-btn" id="btn-ai-evolve" title="调用配置的大语言模型平台进行程序变异生成">
+          <button class="quick-action-btn" id="btn-ai-evolve" data-i18n-title="btn_ai_evolve_title" title="Query configured LLM to synthesize and evolve priority programs">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
               <path d="M12 6v6l4 2"></path>
             </svg>
-            AI 大模型生成演化
+            <span data-i18n="btn_ai_evolve">AI Model Evolution</span>
           </button>
-          <button class="quick-action-btn" id="btn-reset-benchmark" title="恢复为已知最佳/突破点集">
+          <button class="quick-action-btn" id="btn-reset-benchmark" data-i18n-title="btn_reset_benchmark_title" title="Restore known best / breakthrough point set">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
               <path d="M3 3v5h5"></path>
             </svg>
-            重置基准点
+            <span data-i18n="btn_reset_benchmark">Reset Benchmark</span>
           </button>
         </div>
       </div>
@@ -241,11 +251,11 @@
       <!-- 侧边栏：科赫雪花控制与推导 -->
       <div id="sidebar-koch" style="display: none;">
         <div class="sidebar-section">
-          <div class="section-title">生长与演化控制</div>
+          <div class="section-title" data-i18n="koch_sidebar_ctrl_title">Growth & Evolution Controls</div>
           
           <div class="control-row">
             <div class="control-label-group">
-              <span>迭代阶数 (Order)</span>
+              <span data-i18n="koch_label_order">Iteration Order</span>
               <span class="control-val" id="koch-order-val">3</span>
             </div>
             <input type="range" id="koch-order-slider" min="0" max="5" value="3" step="1">
@@ -256,65 +266,65 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
               </svg>
-              暂停演化
+              <span data-i18n="btn_koch_pause">Pause Evolution</span>
             </button>
           </div>
         </div>
 
         <div class="sidebar-section">
-          <div class="section-title">数学推导动态仪表盘</div>
+          <div class="section-title" data-i18n="koch_sidebar_dashboard_title">Dynamic Mathematical Dashboard</div>
 
           <div class="stat-grid">
             <div class="stat-card">
-              <div class="stat-label">线段总数 (×4 递增)</div>
+              <div class="stat-label" data-i18n="koch_stat_segments_label">Total Segments (×4)</div>
               <div class="stat-number" id="stat-segments">192</div>
               <div class="stat-sub">N_n = 3 × 4ⁿ</div>
             </div>
 
             <div class="stat-card">
-              <div class="stat-label">总周长 (4/3 发散)</div>
+              <div class="stat-label" data-i18n="koch_stat_perimeter_label">Total Perimeter (4/3 Diverges)</div>
               <div class="stat-number" id="stat-perimeter">7.111 × P₀</div>
-              <div class="stat-sub">P_n → ∞ (趋于无穷)</div>
+              <div class="stat-sub" data-i18n="koch_stat_perimeter_sub">P_n → ∞ (Tends to infinity)</div>
             </div>
 
             <div class="stat-card" style="grid-column: span 2;">
-              <div class="stat-label">包围面积 (收敛至 8/5 倍)</div>
+              <div class="stat-label" data-i18n="koch_stat_area_label">Enclosed Area (Converges to 8/5)</div>
               <div class="stat-number" id="stat-area">1.5472 × A₀</div>
               
               <div class="progress-bar-container">
                 <div class="progress-track">
                   <div class="progress-fill" id="stat-area-bar" style="width: 96.7%;"></div>
-                  <div class="progress-target" style="left: 100%;" title="收敛极限 1.6 A0"></div>
+                  <div class="progress-target" style="left: 100%;" title="Convergence limit 1.6 A0"></div>
                 </div>
                 <div class="progress-meta">
-                  <span id="stat-area-diff">距理论极限 8/5(1.6) 差: 0.05280</span>
-                  <span>极限 1.6000</span>
+                  <span id="stat-area-diff">Diff from limit 8/5(1.6): 0.05280</span>
+                  <span data-i18n="koch_limit_target">Limit 1.6000</span>
                 </div>
               </div>
             </div>
 
             <div class="stat-card" style="grid-column: span 2;">
-              <div class="stat-label">豪斯多夫分形维数</div>
+              <div class="stat-label" data-i18n="koch_stat_dimension_label">Hausdorff Dimension</div>
               <div class="stat-number" id="stat-dimension">D ≈ 1.26186</div>
-              <div class="stat-sub">D = log(4) / log(3) ≈ 1.262</div>
+              <div class="stat-sub" data-i18n="koch_stat_dim_sub">D = log(4) / log(3) ≈ 1.262</div>
             </div>
           </div>
 
           <div class="theory-box">
-            <strong>核心数学结论：</strong><br>
-            • 构造：正三角形 $\to$ 每边三等分 $\to$ 中间向外补等边三角形。<br>
-            • 周长：每次边长 $\times 1/3$，边数 $\times 4$，周长公比为 $4/3 > 1$，无限迭代下<strong>周长发散至无穷大</strong>。<br>
-            • 面积：新增小三角形面积按公比 $4/9$ 几何级数收敛，总面积有限，严格趋向于<strong>初始三角形的 8/5 倍</strong>。<br>
-            • 哲理：<strong>“无限周长，包围有限面积”</strong>。
+            <strong data-i18n="koch_theory_title">Key Mathematical Insights:</strong><br>
+            <span data-i18n="koch_theory_1">• Construction: Equilateral triangle → Trisection → Add smaller triangle outwards on each middle segment.</span><br>
+            <span data-i18n="koch_theory_2">• Perimeter: Each step side × 1/3, segments × 4. Ratio 4/3 > 1; under infinite steps, **perimeter diverges to infinity**.</span><br>
+            <span data-i18n="koch_theory_3">• Area: Added area converges via geometric series ratio 4/9. Strictly approaches **8/5 (1.6x) of initial area**.</span><br>
+            <span data-i18n="koch_theory_4">• Philosophical Takeaway: **"Infinite perimeter, finite bounded area"**.</span>
           </div>
         </div>
 
         <div class="sidebar-section">
-          <div class="section-title">视觉与色彩主题</div>
+          <div class="section-title" data-i18n="koch_theme_title">Visual Themes</div>
           <div class="color-scheme-group">
-            <button class="color-scheme-btn koch-theme-btn active" data-theme="cyan-glow">青蓝光晕</button>
-            <button class="color-scheme-btn koch-theme-btn" data-theme="aurora">星空极光</button>
-            <button class="color-scheme-btn koch-theme-btn" data-theme="wireframe">几何线框</button>
+            <button class="color-scheme-btn koch-theme-btn active" data-theme="cyan-glow" data-i18n="koch_theme_cyan">Cyan Glow</button>
+            <button class="color-scheme-btn koch-theme-btn" data-theme="aurora" data-i18n="koch_theme_aurora">Cosmic Aurora</button>
+            <button class="color-scheme-btn koch-theme-btn" data-theme="wireframe" data-i18n="koch_theme_wireframe">Wireframe</button>
           </div>
         </div>
       </div>
@@ -322,13 +332,12 @@
       <!-- 侧边栏：曼德勃罗集与高阶多重分形控制 -->
       <div id="sidebar-mandelbrot">
         
-        <!-- 重磅新增：高阶幂次演化开花动画 -->
         <div class="sidebar-section">
-          <div class="section-title">分形高阶幂次演化 (z ↦ zᵈ + c)</div>
+          <div class="section-title" data-i18n="mb_section_power_title">Higher-Order Morphing (z ↦ zᵈ + c)</div>
 
           <div class="control-row">
             <div class="control-label-group">
-              <span>分形指数幂次 (Power d)</span>
+              <span data-i18n="mb_label_power">Power Exponent (d)</span>
               <span class="control-val" id="mb-power-val">2.00</span>
             </div>
             <input type="range" id="mb-power-slider" min="2.00" max="7.00" value="2.00" step="0.01">
@@ -339,25 +348,25 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
               </svg>
-              开启开花形变动画
+              <span data-i18n="btn_power_morph_start">Start Morphing Animation</span>
             </button>
           </div>
 
           <div class="preset-pills" style="margin-top: 10px;">
-            <span class="preset-chip active" data-power="2.00">z² (经典)</span>
-            <span class="preset-chip" data-power="3.00">z³ (双瓣)</span>
-            <span class="preset-chip" data-power="4.00">z⁴ (三叶)</span>
-            <span class="preset-chip" data-power="5.08" style="border-color: var(--accent-amber); color: #fed7aa;">z⁵·⁰⁸ (截图同款)</span>
-            <span class="preset-chip" data-power="6.00">z⁶ (五瓣星)</span>
+            <span class="preset-chip active" data-power="2.00">z² (Classic)</span>
+            <span class="preset-chip" data-power="3.00">z³ (2 lobes)</span>
+            <span class="preset-chip" data-power="4.00">z⁴ (3 lobes)</span>
+            <span class="preset-chip" data-power="5.08" style="border-color: var(--accent-amber); color: #fed7aa;">z⁵·⁰⁸ (Special)</span>
+            <span class="preset-chip" data-power="6.00">z⁶ (5 lobes)</span>
           </div>
         </div>
 
         <div class="sidebar-section">
-          <div class="section-title">计算精度与深潜巡航</div>
+          <div class="section-title" data-i18n="mb_section_prec_title">Compute Precision & Deep Dive</div>
 
           <div class="control-row">
             <div class="control-label-group">
-              <span>GPU 迭代精度</span>
+              <span data-i18n="mb_label_iter">GPU Iteration Depth</span>
               <span class="control-val" id="mb-iter-val">180</span>
             </div>
             <input type="range" id="mb-iter-slider" min="50" max="800" value="180" step="25">
@@ -368,62 +377,62 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
               </svg>
-              自动深潜巡航
+              <span data-i18n="btn_mb_tour_start">Auto Deep-Dive Cruise</span>
             </button>
           </div>
 
           <div class="preset-pills" style="margin-top: 10px;">
-            <span class="preset-chip" data-preset="infinite_spiral" style="border-color: #d8b4fe; color: #f5d0fe; font-weight: 600;">✨ 以为走到了尽头 (绝美多臂螺旋)</span>
-            <span class="preset-chip" data-preset="seahorse">海马谷 (Seahorse)</span>
-            <span class="preset-chip" data-preset="elephant">象谷 (Elephant)</span>
-            <span class="preset-chip" data-preset="minimandel">迷你微型体</span>
+            <span class="preset-chip" data-preset="infinite_spiral" style="border-color: #d8b4fe; color: #f5d0fe; font-weight: 600;" data-i18n="mb_preset_spiral">✨ Infinite Spiral (Multi-arm)</span>
+            <span class="preset-chip" data-preset="seahorse" data-i18n="mb_preset_seahorse">Seahorse Valley</span>
+            <span class="preset-chip" data-preset="elephant" data-i18n="mb_preset_elephant">Elephant Valley</span>
+            <span class="preset-chip" data-preset="minimandel" data-i18n="mb_preset_mini">Mini-Mandelbrot</span>
           </div>
         </div>
 
         <div class="sidebar-section">
-          <div class="section-title">实时动力学指标</div>
+          <div class="section-title" data-i18n="mb_section_metrics_title">Real-Time Dynamics Metrics</div>
 
           <div class="stat-grid">
             <div class="stat-card">
-              <div class="stat-label">当前视口放大倍率</div>
+              <div class="stat-label" data-i18n="mb_stat_zoom_label">Viewport Magnification</div>
               <div class="stat-number" id="mb-stat-zoom">0.85x</div>
-              <div class="stat-sub">100% 完整全貌展现</div>
+              <div class="stat-sub" data-i18n="mb_stat_zoom_sub">100% Full Panoramic View</div>
             </div>
 
             <div class="stat-card">
-              <div class="stat-label">GPU 并行迭代</div>
+              <div class="stat-label" data-i18n="mb_stat_iter_label">GPU Parallel Iterations</div>
               <div class="stat-number" id="mb-stat-iter">180 次</div>
-              <div class="stat-sub">60 FPS 丝滑渲染</div>
+              <div class="stat-sub" data-i18n="mb_stat_iter_sub">Smooth 60 FPS Rendering</div>
             </div>
           </div>
 
           <div class="control-row" style="margin-top: 14px;">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); cursor: pointer;">
               <input type="checkbox" id="chk-orbit-enable" checked>
-              <span>启用复数轨道探测器 (鼠标悬停跟踪轨迹)</span>
+              <span data-i18n="mb_chk_orbit">Enable Complex Orbit Tracer (Hover to inspect trajectory)</span>
             </label>
           </div>
 
           <div class="theory-box">
-            <strong>核心数学机理（上帝指纹）：</strong><br>
-            • 迭代方程：<code>z_{n+1} = z^d + c</code> (从 <code>z_0 = 0</code> 开始)<br>
-            • 当幂次 <code>d = 5.08</code> 时，对称花瓣数量为 <code>d - 1 ≈ 4</code> 个主瓣，如同生命有机体绽放！<br>
-            • 集合定义：若数列模长始终 <code>|z| ≤ 2</code> 有界，则 <code>c ∈ M</code>（黑色内部）。<br>
-            • 上色依据：若数列发散脱离，记录<strong>逃逸前步数</strong>并进行平滑连续势着色。<br>
-            • <strong>不是设计出来的，是算出来的！</strong>
+            <strong data-i18n="mb_theory_title">Mathematical Mechanism (God's Fingerprint):</strong><br>
+            <span data-i18n="mb_theory_1">• Iteration: z_{n+1} = z^d + c (starting at z_0 = 0)</span><br>
+            <span data-i18n="mb_theory_2">• At exponent d = 5.08, symmetric petals equal d - 1 ≈ 4 main lobes, blossoming like an organic entity!</span><br>
+            <span data-i18n="mb_theory_3">• Set Definition: If sequence remains bounded |z| ≤ 2, then c ∈ M (black interior).</span><br>
+            <span data-i18n="mb_theory_4">• Smooth Shading: If sequence escapes, record escape step count and apply continuous smooth potential.</span><br>
+            <span data-i18n="mb_theory_5">• Not hand-designed, but purely computed!</span>
           </div>
         </div>
 
         <div class="sidebar-section">
-          <div class="section-title">色彩艺术方案</div>
+          <div class="section-title" data-i18n="mb_section_palette_title">Color Palettes</div>
           <div class="color-scheme-group">
-            <button class="color-scheme-btn active" data-palette="5" style="border-color: #f59e0b; color: #fed7aa;">分形蓝金(截图同款)</button>
-            <button class="color-scheme-btn" data-palette="6" style="border-color: #c084fc; color: #f5d0fe;">梦幻紫金(螺旋同款)</button>
-            <button class="color-scheme-btn" data-palette="0">赛博霓虹</button>
-            <button class="color-scheme-btn" data-palette="1">深空冰蓝</button>
-            <button class="color-scheme-btn" data-palette="2">炽烈熔岩</button>
-            <button class="color-scheme-btn" data-palette="3">翡翠极光</button>
-            <button class="color-scheme-btn" data-palette="4">奢华黑金</button>
+            <button class="color-scheme-btn active" data-palette="5" style="border-color: #f59e0b; color: #fed7aa;" data-i18n="mb_palette_gold">Fractal Blue-Gold</button>
+            <button class="color-scheme-btn" data-palette="6" style="border-color: #c084fc; color: #f5d0fe;" data-i18n="mb_palette_purple">Dreamy Violet</button>
+            <button class="color-scheme-btn" data-palette="0" data-i18n="mb_palette_neon">Cyber Neon</button>
+            <button class="color-scheme-btn" data-palette="1" data-i18n="mb_palette_ice">Deep Space Ice</button>
+            <button class="color-scheme-btn" data-palette="2" data-i18n="mb_palette_magma">Fiery Magma</button>
+            <button class="color-scheme-btn" data-palette="3" data-i18n="mb_palette_aurora">Emerald Aurora</button>
+            <button class="color-scheme-btn" data-palette="4" data-i18n="mb_palette_darkgold">Luxury Dark Gold</button>
           </div>
         </div>
       </div>
@@ -433,62 +442,66 @@
       <!-- ========================================== -->
       <div id="sidebar-funsearch" style="display: none;">
         <div class="sidebar-section">
-          <div class="section-title">高维空间与突破工作量证明 (PoW)</div>
+          <div class="section-title" data-i18n="funsearch_sidebar_pow_title">High-Dimensional Space & Proof-of-Work (PoW)</div>
           <div class="stat-grid">
             <div class="stat-card">
-              <div class="stat-label">Cap Set 最大基数</div>
+              <div class="stat-label" data-i18n="funsearch_card_max_score">Max Cap Set Cardinality</div>
               <div class="stat-number" id="funsearch-best-score" style="color: #fde047;">38 / 45</div>
-              <div class="stat-sub" id="funsearch-baseline-sub">打破 2ⁿ 局部最优陷阱！</div>
+              <div class="stat-sub" id="funsearch-baseline-sub" data-i18n="funsearch_trap_break">Break 2ⁿ Local Trap</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">空间点集规模</div>
+              <div class="stat-label" data-i18n="funsearch_card_points_count">Cap Set Size</div>
               <div class="stat-number" id="funsearch-points-count">38 点 (15.6%)</div>
-              <div class="stat-sub" id="funsearch-total-space-desc">总空间 243 点</div>
+              <div class="stat-sub" id="funsearch-total-space-desc">Total Space 243 Points</div>
             </div>
           </div>
         </div>
 
-        <!-- A/B 对抗演化历史曲线 (对照组 32 vs 实验组 38) -->
+        <!-- A/B 对抗演化历史曲线 -->
         <div class="sidebar-section">
-          <div class="section-title">A/B 对抗演化收敛曲线 (突破 2ⁿ 局部陷阱)</div>
+          <div class="section-title" data-i18n="funsearch_ab_chart_title">A/B Evolutionary Convergence (Breaking 2ⁿ Trap)</div>
           <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
             <canvas id="ab-chart-canvas" width="280" height="130" style="width: 100%; height: 130px; display: block;"></canvas>
             <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 6px; color: var(--text-secondary);">
-              <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; background: #94a3b8; border-radius: 2px;"></span> 对照组 (朴素盲目演化)</span>
-              <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; background: #eab308; border-radius: 2px;"></span> 实验组 (对称性先验突破)</span>
+              <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; background: #94a3b8; border-radius: 2px;"></span> <span data-i18n="funsearch_ab_legend_naive">Control Group (Naive Search)</span></span>
+              <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; background: #eab308; border-radius: 2px;"></span> <span data-i18n="funsearch_ab_legend_sym">Experimental Group (Symmetry Prior)</span></span>
             </div>
           </div>
         </div>
 
         <!-- AI 模型思考链与演化状态 -->
         <div class="sidebar-section">
-          <div class="section-title">大语言模型演化与思考过程</div>
+          <div class="section-title" data-i18n="funsearch_ai_section_title">LLM Reasoning & Evolution Engine</div>
           <div id="ai-model-status-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px; font-size: 11px; margin-bottom: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="color: #94a3b8;">当前驱动模型:</span>
+              <span style="color: #94a3b8;" data-i18n="funsearch_active_model_label">Active Model:</span>
               <span id="active-model-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-family: monospace;">DeepSeek-V3</span>
             </div>
             <details id="ai-thinking-details" open style="margin-top: 6px;">
               <summary style="color: #f59e0b; font-size: 11px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-                <span>🧠 大模型代数推演全景 (<span id="thinking-status-text">就绪</span>)</span>
+                <span><span data-i18n="funsearch_deduction_title">🧠 LLM Algebraic Reasoning (</span><span id="thinking-status-text" data-i18n="funsearch_status_ready">Ready</span>)</span>
                 <div style="display: flex; gap: 4px; align-items: center;">
-                  <button type="button" id="btn-skip-typing" style="display: none; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.6); color: #fef08a; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: normal;" title="跳过打字动画立即展示全文">⚡ 展开</button>
-                  <button type="button" id="btn-copy-thinking" class="btn-tool-link" style="font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="一键复制大模型代数推导与沙箱验算报告全文">📋 复制推导</button>
-                  <button type="button" id="btn-export-markdown" class="btn-tool-link" style="font-size: 10px; color: #34d399; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="将大模型数学分析、代码与沙箱验算指标导出为完整学术 Markdown 文档">📥 导出报告</button>
+                  <button type="button" id="btn-skip-typing" style="display: none; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.6); color: #fef08a; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: normal;" title="Expand text instantly" data-i18n="btn_skip_typing">⚡ Expand</button>
+                  <button type="button" id="btn-copy-thinking" class="btn-tool-link" style="font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" data-i18n-title="btn_copy_thinking" title="Copy LLM algebraic deduction & sandbox report">
+                    <span data-i18n="btn_copy_thinking">📋 Copy Reasoning</span>
+                  </button>
+                  <button type="button" id="btn-export-markdown" class="btn-tool-link" style="font-size: 10px; color: #34d399; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" data-i18n-title="btn_export_markdown" title="Export complete academic Markdown report with metrics & points">
+                    <span data-i18n="btn_export_markdown">📥 Export Report</span>
+                  </button>
                 </div>
               </summary>
-              <pre id="ai-thinking-text" style="background: rgba(0,0,0,0.65); border: 1px solid rgba(245,158,11,0.25); padding: 10px; border-radius: 6px; color: #e2e8f0; font-size: 11px; white-space: pre-wrap; margin-top: 6px; max-height: 260px; overflow-y: auto; line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">点击“AI 大模型生成演化”将向当前配置的模型发起真实请求，由模型实时推理并生成代数分析与代码，并在 Python 沙箱中完成严格三点共线验算。系统坚决杜绝任何未经模型真实推演的预定结果。</pre>
+              <pre id="ai-thinking-text" style="background: rgba(0,0,0,0.65); border: 1px solid rgba(245,158,11,0.25); padding: 10px; border-radius: 6px; color: #e2e8f0; font-size: 11px; white-space: pre-wrap; margin-top: 6px; max-height: 260px; overflow-y: auto; line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;" data-i18n="funsearch_default_thinking">Click "AI Model Evolution" to dispatch a verified request to the configured LLM. The model will reason algebraically, output priority code, and be validated in the Python sandbox with zero-collinear checking. We strictly prohibit fake pre-determined results.</pre>
             </details>
             <div id="sandbox-status-badge" style="margin-top: 6px; font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 4px;">
               <span style="display:inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-              <span id="sandbox-status-text">沙箱验算引擎: 就绪 (O(k²) 极速无共线碰撞判定)</span>
+              <span id="sandbox-status-text" data-i18n="funsearch_sandbox_ready">Sandbox Engine: Ready (O(k²) fast non-collinear collision check)</span>
             </div>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 4px;">
-            <div class="section-title" id="title-code-display" style="margin: 0;">当前运行的 Python 优先级函数</div>
-            <button type="button" id="btn-copy-code" class="btn-tool-link" style="font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" title="复制 Python priority 优先级函数代码">
-              📋 复制代码
+            <div class="section-title" id="title-code-display" style="margin: 0;" data-i18n="funsearch_code_title">Current Python Priority Heuristic Function</div>
+            <button type="button" id="btn-copy-code" class="btn-tool-link" style="font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 6px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;" data-i18n-title="btn_copy_code" title="Copy Python priority heuristic code">
+              <span data-i18n="btn_copy_code">📋 Copy Code</span>
             </button>
           </div>
           <pre id="funsearch-code-display" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 12px; font-size: 11px; color: #38bdf8; overflow-x: auto; font-family: monospace; line-height: 1.4; max-height: 180px;"></pre>
@@ -507,25 +520,25 @@
         <div style="display: flex; align-items: center; gap: 10px;">
           <span class="logo-badge" style="background: linear-gradient(135deg, #0ea5e9, #6366f1); font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 700;">AI PROVIDER STUDIO</span>
           <div>
-            <h2 style="font-size: 15px; font-weight: 700; color: #f8fafc; margin: 0;">AI 模型平台与自定义配置</h2>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">完整支持动态模型抓取、自定义端点、多平台命名与密钥隔离</div>
+            <h2 style="font-size: 15px; font-weight: 700; color: #f8fafc; margin: 0;" data-i18n="modal_title">AI Model Provider Studio</h2>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" data-i18n="modal_subtitle">Full support for dynamic model fetch, custom endpoints, and encrypted local key storage</div>
           </div>
         </div>
-        <button id="btn-close-modal" class="modal-close-btn" title="关闭">&times;</button>
+        <button id="btn-close-modal" class="modal-close-btn" title="Close">&times;</button>
       </div>
 
       <div class="modal-body">
         <!-- 平台选择与管理栏 -->
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label" style="font-weight: 600;">选择或切换平台 (Provider)</label>
+            <label class="form-label" style="font-weight: 600;" data-i18n="label_provider">Select Provider</label>
             <div style="display: flex; gap: 8px;">
-              <button id="btn-add-custom-provider" type="button" class="btn-tool-link" title="创建新的第三方或私有大模型平台">
+              <button id="btn-add-custom-provider" type="button" class="btn-tool-link" data-i18n-title="btn_add_provider" title="+ Add Custom Provider">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                + 添加新平台
+                <span data-i18n="btn_add_provider">+ Add Custom Provider</span>
               </button>
-              <button id="btn-delete-provider" type="button" class="btn-tool-link text-danger" style="display: none;" title="删除当前自定义平台">
-                🗑️ 删除平台
+              <button id="btn-delete-provider" type="button" class="btn-tool-link text-danger" style="display: none;" data-i18n-title="btn_delete_provider" title="Delete Provider">
+                <span data-i18n="btn_delete_provider">🗑️ Delete Provider</span>
               </button>
             </div>
           </div>
@@ -534,48 +547,48 @@
 
         <!-- 平台名称 (自定义平台可修改) -->
         <div class="form-group" id="group-platform-name">
-          <label class="form-label">平台显示名称 (Platform Name)</label>
-          <input type="text" id="input-platform-name" class="form-input" placeholder="例如：DST 聚合中转 / 公司内部私有集群">
+          <label class="form-label" data-i18n="label_platform_name">Platform Display Name</label>
+          <input type="text" id="input-platform-name" class="form-input" data-i18n-placeholder="placeholder_platform_name" placeholder="e.g. DST Gateway / Company Cluster">
         </div>
 
         <!-- 接口端点 + 自动抓取模型 -->
         <div class="form-group">
-          <label class="form-label">接口端点 (Base URL)</label>
+          <label class="form-label" data-i18n="label_base_url">API Endpoint (Base URL)</label>
           <div style="display: flex; gap: 8px;">
-            <input type="text" id="input-base-url" class="form-input" placeholder="https://dst.225458.xyz/v1" style="flex: 1;">
-            <button id="btn-fetch-remote-models" type="button" class="btn-fetch-models" title="向远端 /v1/models 探测并自动拉取所有真实可用模型">
+            <input type="text" id="input-base-url" class="form-input" placeholder="https://api.openai.com/v1" style="flex: 1;">
+            <button id="btn-fetch-remote-models" type="button" class="btn-fetch-models" data-i18n-title="btn_fetch_models" title="Fetch Models">
               <svg id="icon-fetch-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
               </svg>
-              <span>自动拉取模型</span>
+              <span data-i18n="btn_fetch_models">Fetch Models</span>
             </button>
           </div>
-          <span class="form-tip">支持任意 OpenAI / Claude 兼容的 Base URL。输入端点和 Key 后点击“自动拉取模型”即可同步全部可用模型。</span>
+          <span class="form-tip" data-i18n="tip_base_url">Supports any OpenAI / Claude compatible Base URL. Enter endpoint & key, then click "Fetch Models".</span>
         </div>
 
         <!-- API 密钥 -->
         <div class="form-group">
-          <label class="form-label">API 密钥 (API Key)</label>
+          <label class="form-label" data-i18n="label_api_key">API Key</label>
           <div style="position: relative;">
             <input type="password" id="input-api-key" class="form-input" placeholder="sk-..." autocomplete="off">
-            <button id="btn-toggle-key" type="button" class="btn-input-eye" title="显示/隐藏密钥">👁️</button>
+            <button id="btn-toggle-key" type="button" class="btn-input-eye" title="Show/Hide Key">👁️</button>
           </div>
-          <span class="form-tip">凭据仅安全保存在本地（Local Storage），绝不向任何第三方服务上报。</span>
+          <span class="form-tip" data-i18n="tip_api_key">Credentials are encrypted and saved solely in your browser LocalStorage. Never uploaded.</span>
         </div>
 
         <!-- 可用模型选择与切换模式 -->
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="form-label">模型选择 (Model)</label>
-            <button id="btn-toggle-manual-model" type="button" class="btn-tool-link" style="color: #38bdf8;">
-              手动输入模型名
+            <label class="form-label" data-i18n="label_model_select">Model Selection</label>
+            <button id="btn-toggle-manual-model" type="button" class="btn-tool-link" style="color: #38bdf8;" data-i18n="btn_manual_model">
+              Enter Model Manually
             </button>
           </div>
           <div id="container-select-model">
             <select id="select-model" class="form-select"></select>
           </div>
           <div id="container-input-model" style="display: none;">
-            <input type="text" id="input-custom-model" class="form-input" placeholder="例如：deepseek-chat 或 gpt-4o">
+            <input type="text" id="input-custom-model" class="form-input" placeholder="e.g. deepseek-chat or gpt-4o">
           </div>
         </div>
 
@@ -588,17 +601,18 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
           </svg>
-          测试连接 (Check Auth)
+          <span data-i18n="btn_test_auth">Check Auth</span>
         </button>
         <div class="modal-footer-actions">
-          <button id="btn-cancel-settings" class="btn btn-secondary" type="button">取消</button>
-          <button id="btn-save-settings" class="btn btn-primary" type="button">保存并应用配置</button>
+          <button id="btn-cancel-settings" class="btn btn-secondary" type="button" data-i18n="btn_cancel">Cancel</button>
+          <button id="btn-save-settings" class="btn btn-primary" type="button" data-i18n="btn_save">Save & Apply</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 脚本加载 -->
+  <!-- 脚本加载 (i18n 率先加载完成字典注入) -->
+  <script src="js/i18n.js"></script>
   <script src="js/koch.js"></script>
   <script src="js/orbit.js"></script>
   <script src="js/mandelbrot.js"></script>

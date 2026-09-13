@@ -15,12 +15,12 @@ class ModelPlatformManager {
     // 内置官方提供商预设
     this.builtins = {
       'deepseek': {
-        name: 'DeepSeek (深度求索)',
+        name: 'DeepSeek',
         baseUrl: 'https://api.deepseek.com/v1',
         isBuiltin: true,
         models: [
-          { id: 'deepseek-chat', name: 'DeepSeek-V3 (通用编码与演化)', reasoning: false },
-          { id: 'deepseek-reasoner', name: 'DeepSeek-R1 (深度数学推理与思考)', reasoning: true }
+          { id: 'deepseek-chat', name: 'DeepSeek-V3 (General & Evolution)', reasoning: false },
+          { id: 'deepseek-reasoner', name: 'DeepSeek-R1 (Deep Reasoning)', reasoning: true }
         ]
       },
       'openai': {
@@ -34,7 +34,7 @@ class ModelPlatformManager {
         ]
       },
       'siliconflow': {
-        name: 'SiliconFlow (硅基流动)',
+        name: 'SiliconFlow',
         baseUrl: 'https://api.siliconflow.cn/v1',
         isBuiltin: true,
         models: [
@@ -44,7 +44,7 @@ class ModelPlatformManager {
         ]
       },
       'ollama': {
-        name: 'Ollama (本地私有大模型)',
+        name: 'Ollama (Local LLM)',
         baseUrl: 'http://localhost:11434/v1',
         isBuiltin: true,
         models: [
@@ -53,7 +53,7 @@ class ModelPlatformManager {
         ]
       },
       'mock': {
-        name: '确定性离线模拟器 (零成本免 Key)',
+        name: 'Deterministic Offline Simulator (No Key)',
         baseUrl: 'mock://internal',
         isBuiltin: true,
         models: [
@@ -69,7 +69,7 @@ class ModelPlatformManager {
     if (Object.keys(this.customPlatforms).length === 0) {
       this.customPlatforms['custom_default'] = {
         id: 'custom_default',
-        name: '自定义第三方平台 (OpenAI 兼容)',
+        name: 'Custom Provider (OpenAI Compatible)',
         baseUrl: 'https://dst.225458.xyz/v1',
         apiKey: '',
         selectedModel: 'deepseek-chat',
@@ -347,11 +347,13 @@ class ModelPlatformManager {
   /**
    * 新增一个自定义平台
    */
-  addCustomPlatform(name = '新自定义平台', baseUrl = '') {
+  addCustomPlatform(name = null, baseUrl = '') {
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
+    const defaultName = name || (isEn ? 'Custom Provider' : '新自定义平台');
     const id = 'custom_' + Date.now();
     this.customPlatforms[id] = {
       id: id,
-      name: name,
+      name: defaultName,
       baseUrl: baseUrl,
       apiKey: '',
       selectedModel: 'deepseek-chat',
@@ -380,8 +382,9 @@ class ModelPlatformManager {
    * 向 /v1/models 发送请求，提取所有模型并自动探测 reasoning 能力
    */
   async fetchRemoteModels(baseUrl, apiKey) {
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
     if (!baseUrl) {
-      throw new Error('请先输入接口端点 (Base URL)');
+      throw new Error(isEn ? 'Please enter the API Endpoint (Base URL) first' : '请先输入接口端点 (Base URL)');
     }
 
     // 1. 优先通过后端代理抓取（防止跨域 CORS 问题）
@@ -427,13 +430,14 @@ class ModelPlatformManager {
 
     const resp = await fetch(modelsUrl, { method: 'GET', headers: headers });
     if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+      const errText = await resp.text().catch(() => resp.statusText);
+      throw new Error(`HTTP ${resp.status}: ${errText}`);
     }
 
     const json = await resp.json();
     const items = json.data || json.models || [];
     if (!Array.isArray(items) || items.length === 0) {
-      throw new Error('未在返回数据中解析到可用模型');
+      throw new Error(isEn ? 'No available models found in response data' : '未在返回数据中解析到可用模型');
     }
 
     return items.map(item => {
@@ -452,8 +456,14 @@ class ModelPlatformManager {
    * 测试连接与鉴权 (双轨连通性测试：浏览器直通 + 后端中转双保险)
    */
   async checkConnection(providerId, apiKey, baseUrl, selectedModel) {
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
     if (providerId === 'mock') {
-      return { ok: true, message: '离线确定性模拟引擎就绪！随时可启动演化。' };
+      return {
+        ok: true,
+        message: isEn
+          ? 'Deterministic offline simulation engine ready! Ready for evolution.'
+          : '离线确定性模拟引擎就绪！随时可启动演化。'
+      };
     }
 
     const pInfo = this.getProviderInfo(providerId);
@@ -493,7 +503,9 @@ class ModelPlatformManager {
             const snippet = reply.trim().replace(/\n/g, ' ').substring(0, 30);
             return {
               ok: true,
-              message: `✅ 模型【${selectedModel}】连通测试成功！响应延迟: ${latencySec}s | 回复: "${snippet}"`,
+              message: isEn
+                ? `✅ Model [${selectedModel}] connection test successful! Latency: ${latencySec}s | Reply: "${snippet}"`
+                : `✅ 模型【${selectedModel}】连通测试成功！响应延迟: ${latencySec}s | 回复: "${snippet}"`,
               latency: parseFloat(latencySec)
             };
           } else {
@@ -502,7 +514,9 @@ class ModelPlatformManager {
             const errMsg = errJson?.error?.message || errJson?.error || directResp.statusText;
             return {
               ok: false,
-              message: `❌ 模型【${selectedModel}】调用失败: HTTP ${directResp.status} - ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`
+              message: isEn
+                ? `❌ Model [${selectedModel}] call failed: HTTP ${directResp.status} - ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`
+                : `❌ 模型【${selectedModel}】调用失败: HTTP ${directResp.status} - ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`
             };
           }
         } catch (directErr) {
@@ -528,10 +542,16 @@ class ModelPlatformManager {
           return { ok: data.valid, message: data.message, latency: data.latency_seconds };
         } else {
           const errData = await res.json().catch(() => ({}));
-          return { ok: false, message: errData.message || `服务端检测失败 (HTTP ${res.status})` };
+          return {
+            ok: false,
+            message: errData.message || (isEn ? `Server check failed (HTTP ${res.status})` : `服务端检测失败 (HTTP ${res.status})`)
+          };
         }
       } catch (e) {
-        return { ok: false, message: `网络连接失败: ${e.message}` };
+        return {
+          ok: false,
+          message: isEn ? `Network connection failed: ${e.message}` : `网络连接失败: ${e.message}`
+        };
       }
     }
 
