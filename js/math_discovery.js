@@ -256,43 +256,117 @@ class MultiDimCapSetVisualizer {
 
   setProjectionMode(mode) {
     this.projectionMode = mode;
+    this.updateUI();
   }
 
   /**
-   * 高维点映射至 3D 归一化空间
+   * 高维点严格映射至 3D 空间 (支持 3~7 维全部展开，彻底根除高维退化与重叠)
    */
   mapPointTo3D(p) {
     const n = p.length;
-    if (n === 3) {
-      return [(p[0] - 1), (p[1] - 1), (p[2] - 1)];
+
+    // 1. 3D 切片阵列模式 (Affine Hyperplane Slices)
+    if (this.projectionMode === 'slices') {
+      const cellSize = n >= 6 ? (n === 6 ? 0.15 : 0.08) : (n === 5 ? 0.20 : (n === 4 ? 0.32 : 0.45));
+      const lx = (p[0] - 1) * cellSize;
+      const ly = (p[1] - 1) * cellSize;
+      const lz = (p[2] - 1) * cellSize;
+
+      if (n === 3) {
+        return [lx, ly, lz];
+      }
+      if (n === 4) {
+        // 3 个切片沿水平 X 轴排开 (81 点)
+        const ox = (p[3] - 1) * 0.95;
+        return [lx + ox, ly, lz];
+      }
+      if (n === 5) {
+        // 3x3 = 9 个切片在平面方阵展开 (243 点)
+        const ox = (p[3] - 1) * 0.85;
+        const oy = (p[4] - 1) * 0.85;
+        return [lx + ox, ly + oy, lz];
+      }
+      if (n === 6) {
+        // 3x3x3 = 27 个切片在三维空间构成宏观超立方阵列 (729 点)
+        const ox = (p[3] - 1) * 0.82;
+        const oy = (p[4] - 1) * 0.82;
+        const oz = (p[5] - 1) * 0.82;
+        return [lx + ox, ly + oy, lz + oz];
+      }
+      if (n >= 7) {
+        // 81 个高维切片立体嵌套超阵列 (2187 点)
+        const ox = ((p[3] - 1) * 2.5 + (p[5] - 1)) * 0.36;
+        const oy = ((p[4] - 1) * 2.5 + (p[6] - 1)) * 0.36;
+        const oz = (p[5] - 1) * 0.48;
+        return [lx + ox, ly + oy, lz + oz];
+      }
     }
 
-    if (this.projectionMode === 'slices' && n >= 4) {
-      // 切片模式：前 3 维为局部 3D 坐标，后两维作为平移偏置
-      const subX = (p[0] - 1) * 0.45;
-      const subY = (p[1] - 1) * 0.45;
-      const subZ = (p[2] - 1) * 0.45;
-      const sliceX = ((p[3] || 1) - 1) * 1.1;
-      const sliceY = ((p[4] || 1) - 1) * 1.1;
-      return [subX + sliceX, subY + sliceY, subZ];
-    }
+    // 2. 默认：高维超球正交流形拓扑投影 (Grassmannian Orthogonal Manifold)
+    const cp = [];
+    for (let i = 0; i < n; i++) cp.push(p[i] - 1.0);
 
-    // 默认高维超球拓扑投影 (汉明重量分层球坐标)
-    const hw = p.reduce((acc, v) => acc + (v !== 0 ? 1 : 0), 0);
-    const radius = 0.35 + (hw / n) * 0.95;
-
-    // 利用高维坐标生成伪球谐方位角
-    let theta = 0;
-    let phi = 0;
+    let vx = 0, vy = 0, vz = 0;
     for (let i = 0; i < n; i++) {
-      theta += (p[i] / 3) * Math.PI * (2 / (i + 1));
-      phi += (p[i] / 3) * Math.PI * ((i + 1) / n);
+      vx += cp[i] * Math.cos(2.0 * Math.PI * (i + 0.1) / n);
+      vy += cp[i] * Math.sin(2.0 * Math.PI * (i + 0.1) / n);
+      vz += cp[i] * Math.cos(Math.PI * (i + 0.5) * 1.41421356);
     }
 
-    const x = radius * Math.sin(phi) * Math.cos(theta);
-    const y = radius * Math.sin(phi) * Math.sin(theta);
-    const z = radius * Math.cos(phi);
-    return [x, y, z];
+    const norm = Math.sqrt(n) * 0.72;
+    const hw = p.reduce((acc, v) => acc + (v !== 0 ? 1 : 0), 0);
+    const radial = 0.82 + (hw / n) * 0.38;
+
+    return [
+      (vx / norm) * radial,
+      (vy / norm) * radial,
+      (vz / norm) * radial
+    ];
+  }
+
+  /**
+   * 获取当前维度切片块的中心列表与规格 (供切片线框渲染)
+   */
+  getSliceBoxes() {
+    const n = this.dimension;
+    if (this.projectionMode !== 'slices' || n < 4) return [];
+
+    const boxes = [];
+    const cellSize = n >= 6 ? (n === 6 ? 0.15 : 0.08) : (n === 5 ? 0.20 : (n === 4 ? 0.32 : 0.45));
+    const half = cellSize * 1.25;
+
+    if (n === 4) {
+      for (let s3 = 0; s3 < 3; s3++) {
+        boxes.push({ ox: (s3 - 1) * 0.95, oy: 0, oz: 0, half, label: `S[${s3}]` });
+      }
+    } else if (n === 5) {
+      for (let s3 = 0; s3 < 3; s3++) {
+        for (let s4 = 0; s4 < 3; s4++) {
+          boxes.push({ ox: (s3 - 1) * 0.85, oy: (s4 - 1) * 0.85, oz: 0, half, label: `S[${s3},${s4}]` });
+        }
+      }
+    } else if (n === 6) {
+      for (let s3 = 0; s3 < 3; s3++) {
+        for (let s4 = 0; s4 < 3; s4++) {
+          for (let s5 = 0; s5 < 3; s5++) {
+            boxes.push({ ox: (s3 - 1) * 0.82, oy: (s4 - 1) * 0.82, oz: (s5 - 1) * 0.82, half, label: `S[${s3},${s4},${s5}]` });
+          }
+        }
+      }
+    } else if (n >= 7) {
+      for (let s3 = 0; s3 < 3; s3++) {
+        for (let s4 = 0; s4 < 3; s4++) {
+          boxes.push({
+            ox: (s3 - 1) * 2.5 * 0.36,
+            oy: (s4 - 1) * 2.5 * 0.36,
+            oz: 0,
+            half: 0.45,
+            label: `Block[${s3},${s4}]`
+          });
+        }
+      }
+    }
+    return boxes;
   }
 
   project3D(x, y, z, cx, cy, scale) {
@@ -329,6 +403,63 @@ class MultiDimCapSetVisualizer {
 
     this.ctx.clearRect(0, 0, w, h);
 
+    // 1. 结构性背景导轨与几何线框渲染
+    if (this.projectionMode === 'slices') {
+      // 切片模式：渲染每个切片原胞的微光参考立方体框
+      const sliceBoxes = this.getSliceBoxes();
+      this.ctx.lineWidth = 1;
+
+      for (const box of sliceBoxes) {
+        const hf = box.half;
+        // 8 个顶点
+        const v = [
+          this.project3D(box.ox - hf, box.oy - hf, box.oz - hf, cx, cy, scale),
+          this.project3D(box.ox + hf, box.oy - hf, box.oz - hf, cx, cy, scale),
+          this.project3D(box.ox + hf, box.oy + hf, box.oz - hf, cx, cy, scale),
+          this.project3D(box.ox - hf, box.oy + hf, box.oz - hf, cx, cy, scale),
+          this.project3D(box.ox - hf, box.oy - hf, box.oz + hf, cx, cy, scale),
+          this.project3D(box.ox + hf, box.oy - hf, box.oz + hf, cx, cy, scale),
+          this.project3D(box.ox + hf, box.oy + hf, box.oz + hf, cx, cy, scale),
+          this.project3D(box.ox - hf, box.oy + hf, box.oz + hf, cx, cy, scale)
+        ];
+
+        // 绘制 12 条边
+        this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.10)';
+        const edges = [
+          [0,1], [1,2], [2,3], [3,0],
+          [4,5], [5,6], [6,7], [7,4],
+          [0,4], [1,5], [2,6], [3,7]
+        ];
+        this.ctx.beginPath();
+        for (const [i1, i2] of edges) {
+          this.ctx.moveTo(v[i1].x, v[i1].y);
+          this.ctx.lineTo(v[i2].x, v[i2].y);
+        }
+        this.ctx.stroke();
+
+        // 切片底面轻微着色提升空间立体感
+        this.ctx.fillStyle = 'rgba(14, 165, 233, 0.015)';
+        this.ctx.beginPath();
+        this.ctx.moveTo(v[0].x, v[0].y);
+        this.ctx.lineTo(v[1].x, v[1].y);
+        this.ctx.lineTo(v[2].x, v[2].y);
+        this.ctx.lineTo(v[3].x, v[3].y);
+        this.ctx.closePath();
+        this.ctx.fill();
+      }
+    } else {
+      // 超球流形拓扑模式：按维度动态绘制汉明分层同心轨道
+      const maxRings = Math.min(this.dimension, 7);
+      this.ctx.lineWidth = 1;
+      for (let r = 1; r <= maxRings; r++) {
+        const ringRadius = scale * (0.35 + (r / this.dimension) * 0.78);
+        this.ctx.strokeStyle = r === this.dimension ? 'rgba(56, 189, 248, 0.08)' : 'rgba(56, 189, 248, 0.035)';
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+    }
+
     const selMap = new Set(this.selectedPoints.map(p => p.join(',')));
 
     // 投影全部点
@@ -343,8 +474,8 @@ class MultiDimCapSetVisualizer {
     // 深度排序
     projected.sort((a, b) => b.depth - a.depth);
 
-    // 1. 绘制背景微弱参考网格/连线
-    if (this.dimension === 3) {
+    // 2. 3 维专属连线
+    if (this.dimension === 3 && this.projectionMode !== 'slices') {
       this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       this.ctx.lineWidth = 1;
       for (let i = 0; i < projected.length; i++) {
@@ -360,18 +491,9 @@ class MultiDimCapSetVisualizer {
           }
         }
       }
-    } else {
-      // 高维空间：绘制超球面同心汉明等位圈
-      this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
-      this.ctx.beginPath();
-      this.ctx.arc(cx, cy, scale * 0.7, 0, Math.PI * 2);
-      this.ctx.stroke();
-      this.ctx.beginPath();
-      this.ctx.arc(cx, cy, scale * 1.05, 0, Math.PI * 2);
-      this.ctx.stroke();
     }
 
-    // 2. 渲染散点
+    // 3. 渲染散点 (Cap Set 点金色耀斑，普通点自适应微粒)
     for (const pt of projected) {
       if (pt.isSelected) {
         // Cap Set 点：璀璨金光与脉冲光晕
@@ -386,14 +508,16 @@ class MultiDimCapSetVisualizer {
         this.ctx.fill();
 
         // 实体明亮核心
+        const coreR = this.dimension >= 7 ? 2.5 : (this.dimension === 6 ? 3.0 : (this.dimension === 5 ? 3.5 : 4.5));
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
-        this.ctx.arc(pt.x, pt.y, this.dimension >= 5 ? 3.5 : 4.5, 0, Math.PI * 2);
+        this.ctx.arc(pt.x, pt.y, coreR, 0, Math.PI * 2);
         this.ctx.fill();
       } else {
-        // 普通点：依维度密度缩放半透明小微粒
-        const radius = this.dimension >= 6 ? 1.2 : (this.dimension === 5 ? 1.8 : 2.5);
-        this.ctx.fillStyle = 'rgba(148, 163, 184, 0.28)';
+        // 普通点：依维度密度动态缩放半透明微粒 (7维 2187 点细腻如星尘，6维 729 点层级清晰)
+        const radius = this.dimension >= 7 ? 0.9 : (this.dimension === 6 ? 1.3 : (this.dimension === 5 ? 1.8 : 2.5));
+        const alpha = this.dimension >= 7 ? 0.20 : (this.dimension === 6 ? 0.25 : 0.30);
+        this.ctx.fillStyle = `rgba(148, 163, 184, ${alpha})`;
         this.ctx.beginPath();
         this.ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
         this.ctx.fill();
@@ -552,9 +676,16 @@ class MultiDimCapSetVisualizer {
     // 顶部 HUD 动态文本
     const hudSpaceEl = document.getElementById('hud-target-space');
     if (hudSpaceEl) {
-      hudSpaceEl.textContent = isEn
-        ? `F_3^${this.dimension} (${this.allPoints.length} pts)`
-        : `F_3^${this.dimension} 空间 (${this.allPoints.length} 点)`;
+      if (this.projectionMode === 'slices') {
+        const sliceCount = this.dimension === 3 ? 1 : (this.dimension === 4 ? 3 : (this.dimension === 5 ? 9 : (this.dimension === 6 ? 27 : 81)));
+        hudSpaceEl.textContent = isEn
+          ? `F_3^${this.dimension} · Slices (${sliceCount} blocks · ${this.allPoints.length} pts)`
+          : `F_3^${this.dimension} · 3D切片 (${sliceCount} 个仿射晶格 · ${this.allPoints.length} 点)`;
+      } else {
+        hudSpaceEl.textContent = isEn
+          ? `F_3^${this.dimension} · Hypersphere (${this.dimension} rings · ${this.allPoints.length} pts)`
+          : `F_3^${this.dimension} · 超球拓扑 (${this.dimension} 层汉明流形 · ${this.allPoints.length} 点)`;
+      }
     }
 
     const scoreEl = document.getElementById('funsearch-best-score');
