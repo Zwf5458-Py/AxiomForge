@@ -1317,5 +1317,110 @@ ${JSON.stringify(points, null, 2)}
       btnToggleManualModel.textContent = isManualModelMode ? t('btn_toggle_select_mode', 'Switch to Dropdown Selection') : t('btn_toggle_manual_mode', 'Enter Model Name Manually');
     }
   });
+
+  // ==========================================================================
+  // 品牌 LOGO 选择器与持久化模块
+  // ==========================================================================
+  const STORAGE_LOGO_KEY = 'axiomforge_active_logo';
+  const LOGO_MAP = {
+    'logo-1-core': 'assets/logo-1-core.svg',
+    'logo-2-forge': 'assets/logo-2-forge.svg',
+    'logo-3-spark': 'assets/logo-3-spark.svg'
+  };
+
+  const btnOpenLogoModal = document.getElementById('btn-open-logo-modal');
+  const modalLogoSelector = document.getElementById('modal-logo-selector');
+  const btnCloseLogoModal = document.getElementById('btn-close-logo-modal');
+  const btnDoneLogoModal = document.getElementById('btn-done-logo-modal');
+  const appBrandLogo = document.getElementById('app-brand-logo');
+  const logoCards = document.querySelectorAll('.logo-option-card');
+
+  function getActiveLogo() {
+    const saved = localStorage.getItem(STORAGE_LOGO_KEY);
+    return (saved && LOGO_MAP[saved]) ? saved : 'logo-1-core';
+  }
+
+  function applyLogo(logoId) {
+    if (!LOGO_MAP[logoId]) logoId = 'logo-1-core';
+    localStorage.setItem(STORAGE_LOGO_KEY, logoId);
+
+    const logoSrc = LOGO_MAP[logoId];
+    if (appBrandLogo) {
+      appBrandLogo.src = logoSrc;
+    }
+
+    // 动态同步网页 favicon
+    let favicon = document.querySelector('link[rel="icon"]');
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.type = 'image/svg+xml';
+      document.head.appendChild(favicon);
+    }
+    favicon.href = logoSrc;
+
+    // 更新模态框卡片激活状态与按钮文本
+    const t = (k, fallback) => (window.I18N ? window.I18N.t(k) : fallback);
+    logoCards.forEach(card => {
+      const cid = card.getAttribute('data-logo-id');
+      const applyBtn = card.querySelector('.btn-logo-apply');
+      if (cid === logoId) {
+        card.classList.add('active');
+        if (applyBtn) {
+          applyBtn.textContent = t('logo_btn_active', '✓ Active Logo');
+          applyBtn.classList.remove('btn-secondary');
+        }
+      } else {
+        card.classList.remove('active');
+        if (applyBtn) {
+          applyBtn.textContent = t('logo_btn_apply', 'Select This Logo');
+          applyBtn.classList.add('btn-secondary');
+        }
+      }
+    });
+  }
+
+  // 初始化 LOGO 状态
+  applyLogo(getActiveLogo());
+
+  if (btnOpenLogoModal && modalLogoSelector) {
+    btnOpenLogoModal.addEventListener('click', () => {
+      applyLogo(getActiveLogo());
+      modalLogoSelector.style.display = 'flex';
+    });
+
+    const closeLogoModal = () => {
+      modalLogoSelector.style.display = 'none';
+    };
+
+    if (btnCloseLogoModal) btnCloseLogoModal.addEventListener('click', closeLogoModal);
+    if (btnDoneLogoModal) btnDoneLogoModal.addEventListener('click', closeLogoModal);
+    modalLogoSelector.addEventListener('click', (e) => {
+      if (e.target === modalLogoSelector) closeLogoModal();
+    });
+
+    // 监听卡片点击与选用按钮
+    logoCards.forEach(card => {
+      const logoId = card.getAttribute('data-logo-id');
+      const applyBtn = card.querySelector('.btn-logo-apply');
+
+      card.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A' || e.target.closest('a')) return;
+        applyLogo(logoId);
+      });
+
+      if (applyBtn) {
+        applyBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applyLogo(logoId);
+        });
+      }
+    });
+  }
+
+  // 语言切换时刷新 LOGO 模态框内的按钮文字
+  window.addEventListener('axiomforge:lang_changed', () => {
+    applyLogo(getActiveLogo());
+  });
 });
 

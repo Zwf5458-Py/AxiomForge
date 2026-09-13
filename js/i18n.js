@@ -25,6 +25,7 @@
       btn_model_settings_title: 'Configure AI Model Providers (DeepSeek / OpenAI / Ollama / Custom)',
       btn_fullscreen_title: 'Toggle Fullscreen',
       btn_lang_title: 'Switch Language / 切换语言',
+      btn_logo_picker_title: 'Switch Brand Logo / 切换品牌 LOGO',
       lang_name: 'English',
 
       // 模块 1：科赫雪花
@@ -114,6 +115,8 @@
       funsearch_pow_tag: 'Algebraic Verification',
       funsearch_collinear_stat: '100% Collinear Free (0 lines)',
       funsearch_trap_break: 'Break 2ⁿ Local Trap',
+      funsearch_ctrl_tip_tag: 'Controls',
+      funsearch_ctrl_tip_desc: 'Wheel to Zoom | Drag to Rotate | DblClick to Reset',
       btn_fast_deduction: 'Verify in Sandbox',
       btn_fast_deduction_title: 'Quickly evaluate deterministic heuristic in Python sandbox',
       btn_ai_evolve: 'AI Model Evolution',
@@ -169,6 +172,22 @@
       toast_provider_saved: 'Provider configuration saved successfully!',
       toast_provider_deleted: 'Custom provider deleted.',
       prompt_new_provider_name: 'Enter a name for the new custom provider:',
+
+      // 品牌 LOGO 选择器
+      logo_modal_title: 'Select Project Logo · AxiomForge',
+      logo_modal_subtitle: 'Choose an icon design that best captures the mathematical spirit of AxiomForge.',
+      logo_opt1_title: 'Option A · Hyper-Torus Core',
+      logo_opt1_badge: 'High-Dim Topology',
+      logo_opt1_desc: 'High-dimensional torus manifold with Cap Set affine points in neon cyan & violet gradient. Pure mathematical rigor.',
+      logo_opt2_title: 'Option B · Axiomatic Forge',
+      logo_opt2_badge: 'Evolutionary Energy',
+      logo_opt2_desc: 'Interlocking geometric facets of "A" and "F" forged on a golden anvil with sparks. Dynamic and authoritative.',
+      logo_opt3_title: 'Option C · Fractal Recursion',
+      logo_opt3_badge: 'Self-Similarity',
+      logo_opt3_desc: 'Self-similar Koch snowflake lattice & neural synapses in aurora green & ocean azure. Infinite exploratory vitality.',
+      logo_btn_apply: 'Select This Logo',
+      logo_btn_active: '✓ Active Logo',
+      logo_btn_download: 'Download SVG',
 
       // 演化四阶段
       stage_1: 'Phase 1: Loading Hyperplane Constraints & L0 Slices...',
@@ -252,6 +271,7 @@
       btn_model_settings_title: '配置大模型平台 (DeepSeek / OpenAI / Ollama / 自定义)',
       btn_fullscreen_title: '全屏沉浸模式',
       btn_lang_title: '切换语言 / Switch Language',
+      btn_logo_picker_title: '切换品牌 LOGO / Switch Brand Logo',
       lang_name: '中文',
 
       // 模块 1：科赫雪花
@@ -341,6 +361,8 @@
       funsearch_pow_tag: '代数严密验算',
       funsearch_collinear_stat: '100% 严格无共线 (0 条线)',
       funsearch_trap_break: '突破局部陷阱',
+      funsearch_ctrl_tip_tag: '视窗操作',
+      funsearch_ctrl_tip_desc: '滚轮平滑缩放 | 拖拽自由旋转 | 双击全貌复位',
       btn_fast_deduction: '启动即时推演',
       btn_fast_deduction_title: '在前端快速运行确定性对称性启发式推演',
       btn_ai_evolve: 'AI 大模型生成演化',
@@ -396,6 +418,22 @@
       toast_provider_saved: '平台配置已保存并生效！',
       toast_provider_deleted: '自定义平台已删除。',
       prompt_new_provider_name: '请输入新自定义平台的显示名称：',
+
+      // 品牌 LOGO 选择器
+      logo_modal_title: '选择项目 LOGO · AxiomForge',
+      logo_modal_subtitle: '挑选最契合 AxiomForge 数学灵魂与 AI 演化美学的品牌标识。',
+      logo_opt1_title: '方案 A · 超球代数同余核',
+      logo_opt1_badge: '高维拓扑',
+      logo_opt1_desc: '高维环面流形投影与有限域 Cap Set 仿射点阵，青蓝至紫罗兰渐变，彰显深邃公理之美。',
+      logo_opt2_title: '方案 B · 公理熔炉 · 几何锻造',
+      logo_opt2_badge: '演化能量',
+      logo_opt2_desc: '“A”与“F”精密咬合的坚硬折面与金色砧台，象征代码与公理的炽热演化锻造。',
+      logo_opt3_title: '方案 C · 分形递归 · 智慧星芒',
+      logo_opt3_badge: '自相似分形',
+      logo_opt3_desc: '自相似科赫分形多层晶格与 AI 突触网络，极光翡翠与海天青交融，象征演化的无限生机。',
+      logo_btn_apply: '选用此方案',
+      logo_btn_active: '✓ 当前选用',
+      logo_btn_download: '下载矢量 SVG',
 
       // 演化四阶段
       stage_1: '阶段一：装载超平面约束与 L0 汉明切片...',

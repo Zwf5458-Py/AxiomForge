@@ -17,7 +17,8 @@ class MultiDimCapSetVisualizer {
     this.dimension = 5;
     this.projectionMode = 'hypersphere'; // 'hypersphere' 或 'slices'
 
-    // 视角状态
+    // 视角状态与缩放 (支持鼠标滚轮与按钮无级缩放)
+    this.zoom = 1.0;
     this.yaw = 0.5;
     this.pitch = 0.35;
     this.isDragging = false;
@@ -55,6 +56,33 @@ class MultiDimCapSetVisualizer {
     window.addEventListener('mouseup', () => {
       this.isDragging = false;
     });
+
+    // 鼠标滚轮平滑缩放 (支持无级放大缩小，彻底消除点阵溢出与显示不全)
+    this.canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomDelta = e.deltaY < 0 ? 1.09 : 0.91;
+      this.zoom = Math.max(0.2, Math.min(4.5, this.zoom * zoomDelta));
+      this.updateZoomDisplay();
+    }, { passive: false });
+
+    // 双击画布恢复默认全景视角与自动旋转
+    this.canvas.addEventListener('dblclick', () => {
+      this.resetView();
+    });
+
+    // 快捷缩放按钮绑定
+    const btnZoomIn = document.getElementById('btn-funsearch-zoom-in');
+    if (btnZoomIn) {
+      btnZoomIn.addEventListener('click', () => this.zoomIn());
+    }
+    const btnZoomOut = document.getElementById('btn-funsearch-zoom-out');
+    if (btnZoomOut) {
+      btnZoomOut.addEventListener('click', () => this.zoomOut());
+    }
+    const btnResetView = document.getElementById('btn-funsearch-reset-view');
+    if (btnResetView) {
+      btnResetView.addEventListener('click', () => this.resetView());
+    }
 
     window.addEventListener('axiomforge:lang_changed', () => {
       this.updateUI();
@@ -116,6 +144,31 @@ class MultiDimCapSetVisualizer {
           heroBtnCopyReport.style.color = '';
         }, 1800);
       });
+    }
+  }
+
+  zoomIn() {
+    this.zoom = Math.min(4.5, this.zoom * 1.22);
+    this.updateZoomDisplay();
+  }
+
+  zoomOut() {
+    this.zoom = Math.max(0.2, this.zoom * 0.82);
+    this.updateZoomDisplay();
+  }
+
+  resetView() {
+    this.zoom = 1.0;
+    this.yaw = 0.5;
+    this.pitch = 0.35;
+    this.autoRotate = true;
+    this.updateZoomDisplay();
+  }
+
+  updateZoomDisplay() {
+    const el = document.getElementById('funsearch-zoom-val');
+    if (el) {
+      el.textContent = `${Math.round(this.zoom * 100)}%`;
     }
   }
 
@@ -271,7 +324,8 @@ class MultiDimCapSetVisualizer {
     const h = this.canvas.height / dpr;
     const cx = w / 2;
     const cy = h / 2;
-    const scale = Math.min(w, h) * 0.38;
+    const baseScale = Math.min(w, h) * 0.25;
+    const scale = baseScale * this.zoom;
 
     this.ctx.clearRect(0, 0, w, h);
 

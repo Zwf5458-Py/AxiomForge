@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="forgeGradFire" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ea580c" />
+      <stop offset="40%" stop-color="#f59e0b" />
+      <stop offset="80%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#fda4af" />
+    </linearGradient>
+    <linearGradient id="forgeGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c2d12" />
+      <stop offset="100%" stop-color="#18181b" />
+    </linearGradient>
+    <linearGradient id="crystalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#f97316" />
+    </linearGradient>
+    <filter id="forgeGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- 背景聚焦点 -->
+  <radialGradient id="forgeBg" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#ea580c" stop-opacity="0.35" />
+    <stop offset="60%" stop-color="#451a03" stop-opacity="0.1" />
+    <stop offset="100%" stop-color="#09090b" stop-opacity="0" />
+  </radialGradient>
+  <circle cx="60" cy="60" r="56" fill="url(#forgeBg)" />
+
+  <!-- 外部公理锻造六角护盾外框 -->
+  <polygon points="60,10 102,34 102,86 60,110 18,86 18,34" 
+           fill="none" stroke="url(#forgeGradFire)" stroke-width="2" stroke-dasharray="8 4" opacity="0.6" />
+
+  <!-- 几何熔炉底座 (Forge Anvil / Base) -->
+  <path d="M28 84 L92 84 L82 100 L38 100 Z" fill="url(#forgeGradDark)" stroke="#f59e0b" stroke-width="1.5" />
+  <line x1="38" y1="92" x2="82" y2="92" stroke="#f59e0b" stroke-width="1" opacity="0.6" />
+
+  <!-- 熔炉演化几何主晶体：呈现精密 "A" & "F" 拓扑形态 -->
+  <!-- 左主支架 (Axiom A-Leg) -->
+  <polygon points="60,20 48,26 26,76 38,76 46,56 60,56" 
+           fill="url(#forgeGradFire)" filter="url(#forgeGlow)" />
+           
+  <!-- 右主支架与锻造折翼 (Forge F-Wing) -->
+  <polygon points="60,20 72,26 94,76 82,76 74,56 60,56" 
+           fill="url(#crystalGrad)" opacity="0.9" />
+
+  <!-- A/F 横梁公理桥 (Axiom Bridge) -->
+  <polygon points="40,56 80,56 84,48 36,48" fill="#fff" opacity="0.95" filter="url(#forgeGlow)" />
+
+  <!-- F 次级横向演化火羽 (F-Branch) -->
+  <polygon points="56,38 88,38 82,32 58,32" fill="#fed7aa" filter="url(#forgeGlow)" />
+
+  <!-- 核心悬浮公理菱钻 (The Axiom Seed) -->
+  <polygon points="60,32 68,44 60,56 52,44" fill="#ffffff" filter="url(#forgeGlow)" />
+
+  <!-- 演化迸发粒子与光线 (Evolutionary Sparks) -->
+  <circle cx="60" cy="18" r="2.5" fill="#fef08a" filter="url(#forgeGlow)" />
+  <circle cx="98" cy="42" r="2" fill="#f43f5e" filter="url(#forgeGlow)" />
+  <circle cx="22" cy="42" r="2" fill="#ea580c" filter="url(#forgeGlow)" />
+  <circle cx="50" cy="72" r="1.5" fill="#ffffff" />
+  <circle cx="70" cy="72" r="1.5" fill="#ffffff" />
+</svg>

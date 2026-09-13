@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sparkGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+    <linearGradient id="sparkGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <radialGradient id="sparkHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#022c22" stop-opacity="0" />
+    </radialGradient>
+    <filter id="sparkGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- 背景柔和极光光晕 -->
+  <circle cx="60" cy="60" r="54" fill="url(#sparkHalo)" />
+
+  <!-- 外围曼德博相空间同心约束环 -->
+  <circle cx="60" cy="60" r="48" fill="none" stroke="url(#sparkGrad1)" stroke-width="1" stroke-dasharray="2 6" opacity="0.5" />
+  <circle cx="60" cy="60" r="52" fill="none" stroke="url(#sparkGrad2)" stroke-width="0.75" opacity="0.3" />
+
+  <!-- 主级科赫/星芒对称骨架 (六向自相似展开) -->
+  <!-- 三角形 A (主公理) -->
+  <polygon points="60,18 96,80 24,80" fill="none" stroke="url(#sparkGrad1)" stroke-width="2.5" filter="url(#sparkGlow)" />
+  <!-- 反向三角形 B (对称锻造) -->
+  <polygon points="60,102 96,40 24,40" fill="none" stroke="url(#sparkGrad2)" stroke-width="2.5" filter="url(#sparkGlow)" />
+
+  <!-- 次级自相似迭代星芒晶格 (Recursive Sub-lattice) -->
+  <g stroke="#a7f3d0" stroke-width="1.2" opacity="0.85">
+    <!-- 6 个顶尖分形节点分枝 -->
+    <line x1="60" y1="18" x2="60" y2="34" />
+    <line x1="60" y1="102" x2="60" y2="86" />
+    <line x1="96" y1="40" x2="82" y2="48" />
+    <line x1="24" y1="40" x2="38" y2="48" />
+    <line x1="96" y1="80" x2="82" y2="72" />
+    <line x1="24" y1="80" x2="38" y2="72" />
+
+    <!-- 内部次级正六边形连通核 -->
+    <polygon points="60,38 79,49 79,71 60,82 41,71 41,49" fill="url(#sparkGrad1)" fill-opacity="0.15" />
+  </g>
+
+  <!-- 突触连接高维节点 (AI Neural Synapses) -->
+  <circle cx="60" cy="18" r="3.5" fill="#6ee7b7" filter="url(#sparkGlow)" />
+  <circle cx="96" cy="40" r="3.5" fill="#67e8f9" filter="url(#sparkGlow)" />
+  <circle cx="96" cy="80" r="3.5" fill="#93c5fd" filter="url(#sparkGlow)" />
+  <circle cx="60" cy="102" r="3.5" fill="#6ee7b7" filter="url(#sparkGlow)" />
+  <circle cx="24" cy="80" r="3.5" fill="#67e8f9" filter="url(#sparkGlow)" />
+  <circle cx="24" cy="40" r="3.5" fill="#93c5fd" filter="url(#sparkGlow)" />
+
+  <!-- 内部微星芒中心点 -->
+  <circle cx="60" cy="60" r="14" fill="#0f172a" stroke="url(#sparkGrad1)" stroke-width="2" />
+  <!-- 超对称白金能量原核 -->
+  <polygon points="60,50 67,60 60,70 53,60" fill="#ffffff" filter="url(#sparkGlow)" />
+  <circle cx="60" cy="60" r="2.5" fill="#38bdf8" />
+</svg>
