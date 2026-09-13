@@ -104,7 +104,7 @@ AxiomForge 已正式在国际著名非营利资助平台 **Manifund** 完成全�
    - 开通后代码库顶部将出现粉色 `Sponsor` 按钮，全球开发者可随时打赏；
 3. **申报更多极速小额资助平台**：
    - **Emergent Ventures (EV)**：Tyler Cowen 主持，极度偏爱独立高行动力个体，申报全套文案已完成（见 [`docs/grants/emergent_ventures_application.md`](file:///Users/oraclez/code/数学模型/docs/grants/emergent_ventures_application.md)）；
-   - **Long-Term Future Fund (LTFF - Transformative AI Fund)**：EA Funds 旗下专项，申报全套文案与表单映射已完成（见 [`docs/grants/ltff_transformative_ai_fund_application.md`](file:///Users/oraclez/code/数学模型/docs/grants/ltff_transformative_ai_fund_application.md)）；
+   - **Long-Term Future Fund (LTFF - Transformative AI Fund)**：EA Funds 旗下专项，申请金额 $15,000 USD，已正式在线完成提交（文案见 [`docs/grants/ltff_transformative_ai_fund_application.md`](file:///Users/oraclez/code/数学模型/docs/grants/ltff_transformative_ai_fund_application.md)）；
    - **OpenAI Researcher Access Program**：首期申领 $1,000 美元 API Token，已在线完成全量表单填写与提交（申请ID：`0000048290`，文案见 [`docs/grants/openai_researcher_access_application.md`](file:///Users/oraclez/code/数学模型/docs/grants/openai_researcher_access_application.md)）。
 
 ### 2. 技术演进路线（算法维度）
