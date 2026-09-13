@@ -19,6 +19,7 @@
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://github.com/Zwf5458-Py/AxiomForge/actions"><img src="https://github.com/Zwf5458-Py/AxiomForge/actions/workflows/tests.yml/badge.svg" alt="CI Tests"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://manifund.org/projects/axiomforge-exploring-algebraic-structural-priors-in-heuristic-search-for-extrem"><img src="https://img.shields.io/badge/Manifund-Fast_Grant_Active-orange.svg" alt="Manifund Fast Grant"></a>
   <a href="http://localhost:8080"><img src="https://img.shields.io/badge/Web_UI-3D_Interactive-emerald.svg" alt="Web UI Available"></a>
 </p>
 
@@ -178,6 +179,14 @@ AxiomForge/
 
 1. **Objective Result Scope**: In $\mathbb{F}_3^5$ ($243$ candidates), AxiomForge consistently reaches $38$ points with symmetry priors, significantly surpassing the naive baseline's $2^5=32$ points (+18.75%). However, in higher dimensions (such as $n=7$, reaching $157$ points), a gap remains against the best-known lower bound (236 points, Edel 2004; reaching ~66.5%).
 2. **Prototype Transparency**: This project is maintained as an **early research prototype (Proof of Work)**. Its purpose is to lay down an honest, fully reproducible foundation for small exploratory research grants (such as Manifund, SFF, or Open Philanthropy) without hyperbolic claims.
+
+---
+
+## 🤝 Research Grants & Community Funding
+
+AxiomForge is currently seeking exploratory research funding via **[Manifund](https://manifund.org/projects/axiomforge-exploring-algebraic-structural-priors-in-heuristic-search-for-extrem)** (a 501(c)3 non-profit grant platform) to cover computational GPU and LLM API costs for scaling heuristic program evolution into 6D–8D finite-field combinatorial spaces.
+
+[![Manifund Grant Application](https://img.shields.io/badge/Manifund-Fast_Grant_Active-orange.svg?style=for-the-badge)](https://manifund.org/projects/axiomforge-exploring-algebraic-structural-priors-in-heuristic-search-for-extrem)
 
 ---
 

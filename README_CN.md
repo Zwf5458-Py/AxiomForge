@@ -19,6 +19,7 @@
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://github.com/Zwf5458-Py/AxiomForge/actions"><img src="https://github.com/Zwf5458-Py/AxiomForge/actions/workflows/tests.yml/badge.svg" alt="CI Tests"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://manifund.org/projects/axiomforge-exploring-algebraic-structural-priors-in-heuristic-search-for-extrem"><img src="https://img.shields.io/badge/Manifund-Fast_Grant_Active-orange.svg" alt="Manifund Fast Grant"></a>
   <a href="http://localhost:8080"><img src="https://img.shields.io/badge/Web_UI-3D_Interactive-emerald.svg" alt="Web UI Available"></a>
 </p>
 
@@ -176,6 +177,14 @@ AxiomForge/
 
 1. **客观成果声明**：本项目在 $\mathbb{F}_3^5$（243 点空间）中通过对称性先验搜索稳定达到的 38 点，显著超越朴素贪心的 $2^5=32$ 点（+18.75%），具有显著的工程启发意义；但在更高维度（如 $n=7$ 维达到 157 点），距离公开已知最佳下界（Edel, 2004 构造的 236 点）仍有差距（达成率约 66.5%）。
 2. **原型阶段声明**：本项目定位为**早期开源研究原型（Proof of Work）**，旨在为后续申请小额探索型科研资助（如 Manifund / SFF / Open Philanthropy）提供真实可复现的工程基石，不作夸大宣称。
+
+---
+
+## 🤝 科研资助与社区支持 (Grants & Community Funding)
+
+AxiomForge 目前正在通过 **[Manifund](https://manifund.org/projects/axiomforge-exploring-algebraic-structural-priors-in-heuristic-search-for-extrem)**（美国 501(c)3 免税慈善机构平台）申请探索型小额科研资助，用于覆盖高维有限域（6~8维）演化搜索所需的 GPU 算力与模型 API 支出。欢迎学术机构、基金会评审人与开源资助者支持！
+
+[![Manifund Grant Application](https://img.shields.io/badge/Manifund-Fast_Grant_Active-orange.svg?style=for-the-badge)](https://manifund.org/projects/axiomforge-exploring-algebraic-structural-priors-in-heuristic-search-for-extrem)
 
 ---
 
