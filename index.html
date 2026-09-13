@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="brand_title">AxiomForge · AI Math Discovery</title>
-  <link rel="stylesheet" href="css/style.css?v=20260913_3">
+  <link rel="stylesheet" href="css/style.css?v=20260913_4">
 </head>
 <body>
 
@@ -514,7 +514,16 @@
 
         <!-- AI 模型思考链与演化状态 -->
         <div class="sidebar-section">
-          <div class="section-title" data-i18n="funsearch_ai_section_title">LLM Reasoning & Evolution Engine</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+            <div class="section-title" style="margin-bottom: 0;" data-i18n="funsearch_ai_section_title">LLM Reasoning & Evolution Engine</div>
+            <button class="btn-sidebar-evolve" id="btn-ai-evolve-sidebar" data-i18n-title="btn_ai_evolve_title" title="Query configured LLM to synthesize and evolve priority programs">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+              <span data-i18n="btn_ai_evolve">AI Model Evolution</span>
+            </button>
+          </div>
           <div id="ai-model-status-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px; font-size: 11px; margin-bottom: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span style="color: #94a3b8;" data-i18n="funsearch_active_model_label">Active Model:</span>
@@ -655,13 +664,13 @@
   </div>
 
   <!-- 脚本加载 (i18n 率先加载完成字典注入，防缓存版本号确保即时生效) -->
-  <script src="js/i18n.js?v=20260913_3"></script>
-  <script src="js/koch.js?v=20260913_3"></script>
-  <script src="js/orbit.js?v=20260913_3"></script>
-  <script src="js/mandelbrot.js?v=20260913_3"></script>
-  <script src="js/cap_set_data.js?v=20260913_3"></script>
-  <script src="js/model_platform.js?v=20260913_3"></script>
-  <script src="js/math_discovery.js?v=20260913_3"></script>
-  <script src="js/app.js?v=20260913_3"></script>
+  <script src="js/i18n.js?v=20260913_4"></script>
+  <script src="js/koch.js?v=20260913_4"></script>
+  <script src="js/orbit.js?v=20260913_4"></script>
+  <script src="js/mandelbrot.js?v=20260913_4"></script>
+  <script src="js/cap_set_data.js?v=20260913_4"></script>
+  <script src="js/model_platform.js?v=20260913_4"></script>
+  <script src="js/math_discovery.js?v=20260913_4"></script>
+  <script src="js/app.js?v=20260913_4"></script>
 </body>
 </html>

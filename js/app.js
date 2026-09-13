@@ -368,11 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       pendingFullText = null;
       onTypingCompleteCallback = null;
-      if (btnAiEvolve) {
-        btnAiEvolve.disabled = false;
-        const evolveText = window.I18N ? window.I18N.t('btn_ai_evolve') : 'AI Model Evolution';
-        btnAiEvolve.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> ${evolveText}`;
-      }
+      updateAiEvolveButtons(false);
 
       funsearchEngine.switchDimension(dim);
     });
@@ -416,9 +412,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // AI 大模型真实在线代码演化 (端到端真实 API + 思考链提取 + Python 沙箱验算)
   const btnAiEvolve = document.getElementById('btn-ai-evolve');
+  const btnAiEvolveSidebar = document.getElementById('btn-ai-evolve-sidebar');
   const aiThinkingDetails = document.getElementById('ai-thinking-details');
   const aiThinkingText = document.getElementById('ai-thinking-text');
   const thinkingStatusText = document.getElementById('thinking-status-text');
+
+  function updateAiEvolveButtons(isEvolving) {
+    const isEn = !window.I18N || window.I18N.getLanguage() === 'en';
+    const normalLabel = isEn ? 'AI Model Evolution' : (window.I18N ? window.I18N.t('btn_ai_evolve') : 'AI 大模型生成演化');
+    const runningLabel = isEn ? 'AI Reasoning Evolution...' : 'AI 演化推理中...';
+
+    const buttons = [btnAiEvolve, btnAiEvolveSidebar].filter(Boolean);
+    buttons.forEach(btn => {
+      btn.disabled = isEvolving;
+      if (isEvolving) {
+        btn.innerHTML = `<span class="pulse-indicator" style="background:#38bdf8;"></span> <span>${runningLabel}</span>`;
+      } else {
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> <span>${normalLabel}</span>`;
+      }
+    });
+  }
+
+  window.addEventListener('axiomforge:lang_changed', () => {
+    updateAiEvolveButtons(false);
+  });
 
   // 打字机流式输出与可跳过交互
   const btnSkipTyping = document.getElementById('btn-skip-typing');
@@ -676,11 +693,9 @@ ${JSON.stringify(points, null, 2)}
     });
   }
 
-  if (btnAiEvolve) {
-    btnAiEvolve.addEventListener('click', async () => {
-      btnAiEvolve.disabled = true;
-      btnAiEvolve.innerHTML = '<span class="pulse-indicator" style="background:#38bdf8;"></span> AI 真实演化推理中...';
-      if (aiThinkingDetails) aiThinkingDetails.open = true;
+  const handleAiEvolveClick = async () => {
+    updateAiEvolveButtons(true);
+    if (aiThinkingDetails) aiThinkingDetails.open = true;
 
       const curProvider = window.modelPlatformManager.activeProvider;
       const curModel = window.modelPlatformManager.activeModel;
@@ -846,12 +861,16 @@ ${JSON.stringify(points, null, 2)}
           }
         }
       } finally {
-        btnAiEvolve.disabled = false;
-        const evolveBtnLabel = window.I18N ? window.I18N.t('btn_ai_evolve') : 'Evolve via AI Model';
-        btnAiEvolve.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 6v6l4 2"></path></svg> ${evolveBtnLabel}`;
+        updateAiEvolveButtons(false);
       }
-    });
-  }
+    };
+
+    if (btnAiEvolve) {
+      btnAiEvolve.addEventListener('click', handleAiEvolveClick);
+    }
+    if (btnAiEvolveSidebar) {
+      btnAiEvolveSidebar.addEventListener('click', handleAiEvolveClick);
+    }
 
   // ==============================================
   // 6. A/B 演化对抗收敛图表绘制 (Canvas)

@@ -1182,5 +1182,45 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: #e2e8f0;
 }
 
+/* 侧边栏大模型演化核心高光操作按钮 (用户瞩目焦点) */
+.btn-sidebar-evolve {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.28), rgba(99, 102, 241, 0.32));
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  color: #bae6fd;
+  font-size: 11.5px;
+  font-weight: 600;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+  white-space: nowrap;
+}
+
+.btn-sidebar-evolve:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.48), rgba(99, 102, 241, 0.52));
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-sidebar-evolve:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-sidebar-evolve:disabled {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(56, 189, 248, 0.2);
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
 
 
