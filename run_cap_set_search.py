@@ -59,7 +59,7 @@ def main():
     seed_eval = evaluate_program(INITIAL_SEED_PROGRAM, n)
     print(f"\n[种子程序] 评估得分: {seed_eval['score']} (验证有效: {seed_eval['valid']})")
     for island_id in range(args.islands):
-        db.register_program(INITIAL_SEED_PROGRAM, seed_eval["score"], generation=0, island_id=island_id)
+        db.register_program(INITIAL_SEED_PROGRAM, seed_eval["score"], generation=0, island_id=island_id, parent_ids=[], operator="seed")
 
     best_so_far = seed_eval["score"]
     best_points = seed_eval["points"]
@@ -68,9 +68,10 @@ def main():
     start_time = time.time()
     for gen in range(1, args.iterations + 1):
         island_id = (gen - 1) % args.islands
-        parent = db.sample_parent(island_id)
-        if not parent:
+        parents = db.sample_parents(island_id, operator="mutation")
+        if not parents:
             continue
+        parent = parents[0]
 
         mutated_code = sampler.sample_mutation(parent.code, db.global_best.score, n)
         result = evaluate_program(mutated_code, n)
