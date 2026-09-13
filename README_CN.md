@@ -137,11 +137,16 @@ AxiomForge/
 │   ├── sampler.py                   # 进化采样、变异与交叉逻辑
 │   ├── ai_providers/                # 解耦的大模型适配器 (OpenAI/DeepSeek/Claude/Ollama)
 │   └── mock_provider.py             # 离线确定性代数变异仿真器
-├── web/                             # WebGL / Canvas 3D 交互控制台
-│   ├── index.html                   # 全局交互主入口
-│   ├── cap_set_visualizer.js        # 5维超球拓扑投影与高维点阵渲染
-│   ├── mandelbrot.js                # 广义高阶复动力学与平滑着色引擎
-│   └── snowflake.js                 # 科赫雪花几何自相似生长与测度论仪表盘
+├── js/                              # 前端核心交互引擎
+│   ├── i18n.js                      # 国际化引擎 (默认英文，一键切换中文)
+│   ├── app.js                       # 工作区路由、事件总线与 Markdown 报告导出
+│   ├── math_discovery.js            # 5维帽集投影、思考链解析与沙箱验算
+│   ├── model_platform.js            # 通用模型枢纽、远程模型发现与本地隔离存储
+│   ├── mandelbrot.js                # 广义高阶复动力学与轨道陷阱着色引擎
+│   ├── orbit.js                     # 复平面相空间动态轨道追踪器
+│   └── snowflake.js                 # 科赫雪花几何自相似生长与测度仪表盘
+├── css/                             # 赛博霓虹数学风格样式表
+│   └── style.css
 ├── experiments/                     # 统计实验与跨种子基准脚本
 │   └── run_ab_experiment.py         # 对照组 vs 对称性先验组 A/B 自动化评测
 ├── aimo_pipeline/                   # Kaggle AIMO 竞赛实战与代码沙箱验算流水线
@@ -149,8 +154,10 @@ AxiomForge/
 ├── tests/                           # 完整自动化单元测试套件
 ├── web_server.py                    # 融合静态资源托管与模型中转的轻量级服务
 ├── run_funsearch_real.py            # 端到端 CLI 真实大模型自主演化脚本
-├── EXPERIMENT_CAPSET.md             # 5维帽集统计评测正式报告 (附基准对比)
-└── README.md                        # 项目主文档
+├── EXPERIMENT_CAPSET.md             # 5维帽集统计评测正式报告 (英文)
+├── EXPERIMENT_CAPSET_CN.md          # 5维帽集统计评测正式报告 (简体中文)
+├── README.md                        # 项目主文档 (英文)
+└── README_CN.md                     # 项目主文档 (简体中文)
 ```
 
 ---

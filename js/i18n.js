@@ -183,6 +183,8 @@
       mb_orbit_bounded_step: 'Remains bounded after {step} steps',
       mb_iter_unit: 'iters',
       mb_stat_passes_label: 'GPU Parallel Passes',
+      mb_watermark_default: 'Fractal Geometry',
+      mb_watermark_spiral: 'Infinite Spiral (Flower of Dynamics)',
 
       // 科赫雪花 HUD 与指标
       koch_hud_order_progress: 'Order {order} (Growth: {growth}%)',
@@ -398,6 +400,8 @@
       mb_orbit_bounded_step: '迭代 {step} 步始终有界收敛/闭合',
       mb_iter_unit: '次',
       mb_stat_passes_label: 'GPU 并行迭代',
+      mb_watermark_default: '分形几何学',
+      mb_watermark_spiral: '以为已经走到了尽头',
 
       // 科赫雪花 HUD 与指标
       koch_hud_order_progress: '第 {order} 阶 (生长进度 {growth}%)',

@@ -559,7 +559,9 @@ class MandelbrotViewer {
 
     // 更新标题水印
     const elTitle = document.querySelector('.watermark-title');
-    if (elTitle) elTitle.textContent = '分形几何学';
+    if (elTitle) {
+      elTitle.textContent = window.I18N ? window.I18N.t('mb_watermark_default') : 'Fractal Geometry';
+    }
 
     this.updateFormulaHUD();
     this.render();
@@ -608,9 +610,9 @@ class MandelbrotViewer {
       const elTitle = document.querySelector('.watermark-title');
       if (elTitle) {
         if (key === 'infinite_spiral') {
-          elTitle.textContent = '以为已经走到了尽头';
+          elTitle.textContent = window.I18N ? window.I18N.t('mb_watermark_spiral') : 'Infinite Spiral (Flower of Dynamics)';
         } else {
-          elTitle.textContent = '分形几何学';
+          elTitle.textContent = window.I18N ? window.I18N.t('mb_watermark_default') : 'Fractal Geometry';
         }
       }
 
@@ -642,7 +644,9 @@ class MandelbrotViewer {
     }
 
     const elTitle = document.querySelector('.watermark-title');
-    if (elTitle) elTitle.textContent = '分形几何学';
+    if (elTitle) {
+      elTitle.textContent = window.I18N ? window.I18N.t('mb_watermark_default') : 'Fractal Geometry';
+    }
 
     this.updateFormulaHUD();
     this.render();
@@ -655,48 +659,41 @@ class MandelbrotViewer {
     let target;
     if (this.power >= 2.5) {
       target = {
-        name: '四瓣分形旋臂峡谷深潜',
-        power: this.power,
-        re: 0.38,
-        im: 0.38,
-        zoom: 160.0,
-        maxIter: 240,
-        palette: this.colorPalette
+        name: window.I18N ? window.I18N.t('mb_watermark_default') : 'Multibrot Deep-Dive',
+        power: 5.08,
+        re: -0.00035,
+        im: -0.00035,
+        targetZoom: 600.0,
+        maxIter: 260
       };
     } else {
       target = this.presets[presetKey] || this.presets['infinite_spiral'];
     }
-
     if (!target) return;
 
     this.isTouring = true;
-    this.isMorphingPower = false;
-    this.tourTarget = target;
+    this.tourStartTime = performance.now();
+    this.tourPreset = target;
+    this.tourStartCenter = { re: this.center.re, im: this.center.im };
+    this.tourStartZoom = this.zoom;
 
-    this.power = target.power;
+    const btnTour = document.getElementById('btn-mb-tour');
+    if (btnTour) {
+      btnTour.classList.add('btn-active');
+    }
+
     // 若当前倍率已较深，则从宏观全景平滑开始推进
     if (this.zoom > 10.0) {
-      this.zoom = 1.0;
       if (this.power >= 2.5) {
         this.center = { re: 0.0, im: 0.0 };
+        this.zoom = 1.05;
       } else {
         this.center = { re: -0.65, im: 0.0 };
+        this.zoom = 0.95;
       }
+      this.tourStartCenter = { re: this.center.re, im: this.center.im };
+      this.tourStartZoom = this.zoom;
     }
-
-    if (target.palette !== undefined) {
-      this.colorPalette = target.palette;
-      document.querySelectorAll('.color-scheme-btn').forEach(btn => {
-        if (parseInt(btn.dataset.palette, 10) === target.palette) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-    }
-
-    this.updateFormulaHUD();
-    this.render();
   }
 
   stopTour() {
@@ -704,7 +701,8 @@ class MandelbrotViewer {
     this.isTouring = false;
     const btnTour = document.getElementById('btn-mb-tour');
     if (btnTour) {
-      btnTour.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> 自动深潜巡航';
+      const tourLabel = window.I18N ? window.I18N.t('btn_mb_tour', 'Auto Deep-Dive Cruise') : 'Auto Deep-Dive Cruise';
+      btnTour.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> ${tourLabel}`;
       btnTour.classList.remove('btn-active');
     }
   }

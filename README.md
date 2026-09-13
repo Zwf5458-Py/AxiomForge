@@ -143,6 +143,7 @@ AxiomForge/
 │   ├── math_discovery.js            # 5D Cap Set projection, reasoning parser & live evaluation
 │   ├── model_platform.js            # Universal model hub, dynamic discovery & localStorage vault
 │   ├── mandelbrot.js                # Generalized high-order dynamics & orbit traps
+│   ├── orbit.js                     # Phase space complex orbit tracing & trajectory mapping
 │   └── snowflake.js                 # Koch snowflake recursive geometry & measure HUD
 ├── css/                             # Polished neon cyberpunk mathematical styling
 │   └── style.css
