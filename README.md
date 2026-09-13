@@ -1,14 +1,26 @@
-# AxiomForge: Mathematical Discovery & Complex Dynamics via Algebraic Priors and LLM Program Evolution
+<p align="center">
+  <a href="https://github.com/Zwf5458-Py/AxiomForge">
+    <img src="assets/logo.svg" alt="AxiomForge Logo" width="130" height="130">
+  </a>
+</p>
+
+<h1 align="center">AxiomForge</h1>
+
+<p align="center">
+  <strong>Autonomous Program Evolution · Extremal Combinatorics · Complex Dynamics</strong>
+</p>
 
 <p align="center">
   <strong>English</strong> | 
   <a href="README_CN.md">简体中文</a>
 </p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI Tests](https://github.com/Zwf5458-Py/AxiomForge/actions/workflows/tests.yml/badge.svg)](https://github.com/Zwf5458-Py/AxiomForge/actions)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Web UI Available](https://img.shields.io/badge/Web_UI-3D_Interactive-emerald.svg)](http://localhost:8080)
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/Zwf5458-Py/AxiomForge/actions"><img src="https://github.com/Zwf5458-Py/AxiomForge/actions/workflows/tests.yml/badge.svg" alt="CI Tests"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python 3.10+"></a>
+  <a href="http://localhost:8080"><img src="https://img.shields.io/badge/Web_UI-3D_Interactive-emerald.svg" alt="Web UI Available"></a>
+</p>
 
 > **Project Mission**: A rigorous **Early Open-Source Research Prototype** designed for independent researchers to investigate the intersection of algebraic structural priors (symmetry & modular invariants) and LLM program evolution (FunSearch paradigm) in finite field extremal combinatorics (such as the Cap Set problem), alongside interactive computational tools for higher-order complex dynamics and geometric fractals.
 
@@ -16,10 +28,10 @@
 
 ## 📸 Representative Visual Gallery
 
-| 1. AI Mathematical Discovery · 5D (243 pts) Cap Set Evolution | 2. Generalized Complex Dynamics · Mandelbrot Multi-Arm Tour | 3. Geometric Fractals · Koch Snowflake Measure Theory |
+| 1. AI Mathematical Discovery · 3D Slices & Cap Set Evolution | 2. Generalized Complex Dynamics · Mandelbrot Multi-Arm Tour | 3. Geometric Fractals · Koch Snowflake Measure Theory |
 | :---: | :---: | :---: |
-| [![Cap Set 5D](assets/preview_funsearch_5d.png)](assets/preview_funsearch_5d.png) | [![Mandelbrot Dynamics](assets/preview_mandelbrot.png)](assets/preview_mandelbrot.png) | [![Koch Snowflake](assets/preview_koch.png)](assets/preview_koch.png) |
-| **5D Hypersphere Projection**<br>Breaks the $2^5=32$ hypercube trap to achieve **38 points**; real-time A/B convergence trajectories & LLM reasoning chain | **Generalized Complex Dynamics**<br>Continuous power transformations ($z \mapsto z^d + c$), smooth escape-time shading, orbit traps & phase space tracking | **Measure-Theoretic Demonstrations**<br>Perimeter exponential divergence ($P_n \to \infty$), bounded area convergence ($\frac{8}{5}A_0$), Hausdorff dimension $D \approx 1.26186$ |
+| [![Cap Set Discovery](assets/preview_funsearch_5d.png)](assets/preview_funsearch_5d.png) | [![Mandelbrot Dynamics](assets/preview_mandelbrot.png)](assets/preview_mandelbrot.png) | [![Koch Snowflake](assets/preview_koch.png)](assets/preview_koch.png) |
+| **3D Array Slices & Hypersphere**<br>Breaks the $2^n$ hypercube trap (38 pts in 5D, 64+ in 6D); real-time A/B convergence & LLM reasoning chains | **Generalized Complex Dynamics**<br>Continuous power transformations ($z \mapsto z^d + c$), smooth escape-time shading, orbit traps & phase space tracking | **Measure-Theoretic Demonstrations**<br>Perimeter exponential divergence ($P_n \to \infty$), bounded area convergence ($\frac{8}{5}A_0$), Hausdorff dimension $D \approx 1.26186$ |
 
 ---
 
@@ -30,7 +42,7 @@
 The Cap Set problem is a celebrated central challenge in extremal combinatorics and additive number theory, investigated by Terence Tao and serving as a premier benchmark for DeepMind's FunSearch (*Nature 2023*): In the affine space $\mathbb{F}_3^n$, find the maximum subset containing no three collinear points (non-trivial triples satisfying $x + y + z \equiv 0 \pmod 3$).
 
 <div align="center">
-  <img src="assets/preview_funsearch_5d.png" alt="5D Cap Set Evolution" width="90%">
+  <img src="assets/preview_funsearch_5d.png" alt="AxiomForge Interactive Mathematical Discovery Studio" width="92%">
 </div>
 
 - **Overcoming Hypercube Local Traps**: Naive greedy heuristics inevitably stagnate in degenerate affine subspaces of size $2^n$ ($n=4 \to 16$, $n=5 \to 32$, $n=6 \to 64$, $n=7 \to 128$).

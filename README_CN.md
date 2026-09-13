@@ -1,14 +1,26 @@
-# AxiomForge: 基于代数先验与大模型程序演化的极值组合数学发现与复动力学探索平台
+<p align="center">
+  <a href="https://github.com/Zwf5458-Py/AxiomForge">
+    <img src="assets/logo.svg" alt="AxiomForge Logo" width="130" height="130">
+  </a>
+</p>
+
+<h1 align="center">AxiomForge · AI 数学发现平台</h1>
 
 <p align="center">
-  <a href="README.md"><strong>English</strong></a> | 
+  <strong>自主程序演化 · 极值组合 · 复杂动力学</strong>
+</p>
+
+<p align="center">
+  <a href="README.md">English</a> | 
   <strong>简体中文</strong>
 </p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI Tests](https://github.com/Zwf5458-Py/AxiomForge/actions/workflows/tests.yml/badge.svg)](https://github.com/Zwf5458-Py/AxiomForge/actions)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Web UI Available](https://img.shields.io/badge/Web_UI-3D_Interactive-emerald.svg)](http://localhost:8080)
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/Zwf5458-Py/AxiomForge/actions"><img src="https://github.com/Zwf5458-Py/AxiomForge/actions/workflows/tests.yml/badge.svg" alt="CI Tests"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python 3.10+"></a>
+  <a href="http://localhost:8080"><img src="https://img.shields.io/badge/Web_UI-3D_Interactive-emerald.svg" alt="Web UI Available"></a>
+</p>
 
 > **项目定位**：一个面向独立研究者的高标准**早期开源研究原型（Early Research Prototype）**，旨在探索代数结构先验（Symmetry & Modular Invariants）与大语言模型程序演化（FunSearch 范式）在有限域极值组合问题（如 Cap Set 问题）中的有效结合，并提供高阶复动力学与几何自相似分形的专业级交互推演平台。
 
@@ -16,12 +28,10 @@
 
 ## 📸 项目代表特性视觉画廊 (Visual Gallery)
 
-| 1. AI 极值数学发现 · 5 维 (243点) Cap Set 拓扑演化 | 2. 广义高阶复动力学 · 曼德勃罗多重螺旋巡航 | 3. 几何自相似生长 · 科赫雪花测度论收敛仪表盘 |
+| 1. AI 极值数学发现 · 3D切片阵列与高维帽集演化 | 2. 广义高阶复动力学 · 曼德勃罗多重螺旋巡航 | 3. 几何自相似生长 · 科赫雪花测度论收敛仪表盘 |
 | :---: | :---: | :---: |
-| [![Cap Set 5D](assets/preview_funsearch_5d.png)](assets/preview_funsearch_5d.png) | [![Mandelbrot Dynamics](assets/preview_mandelbrot.png)](assets/preview_mandelbrot.png) | [![Koch Snowflake](assets/preview_koch.png)](assets/preview_koch.png) |
-| **5 维超球拓扑投影**<br>突破 $2^5=32$ 局部陷阱达到 **38 点**，A/B 演化对抗收敛折线图，大模型思考链实时解析 | **广义高阶复动力学**<br>多臂螺旋开花形变、逃逸时间轨道陷阱（Orbit Traps）与复数轨道实时仪表盘 | **几何测度论推演**<br>周长指数发散（$P_n \to \infty$）、面积单调收敛至 $\frac{8}{5}A_0$、豪斯多夫维数 $D \approx 1.26186$ |
-
----
+| [![Cap Set Discovery](assets/preview_funsearch_5d.png)](assets/preview_funsearch_5d.png) | [![Mandelbrot Dynamics](assets/preview_mandelbrot.png)](assets/preview_mandelbrot.png) | [![Koch Snowflake](assets/preview_koch.png)](assets/preview_koch.png) |
+| **3D 切片超立方阵列与超球流形**<br>突破 $2^n$ 局部陷阱（5维38点、6维64+点），A/B 对抗收敛图，大模型思考链与沙箱严格共线验算 | **广义高阶复动力学**<br>多臂螺旋开花形变、逃逸时间轨道陷阱（Orbit Traps）与复数轨道实时仪表盘 | **几何测度论推演**<br>周长指数发散（$P_n \to \infty$）、面积单调收敛至 $\frac{8}{5}A_0$、豪斯多夫维数 $D \approx 1.26186$ |
 
 ---
 
@@ -32,7 +42,7 @@
 帽集问题（Cap Set Problem）是极值组合数学与加性组合学中的著名难题，亦是陶哲轩（Terence Tao）与 DeepMind FunSearch（Nature 2023）重点关注的研究标杆：在有限向量空间 $\mathbb{F}_3^n$ 中，寻找不包含任何三点共线（即满足 $x + y + z \equiv 0 \pmod 3$ 的非平凡三元组）的最大子集。
 
 <div align="center">
-  <img src="assets/preview_funsearch_5d.png" alt="5D Cap Set Evolution" width="90%">
+  <img src="assets/preview_funsearch_5d.png" alt="AxiomForge 交互式数学发现与高维切片演化控制台" width="92%">
 </div>
 
 - **突破超立方体局部陷阱**：朴素贪心搜索极易被困在容量为 $2^n$ 的退化子空间中（$n=4 \to 16$, $n=5 \to 32$, $n=6 \to 64$, $n=7 \to 128$）。
