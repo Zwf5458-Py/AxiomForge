@@ -104,7 +104,7 @@ AxiomForge 已正式在国际著名非营利资助平台 **Manifund** 完成全�
    - 入口：[`https://github.com/sponsors`](https://github.com/sponsors)；
    - 开通后代码库顶部将出现粉色 `Sponsor` 按钮，全球开发者可随时打赏；
 3. **申报更多极速小额资助平台**：
-   - **Emergent Ventures (EV)**：Tyler Cowen 主持，极度偏爱独立高行动力个体，申报全套文案已完成（见 [`docs/grants/emergent_ventures_application.md`](file:///Users/oraclez/code/数学模型/docs/grants/emergent_ventures_application.md)）；
+   - **Emergent Ventures (EV)**：首轮审理完成（申请编号：`#92603`），Mercatus 机构反馈项目偏向理论科研与范畴差异暂未获批，明确欢迎后续取得新进展再次投递；后续可待拓展至物流装箱商业运筹模型后再行更新跟进；
    - **Long-Term Future Fund (LTFF - Transformative AI Fund)**：EA Funds 旗下专项，申请金额 $15,000 USD，已正式在线完成提交（文案见 [`docs/grants/ltff_transformative_ai_fund_application.md`](file:///Users/oraclez/code/数学模型/docs/grants/ltff_transformative_ai_fund_application.md)）；
    - **OpenAI Researcher Access Program**：首期申领 $1,000 美元 API Token，已在线完成全量表单填写与提交（申请ID：`0000048290`，文案见 [`docs/grants/openai_researcher_access_application.md`](file:///Users/oraclez/code/数学模型/docs/grants/openai_researcher_access_application.md)）；
    - **ACX Grants (Astral Codex Ten)**：每年定期批次开放，目前已与 Manifund 深度合并。AxiomForge 在 Manifund 上的项目已自动纳入 Scott Alexander 及 ACX 评委（Regranters）的审查池中。
