@@ -18,9 +18,20 @@
 Inspired by DeepMind's *FunSearch* (*Nature 2023*), we have built **AxiomForge**, an open, lightweight heuristic search and evaluation framework focused on extreme combinatorial geometry—specifically the Cap Set problem in finite affine spaces $\mathbb{F}_3^n$.
 
 ### Current Proof of Work (Baseline Prototype):
-In preliminary controlled trials across $\mathbb{F}_3^4$ to $\mathbb{F}_3^7$:
-- **Naive baseline heuristics** (linear coordinate weights) consistently stagnate at elementary hypercube bounds of size $2^n$ ($16, 32, 64, 128$).
-- **Heuristics injected with algebraic priors** (Hamming weight $L_0$ slices and affine hyperplane modulo constraints) break this hypercube barrier, achieving exact theoretical maximums at $n=4$ ($20/20$), statistical means of $37.6 \pm 0.7$ at $n=5$ (target: 45), and $157$ at $n=7$.
+In controlled multi-seed statistical trials across $\mathbb{F}_3^4$ to $\mathbb{F}_3^7$ (10 independent random seeds per dimension, identical evaluation budgets):
+- **Naive baseline heuristics** (linear coordinate weights) deterministically stagnate at elementary hypercube bounds of size $2^n$ ($16, 32, 64, 128$).
+- **Heuristics injected with algebraic priors** (Hamming weight $L_0$ slices and affine hyperplane modulo constraints) consistently break this hypercube barrier, reaching the exact theoretical maximum at $n=4$ ($20/20$) and clear improvements at every higher dimension.
+
+| Dim | Baseline (Naive) | Symmetry Prior | Best Observed | Reference Benchmark | Gain |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| $n=4$ | $16 \pm 0.0$ | $19.2 \pm 1.03$ | **20 / 20** | 20 (exact max, Pellegrino 1971) | **+20.0%** |
+| $n=5$ | $32 \pm 0.0$ | $37.6 \pm 0.70$ | **38 / 45** | 45 (exact max, Edel 2004) | **+17.5%** |
+| $n=6$ | $64 \pm 0.0$ | $77.2 \pm 1.03$ | **78 / 112** | 112 (exact max, Edel/Potechin 2008) | **+20.6%** |
+| $n=7$ | $128 \pm 0.0$ | $156.8 \pm 0.63$ | **157 / 236** | 236 (best-known lower bound, Edel 2004) | **+22.5%** |
+
+All raw data is publicly reproducible: `experiments/results_n{4,5,6,7}_statistical.json` (10 seeds; 20 iterations per dimension, 50 for $n=7$).
+
+> **Latest Milestone Update (Sep 16, 2026)**: With our newly developed trinary integer solver (`FastCapSetEnv`) and inversion polarization priors, peak observations advanced to **81 points in 6D** (+26.56%, locking onto the maximal orthogonal product bound $9 \times 9 = 81$) and **166 points in 7D** (+29.69%, 100% collinear-free). See the full technical report: [`EXPERIMENT_HIGH_DIM.md`](../../EXPERIMENT_HIGH_DIM.md).
 
 ### Critical Limitations We Acknowledge:
 1. **Distance to State-of-the-Art**: Our current best observation at $n=7$ (157 points) is still 79 points short of the best-known lower bound (236 points, Edel 2004).

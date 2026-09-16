@@ -63,7 +63,7 @@
   3. **高维跑分双双打破历史纪录**：
      - **6 维（729 点）**：从历史纪录 78 点跃升至 **81 点**（对比基线 64 点提升 **+26.56%**，耗时仅 4.55s，达到两套 3 维极值正交直积理论上限 $9 \times 9 = 81$！）；
      - **7 维（2,187 点）**：从历史纪录 157 点跃升至 **166 点**（对比基线 128 点提升 **+29.69%**，耗时 66.62s）；
-     - 两项成果均通过全量 $\binom{k}{2}$ 共线严格数学校验（`is_valid_cap_set == True`），数据分别导出至 `high_dim_results_dim_6.json` 和 `high_dim_results_dim_7.json`，完整技术报告见 [`EXPERIMENT_HIGH_DIM.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM.md)。
+     - 两项成果均通过全量 $\binom{k}{2}$ 共线严格数学校验（`is_valid_cap_set == True`），数据分别导出至 `high_dim_results_dim_6.json` 和 `high_dim_results_dim_7.json`，完整技术报告已形成双语发布：国际英文版 [`EXPERIMENT_HIGH_DIM.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM.md) 与中文版 [`EXPERIMENT_HIGH_DIM_CN.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM_CN.md)。
 
 ### 5. 质量工程与测试全绿
 - 配置文件：[`pyproject.toml`](file:///Users/oraclez/code/数学模型/pyproject.toml) 固化 `pythonpath = ["."]`；
@@ -134,7 +134,7 @@ AxiomForge 已正式在国际著名非营利资助平台 **Manifund** 完成全�
    - [ ] 下一步挑战：探索 8 维空间（6,561 点）紧凑位图与超高维切片求解的可行性，以及 7 维向更高界（如 180+ 点）持续演化；
 3. **成果固化**：
    - [✓] 6D（81点）与 7D（166点）极值构造向量及跑分对比已持久化导出至 [`high_dim_results_dim_6.json`](file:///Users/oraclez/code/数学模型/high_dim_results_dim_6.json) 与 [`high_dim_results_dim_7.json`](file:///Users/oraclez/code/数学模型/high_dim_results_dim_7.json)；
-   - [✓] 撰写完成高维独立实验技术报告 [`EXPERIMENT_HIGH_DIM.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM.md)。
+   - [✓] 撰写完成中英文双语高维独立实验技术报告：国际英文版 [`EXPERIMENT_HIGH_DIM.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM.md) 与中文版 [`EXPERIMENT_HIGH_DIM_CN.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM_CN.md)。
 
 ---
 *本交接文档已在本地代码库根目录与系统存档中持久化保存，任何新会话或接替者均可通过阅读本文档在 1 分钟内无缝接管项目全部上下文。*
