@@ -1,65 +1,53 @@
-# AxiomForge Statistical Evaluation Report: Preliminary Assessment of Algebraic Structural Priors in Cap Set Heuristic Search
+# AxiomForge 统计评测报告：代数结构先验在有限域帽集启发式搜索中的初步增益评估
 
-<p align="center">
-  <strong>English</strong> | 
-  <a href="EXPERIMENT_CAPSET_CN.md">简体中文</a>
-</p>
-
-> **Nature of Experiment**: Early Research Prototype Evaluation  
-> **Topic**: Evaluation of Algebraic Structural Priors in Heuristic Search for Cap Sets in $\mathbb{F}_3^5$  
-> **Code & Data Repository**: [https://github.com/Zwf5458-Py/AxiomForge](https://github.com/Zwf5458-Py/AxiomForge)  
-> **Evaluation Protocol**: 10 independent random seeds, identical candidate sampling budget (20 iterations per trial)  
-> **Experiment Timestamp**: 2026-09-12 11:56:22  
+> **实验性质**：早期探索型原型实验 (Early Research Prototype)  
+> **研究课题**：Evaluation of Algebraic Priors in Heuristic Search for Cap Sets in $\mathbb{F}_3^7$  
+> **代码与数据仓库**：[https://github.com/Zwf5458-Py/AxiomForge](https://github.com/Zwf5458-Py/AxiomForge)  
+> **评测协议**：10 组独立随机种子重复试验，相同候选采样预算（每组 50 轮）  
+> **实验时间**：2026-09-16 17:12:41  
 
 ---
 
-## 1. Statistical Summary
+## 1. 统计评测摘要 (Statistical Summary)
 
-In the affine finite space $\mathbb{F}_3^5$ ($3^5 = 243$ candidate points), under identical computational budgets and evaluation iteration counts, we compared the **"Naive Heuristic Baseline"** against the **"Symmetry-Injected Prior Group"**:
+在有限域 $\mathbb{F}_3^7$（总空间 $3^7 = 2187$ 点）中，我们在相同计算预算与固定评估次数下，对比了**“朴素启发式基准组 (Naive Heuristic)”**与**“对称性先验组 (Symmetry-Injected Prior)”**：
 
-| Experimental Group | Seeds | Mean ± Std Dev | Median | Observed Range [Min, Max] | Gain vs. Naive Baseline | Benchmark Reference (45 pts, Edel (2004)) |
+| 实验组别 | 随机种子数 | 得分均值 ± 标准差 | 中位数 | 观测极值区间 [Min, Max] | 相比基线均值增益 | 基准目标参照 (236 点, Edel (2004)) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Control (Naive)** | 10 | **32 ± 0.0** | 32.0 | [32, 32] | Baseline | 71.1% of maximum |
-| **Experiment (Symmetry)** | 10 | **37.6 ± 0.7** | 38.0 | [36, 38] | **+5.6 pts (+17.5%)** | 84.4% of maximum |
+| **对照组 (Naive)** | 10 | **128 ± 0.0** | 128.0 | [128, 128] | 基准线 | 达成率 54.2% |
+| **实验组 (Symmetry)** | 10 | **156.8 ± 0.63** | 157.0 | [155, 157] | **+28.8 点 (+22.5%)** | 达成率 66.5% |
 
-### Objective Observations & Analysis:
-1. **Statistically Significant Gain**: Across multiple random seeds, the symmetry-injected template consistently outperforms the naive linear coordinate baseline. This demonstrates that Hamming weight level-set slicing ($L_0$ norm) combined with modular arithmetic biases helps greedy rankers construct non-collinear point configurations earlier.
-2. **Distance to Known Benchmarks**:
-   - For $n=4$, the experimental group consistently hits the theoretical maximum of 20 points ($20/20$).
-   - For higher dimensions ($n=7$), our single best observation is 157 points, which still lags behind the open best-known lower bound (236 points, Edel 2004; ratio ~66.5%). These results validate preliminary acceleration under constrained template search, but make no claim to breaking or approaching high-dimensional world records.
-
-### 5D Point Set Topology and A/B Convergence Visuals:
-
-<div align="center">
-  <img src="assets/preview_funsearch_5d.png" alt="5D Cap Set Topology & AB Convergence" width="90%">
-  <p><em>Figure: 5-dimensional (243-point space) hypersphere topological projection (breaking the 32-point trap to reach 38 points, with verified collinear count strictly equal to 0) alongside multi-round A/B convergence trajectories.</em></p>
-</div>
+### 客观结论说明：
+1. **统计显著的增益趋势**：在跨多组随机种子的严格对比下，对称性先验模板在统计均值上一致优于朴素线性基线。这表明汉明重量切片与同余偏置有助于贪心排序器更早建立非共线点群。
+2. **基准距离说明**：
+   - 对于 $n=4$，实验组能够稳定达到理论上限 20 点；
+   - 对于高维（如 $n=7$），当前最好单次结果为 157 点，距离公开已知最佳构造（Edel, 2004 构造的 236 点）仍有差距（达成率约 66.5%）。目前结果仅证实了在低算力模板搜索下的初步加速效果，尚不能声称打破或逼近高维世界纪录。
 
 ---
 
-## 2. Top-Performing Heuristic Function in Benchmark
+## 2. 评测中表现最佳的启发式候选函数
 
-The following snippet represents the highest-scoring candidate function captured during the statistical trials (single-run peak: 38 / 45 points in $\mathbb{F}_3^5$):
+以下为多轮评测中捕获的最高分候选代码（单次最高得分: 157 / 236）：
 
 ```python
 def priority(p: tuple, n: int) -> float:
-    # Algebraic prior: L0-norm slicing & modular congruence
+    # 对称性先验：L0 范数切片与多项式可乘性
     l0_norm = sum(1 for x in p if x != 0)
-    # Reward points situated in the intermediate Hamming weight slice
+    # 鼓励处于特定中间汉明重量层的点
     slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0
     parity = sum(p) % 3
-    return float(slice_bonus + (parity == 0) * 30.0 + p[0] * 3.39)
+    return float(slice_bonus + (parity == 1) * 30.0 + p[0] * 1.11)
 ```
 
-### Objective Architectural Characteristics:
-- **Active Structural Features**: The function leverages an $L_0$-norm intermediate slice bias combined with a coordinate sum modulo 3 congruence check (`sum(p) % 3 == 0`).
-- **Limitation**: This candidate evolved via parameter search across algebraic templates; it should be regarded as template parameter optimization rather than spontaneous LLM generation of complex polynomial methods.
+### 代码特征客观分析：
+- **主要起效结构**：该函数结合了 $L_0$ 范数切片（中间汉明重量偏置）与坐标和模 3 同余判定（`sum(p) % 3`）。
+- **局限性**：该函数由预置代数模板演化系数而来，尚属“受限模板参数搜索”，不应过度引申为大语言模型自发复现复杂多项式方法。
 
 ---
 
-## 3. Next-Phase Research Agenda & Funding Goals
+## 3. 下一阶段研究计划与资助诉求
 
-Based on this early prototype, subsequent development will focus on three key pillars:
-1. **End-to-End LLM Program Synthesis**: Transitioning from parametric templates to open-ended code generation via LLMs (DeepSeek-R1 / Qwen2.5-Coder) evaluated inside isolated sandboxes;
-2. **Multi-Island Genetic Population Diversity**: Preventing premature greedy convergence and stagnation;
-3. **Cross-Domain Generalization**: Applying the same evolutionary paradigm to Online Bin Packing and extremal graph theory problems.
+基于当前早期原型，后续研究将围绕以下三项展开：
+1. **引入真实 LLM 演化闭环**：将模板系数搜索推进为由开源大模型（如 DeepSeek-R1 / Qwen2.5-Coder）在代码沙箱中自主变异生成任意 Python 逻辑；
+2. **多岛屿种群与多样性维护**：防止搜索陷入早熟收敛；
+3. **探索更高维与跨领域运筹问题**：将同一套演化框架迁移至在线装箱（Bin Packing）与图论极值问题。

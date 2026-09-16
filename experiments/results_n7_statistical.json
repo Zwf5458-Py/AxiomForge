@@ -4,11 +4,16 @@
   "benchmark_type": "best_known_lower_bound",
   "benchmark_reference": "Edel (2004)",
   "iterations_per_trial": 50,
-  "num_seeds": 5,
+  "num_seeds": 10,
   "naive_stats": {
     "name": "对照组: 朴素启发式 (Naive Heuristic)",
-    "num_seeds": 5,
+    "num_seeds": 10,
     "scores": [
+      128,
+      128,
+      128,
+      128,
+      128,
       128,
       128,
       128,
@@ -17,15 +22,15 @@
     ],
     "mean_score": 128,
     "std_score": 0.0,
-    "median_score": 128,
+    "median_score": 128.0,
     "min_score": 128,
     "max_score": 128,
-    "mean_time_seconds": 0.7183,
+    "mean_time_seconds": 0.7304,
     "best_trial": {
       "seed": 42,
       "best_score": 128,
       "best_code": "def priority(p: tuple, n: int) -> float:\n    return float(sum(p))",
-      "elapsed_seconds": 0.708261251449585,
+      "elapsed_seconds": 0.7311780452728271,
       "history": [
         {
           "gen": 1,
@@ -290,25 +295,30 @@
   },
   "symmetry_stats": {
     "name": "实验组: 对称性先验 (Symmetry Prior)",
-    "num_seeds": 5,
+    "num_seeds": 10,
     "scores": [
       157,
       157,
       157,
       157,
+      157,
+      157,
+      155,
+      157,
+      157,
       157
     ],
-    "mean_score": 157,
-    "std_score": 0.0,
-    "median_score": 157,
-    "min_score": 157,
+    "mean_score": 156.8,
+    "std_score": 0.63,
+    "median_score": 157.0,
+    "min_score": 155,
     "max_score": 157,
-    "mean_time_seconds": 0.9229,
+    "mean_time_seconds": 0.9241,
     "best_trial": {
       "seed": 42,
       "best_score": 157,
       "best_code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 1) * 30.0 + p[0] * 1.11)",
-      "elapsed_seconds": 0.8761389255523682,
+      "elapsed_seconds": 0.8846888542175293,
       "history": [
         {
           "gen": 1,
@@ -574,7 +584,7 @@
       "is_valid": true
     }
   },
-  "mean_gain": 29,
-  "mean_gain_pct": 22.66,
-  "timestamp": "2026-09-13 08:18:51"
+  "mean_gain": 28.8,
+  "mean_gain_pct": 22.5,
+  "timestamp": "2026-09-16 17:12:41"
 }
