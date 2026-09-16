@@ -1,0 +1,295 @@
+{
+  "dimension": 6,
+  "benchmark_target": 112,
+  "benchmark_type": "exact_maximum",
+  "benchmark_reference": "Potechin (2008) / Edel (2004)",
+  "iterations_per_trial": 20,
+  "num_seeds": 10,
+  "naive_stats": {
+    "name": "对照组: 朴素启发式 (Naive Heuristic)",
+    "num_seeds": 10,
+    "scores": [
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64
+    ],
+    "mean_score": 64,
+    "std_score": 0.0,
+    "median_score": 64.0,
+    "min_score": 64,
+    "max_score": 64,
+    "mean_time_seconds": 0.0719,
+    "best_trial": {
+      "seed": 42,
+      "best_score": 64,
+      "best_code": "def priority(p: tuple, n: int) -> float:\n    return float(sum(p))",
+      "elapsed_seconds": 0.07213425636291504,
+      "history": [
+        {
+          "gen": 1,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 2,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 3,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 4,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 5,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 6,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 7,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 8,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 9,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 10,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 11,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 12,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 13,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 14,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 15,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 16,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 17,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 18,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 19,
+          "best_score": 64,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 20,
+          "best_score": 64,
+          "current_eval_score": 64
+        }
+      ],
+      "top_programs": [
+        {
+          "score": 64,
+          "code": "def priority(p: tuple, n: int) -> float:\n    return float(sum(p))"
+        }
+      ],
+      "points_count": 64,
+      "is_valid": true
+    }
+  },
+  "symmetry_stats": {
+    "name": "实验组: 对称性先验 (Symmetry Prior)",
+    "num_seeds": 10,
+    "scores": [
+      78,
+      78,
+      78,
+      76,
+      78,
+      76,
+      76,
+      76,
+      78,
+      78
+    ],
+    "mean_score": 77.2,
+    "std_score": 1.03,
+    "median_score": 78.0,
+    "min_score": 76,
+    "max_score": 78,
+    "mean_time_seconds": 0.0924,
+    "best_trial": {
+      "seed": 42,
+      "best_score": 78,
+      "best_code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 1) * 30.0 + p[0] * 1.11)",
+      "elapsed_seconds": 0.09074997901916504,
+      "history": [
+        {
+          "gen": 1,
+          "best_score": 71,
+          "current_eval_score": 71
+        },
+        {
+          "gen": 2,
+          "best_score": 71,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 3,
+          "best_score": 71,
+          "current_eval_score": 71
+        },
+        {
+          "gen": 4,
+          "best_score": 76,
+          "current_eval_score": 76
+        },
+        {
+          "gen": 5,
+          "best_score": 78,
+          "current_eval_score": 78
+        },
+        {
+          "gen": 6,
+          "best_score": 78,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 7,
+          "best_score": 78,
+          "current_eval_score": 67
+        },
+        {
+          "gen": 8,
+          "best_score": 78,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 9,
+          "best_score": 78,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 10,
+          "best_score": 78,
+          "current_eval_score": 71
+        },
+        {
+          "gen": 11,
+          "best_score": 78,
+          "current_eval_score": 76
+        },
+        {
+          "gen": 12,
+          "best_score": 78,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 13,
+          "best_score": 78,
+          "current_eval_score": 72
+        },
+        {
+          "gen": 14,
+          "best_score": 78,
+          "current_eval_score": 76
+        },
+        {
+          "gen": 15,
+          "best_score": 78,
+          "current_eval_score": 71
+        },
+        {
+          "gen": 16,
+          "best_score": 78,
+          "current_eval_score": 72
+        },
+        {
+          "gen": 17,
+          "best_score": 78,
+          "current_eval_score": 64
+        },
+        {
+          "gen": 18,
+          "best_score": 78,
+          "current_eval_score": 75
+        },
+        {
+          "gen": 19,
+          "best_score": 78,
+          "current_eval_score": 71
+        },
+        {
+          "gen": 20,
+          "best_score": 78,
+          "current_eval_score": 69
+        }
+      ],
+      "top_programs": [
+        {
+          "score": 78,
+          "code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 1) * 30.0 + p[0] * 1.11)"
+        },
+        {
+          "score": 76,
+          "code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 1) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 0) * 30.0 + p[0] * 3.39)"
+        },
+        {
+          "score": 71,
+          "code": "def priority(p: tuple, n: int) -> float:\n    # 对称性先验：L0 范数切片与多项式可乘性\n    l0_norm = sum(1 for x in p if x != 0)\n    # 鼓励处于特定中间汉明重量层的点\n    slice_bonus = 60.0 if l0_norm == (n // 2 + 0) else 0.0\n    parity = sum(p) % 3\n    return float(slice_bonus + (parity == 2) * 30.0 + p[0] * 1.06)"
+        }
+      ],
+      "points_count": 78,
+      "is_valid": true
+    }
+  },
+  "mean_gain": 13.2,
+  "mean_gain_pct": 20.63,
+  "timestamp": "2026-09-16 17:59:37"
+}
