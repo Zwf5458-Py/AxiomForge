@@ -86,6 +86,16 @@ Mathematical aesthetics extend from discrete algebra into continuous dynamical s
 
 ---
 
+### Pillar 4: Discrete Arithmetic Dynamics & Collatz Conjecture (Hailstone & Inverse Tree)
+
+Described by Paul Erdős as a puzzle for which "mathematics is not yet ready", the Collatz ($3x+1$) conjecture serves as a prime archetype for discrete dynamical systems and computational number theory:
+
+- **Hailstone Trajectory Dynamics**: Features particle flow animations, golden odd steps ($3n+1$), and ice-blue even drops ($n/2$), with dual logarithmic ($\log_{10}$) and linear axes to seamlessly explore extreme seeds (e.g., $27$ with 111 steps and 9,232 peak; $9.78\text{B}$ with 1,132 steps and $26.8\text{T}$ peak).
+- **Inverse Collatz Fractal Tree**: Roots from unity ($1$) and branches upward along even trunks ($2n$) and modular odd forks ($(n-1)/3$ when $n \equiv 4 \pmod 6$), revealing an infinite, cycle-free spanning network connecting all natural numbers.
+- **Extremal Stopping Time Explorer**: Instantly search bounded integer ranges $[N_1, N_2]$ to discover local champion seeds with maximal flight duration and expansion ratios.
+
+---
+
 ## 🛠️ Quick Start & Reproducibility
 
 ### 1. Installation & Environment Setup

@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mandelbrotEngine = new MandelbrotViewer('mandelbrot-canvas', orbitTracer);
   const funsearchEngine = new MultiDimCapSetVisualizer('funsearch-canvas');
   funsearchEngine.updateUI();
+  const collatzEngine = new CollatzVisualizer('collatz-canvas');
 
   window.updateActiveModelBadge = function() {
     const activeModelBadge = document.getElementById('active-model-badge');
@@ -35,6 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (funsearchEngine && typeof funsearchEngine.updateUI === 'function') {
       funsearchEngine.updateUI();
     }
+    if (collatzEngine && typeof collatzEngine.updateDashboardUI === 'function') {
+      collatzEngine.updateDashboardUI();
+    }
   });
 
   let activeTab = 'mandelbrot'; // 默认进入震撼的广义高阶分形视窗
@@ -44,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     kochEngine.resize();
     mandelbrotEngine.resize();
     funsearchEngine.resize();
+    if (collatzEngine) collatzEngine.resize();
   }
   window.addEventListener('resize', handleResize);
   requestAnimationFrame(handleResize);
@@ -57,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mandelbrotEngine.update(timestamp);
     } else if (activeTab === 'funsearch') {
       funsearchEngine.render(timestamp);
+    } else if (activeTab === 'collatz') {
+      collatzEngine.update(timestamp);
     }
     requestAnimationFrame(mainLoop);
   }
@@ -66,20 +73,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabKochBtn = document.getElementById('tab-koch');
   const tabMandelBtn = document.getElementById('tab-mandelbrot');
   const tabFunsearchBtn = document.getElementById('tab-funsearch');
+  const tabCollatzBtn = document.getElementById('tab-collatz');
   const viewKoch = document.getElementById('view-koch');
   const viewMandel = document.getElementById('view-mandelbrot');
   const viewFunsearch = document.getElementById('view-funsearch');
+  const viewCollatz = document.getElementById('view-collatz');
   const sidebarKoch = document.getElementById('sidebar-koch');
   const sidebarMandel = document.getElementById('sidebar-mandelbrot');
   const sidebarFunsearch = document.getElementById('sidebar-funsearch');
+  const sidebarCollatz = document.getElementById('sidebar-collatz');
 
   function switchTab(target) {
     activeTab = target;
-    [tabKochBtn, tabMandelBtn, tabFunsearchBtn].forEach(b => b && b.classList.remove('active'));
-    [viewKoch, viewMandel, viewFunsearch].forEach(v => v && v.classList.remove('active'));
+    [tabKochBtn, tabMandelBtn, tabFunsearchBtn, tabCollatzBtn].forEach(b => b && b.classList.remove('active'));
+    [viewKoch, viewMandel, viewFunsearch, viewCollatz].forEach(v => v && v.classList.remove('active'));
     if (sidebarKoch) sidebarKoch.style.display = 'none';
     if (sidebarMandel) sidebarMandel.style.display = 'none';
     if (sidebarFunsearch) sidebarFunsearch.style.display = 'none';
+    if (sidebarCollatz) sidebarCollatz.style.display = 'none';
 
     if (target === 'koch') {
       tabKochBtn.classList.add('active');
@@ -96,6 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
       viewFunsearch.classList.add('active');
       sidebarFunsearch.style.display = 'block';
       funsearchEngine.resize();
+    } else if (target === 'collatz') {
+      if (tabCollatzBtn) tabCollatzBtn.classList.add('active');
+      if (viewCollatz) viewCollatz.classList.add('active');
+      if (sidebarCollatz) sidebarCollatz.style.display = 'block';
+      collatzEngine.resize();
     }
   }
 
@@ -103,6 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
   tabMandelBtn.addEventListener('click', () => switchTab('mandelbrot'));
   if (tabFunsearchBtn) {
     tabFunsearchBtn.addEventListener('click', () => switchTab('funsearch'));
+  }
+  if (tabCollatzBtn) {
+    tabCollatzBtn.addEventListener('click', () => switchTab('collatz'));
   }
 
   // ==========================
@@ -1422,5 +1441,161 @@ ${JSON.stringify(points, null, 2)}
   window.addEventListener('axiomforge:lang_changed', () => {
     applyLogo(getActiveLogo());
   });
+
+  // ==========================
+  // 7. 考拉兹猜想 (Collatz) 控制事件绑定
+  // ==========================
+  const btnCollatzModeTraj = document.getElementById('btn-collatz-mode-traj');
+  const btnCollatzModeTree = document.getElementById('btn-collatz-mode-tree');
+  const rowCollatzScale = document.getElementById('row-collatz-scale');
+  const rowCollatzTreeDepth = document.getElementById('row-collatz-tree-depth');
+  const btnCollatzScaleLog = document.getElementById('btn-collatz-scale-log');
+  const btnCollatzScaleLinear = document.getElementById('btn-collatz-scale-linear');
+  const inputCollatzSeed = document.getElementById('input-collatz-seed');
+  const btnCollatzRandom = document.getElementById('btn-collatz-random');
+  const btnCollatzCompute = document.getElementById('btn-collatz-compute');
+  const seedPillBtns = document.querySelectorAll('.seed-pill-btn');
+  const btnCollatzFindExtreme = document.getElementById('btn-collatz-find-extreme');
+  const collatzRangeStart = document.getElementById('collatz-range-start');
+  const collatzRangeEnd = document.getElementById('collatz-range-end');
+  const collatzDepthSlider = document.getElementById('collatz-depth-slider');
+  const collatzDepthVal = document.getElementById('collatz-depth-val');
+  const collatzSpeedSlider = document.getElementById('collatz-speed-slider');
+  const collatzSpeedVal = document.getElementById('collatz-speed-val');
+  const btnCollatzPlayBottom = document.getElementById('btn-collatz-play-bottom');
+  const labelCollatzPlay = document.getElementById('label-collatz-play');
+  const btnCollatzStepBottom = document.getElementById('btn-collatz-step-bottom');
+  const btnCollatzResetBottom = document.getElementById('btn-collatz-reset-bottom');
+
+  if (btnCollatzModeTraj && btnCollatzModeTree) {
+    btnCollatzModeTraj.addEventListener('click', () => {
+      collatzEngine.mode = 'trajectory';
+      btnCollatzModeTraj.classList.add('active');
+      btnCollatzModeTree.classList.remove('active');
+      if (rowCollatzScale) rowCollatzScale.style.display = 'block';
+      if (rowCollatzTreeDepth) rowCollatzTreeDepth.style.display = 'none';
+    });
+
+    btnCollatzModeTree.addEventListener('click', () => {
+      collatzEngine.mode = 'tree';
+      btnCollatzModeTree.classList.add('active');
+      btnCollatzModeTraj.classList.remove('active');
+      if (rowCollatzScale) rowCollatzScale.style.display = 'none';
+      if (rowCollatzTreeDepth) rowCollatzTreeDepth.style.display = 'block';
+      collatzEngine.resetTreeCenter();
+    });
+  }
+
+  if (btnCollatzScaleLog && btnCollatzScaleLinear) {
+    btnCollatzScaleLog.addEventListener('click', () => {
+      collatzEngine.scaleType = 'log';
+      btnCollatzScaleLog.classList.add('active');
+      btnCollatzScaleLinear.classList.remove('active');
+    });
+
+    btnCollatzScaleLinear.addEventListener('click', () => {
+      collatzEngine.scaleType = 'linear';
+      btnCollatzScaleLinear.classList.add('active');
+      btnCollatzScaleLog.classList.remove('active');
+    });
+  }
+
+  const applySeed = (val) => {
+    const n = Math.max(1, Math.floor(Number(val) || 1));
+    if (inputCollatzSeed) inputCollatzSeed.value = n;
+    collatzEngine.computeSequence(n);
+
+    seedPillBtns.forEach(b => {
+      if (Number(b.getAttribute('data-seed')) === n) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+  };
+
+  if (btnCollatzCompute && inputCollatzSeed) {
+    btnCollatzCompute.addEventListener('click', () => {
+      applySeed(inputCollatzSeed.value);
+    });
+    inputCollatzSeed.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applySeed(inputCollatzSeed.value);
+    });
+  }
+
+  if (btnCollatzRandom) {
+    btnCollatzRandom.addEventListener('click', () => {
+      const rnd = Math.floor(Math.random() * 99999) + 2;
+      applySeed(rnd);
+    });
+  }
+
+  seedPillBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const s = Number(btn.getAttribute('data-seed'));
+      applySeed(s);
+    });
+  });
+
+  if (btnCollatzFindExtreme) {
+    btnCollatzFindExtreme.addEventListener('click', () => {
+      const n1 = Number(collatzRangeStart ? collatzRangeStart.value : 1) || 1;
+      const n2 = Number(collatzRangeEnd ? collatzRangeEnd.value : 1000) || 1000;
+      const res = collatzEngine.findExtremalSeed(n1, n2);
+      applySeed(res.seed);
+    });
+  }
+
+  if (collatzDepthSlider && collatzDepthVal) {
+    collatzDepthSlider.addEventListener('input', (e) => {
+      const d = Number(e.target.value);
+      collatzDepthVal.textContent = d;
+      collatzEngine.treeDepth = d;
+      collatzEngine.buildInverseTree(d);
+    });
+  }
+
+  if (collatzSpeedSlider && collatzSpeedVal) {
+    collatzSpeedSlider.addEventListener('input', (e) => {
+      const spd = Number(e.target.value);
+      collatzSpeedVal.textContent = spd.toFixed(1) + 'x';
+      collatzEngine.playSpeed = spd;
+    });
+  }
+
+  if (btnCollatzPlayBottom && labelCollatzPlay) {
+    btnCollatzPlayBottom.addEventListener('click', () => {
+      collatzEngine.isPlaying = !collatzEngine.isPlaying;
+      labelCollatzPlay.textContent = collatzEngine.isPlaying ? 'Pause Flow' : 'Play Flow';
+      labelCollatzPlay.setAttribute('data-i18n', collatzEngine.isPlaying ? 'btn_collatz_pause' : 'btn_collatz_play');
+      if (window.I18N) window.I18N.applyToDOM();
+    });
+  }
+
+  if (btnCollatzStepBottom) {
+    btnCollatzStepBottom.addEventListener('click', () => {
+      collatzEngine.isPlaying = false;
+      if (collatzEngine.animStep < collatzEngine.sequence.length - 1) {
+        collatzEngine.animStep++;
+      } else {
+        collatzEngine.animStep = 0;
+      }
+      if (labelCollatzPlay) {
+        labelCollatzPlay.textContent = 'Play Flow';
+        labelCollatzPlay.setAttribute('data-i18n', 'btn_collatz_play');
+      }
+    });
+  }
+
+  if (btnCollatzResetBottom) {
+    btnCollatzResetBottom.addEventListener('click', () => {
+      if (collatzEngine.mode === 'trajectory') {
+        collatzEngine.animStep = 0;
+      } else {
+        collatzEngine.resetTreeCenter();
+      }
+    });
+  }
 });
+
 

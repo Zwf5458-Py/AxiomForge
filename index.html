@@ -42,7 +42,14 @@
         </svg>
         <span data-i18n="tab_funsearch">Cap Set · Program Evolution</span>
       </button>
+      <button id="tab-collatz" class="tab-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span data-i18n="tab_collatz">Collatz · Hailstone Dynamics</span>
+      </button>
     </div>
+
 
     <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
       <!-- 语言切换按钮 (默认 English) -->
@@ -304,6 +311,56 @@
           </button>
           <button id="btn-funsearch-reset-view" class="zoom-btn" title="Reset View (Scale 100%)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          </button>
+        </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 模块四：考拉兹猜想 (Collatz Conjecture) 视窗 -->
+    <!-- ============================================== -->
+    <section id="view-collatz" class="view-panel">
+      <div class="canvas-wrapper">
+        <canvas id="collatz-canvas" class="render-canvas"></canvas>
+
+        <!-- 浮动信息条 (HUD) -->
+        <div class="hud-overlay">
+          <div class="hud-pill">
+            <span class="pulse-indicator"></span>
+            <span><span data-i18n="collatz_stat_seed">Seed n₀: </span><strong id="hud-collatz-seed">27</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span><span data-i18n="collatz_stat_steps">Total Steps: </span><strong id="hud-collatz-steps">111</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span class="pulse-indicator" style="background: #f59e0b; box-shadow: 0 0 8px #f59e0b;"></span>
+            <span><span data-i18n="collatz_stat_peak">Peak: </span><strong id="hud-collatz-peak" style="color: #fbbf24;">9,232</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span class="hud-tag" data-i18n="collatz_hud_action_tag">Dynamics</span>
+            <span data-i18n="collatz_hud_action_desc">Log/Linear Scale | Particle Flow | Tree Drag/Zoom</span>
+          </div>
+        </div>
+
+        <!-- 底部快捷操作条 -->
+        <div class="canvas-bottom-controls">
+          <button class="quick-action-btn" id="btn-collatz-play-bottom" title="Play / Pause Flow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="label-collatz-play" data-i18n="btn_collatz_pause">Pause Flow</span>
+          </button>
+          <button class="quick-action-btn" id="btn-collatz-step-bottom" title="Step Next">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <span data-i18n="btn_collatz_step">Step Next</span>
+          </button>
+          <button class="quick-action-btn" id="btn-collatz-reset-bottom" title="Reset View / Center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span data-i18n="btn_collatz_reset">Reset Center</span>
           </button>
         </div>
       </div>
@@ -583,6 +640,116 @@
         </div>
       </div>
 
+      <!-- 侧边栏：考拉兹冰雹猜想与逆向拓扑树控制 -->
+      <div id="sidebar-collatz" style="display: none;">
+        <div class="sidebar-section">
+          <div class="section-title" data-i18n="collatz_ctrl_title">Hailstone Dynamics & Seed Controls</div>
+
+          <!-- 可视化模式切换 -->
+          <div class="control-row">
+            <span class="control-label" data-i18n="collatz_mode_label">Visualization Mode</span>
+            <div class="btn-group-toggle" style="margin-top: 6px;">
+              <button id="btn-collatz-mode-traj" class="btn-toggle-option active" data-i18n="collatz_mode_traj">Hailstone Trajectory</button>
+              <button id="btn-collatz-mode-tree" class="btn-toggle-option" data-i18n="collatz_mode_tree">Inverse Tree</button>
+            </div>
+          </div>
+
+          <!-- 坐标刻度模式切换 (轨迹模式下有效) -->
+          <div class="control-row" id="row-collatz-scale">
+            <span class="control-label" data-i18n="collatz_scale_label">Coordinate Scale</span>
+            <div class="btn-group-toggle" style="margin-top: 6px;">
+              <button id="btn-collatz-scale-log" class="btn-toggle-option active" data-i18n="collatz_scale_log">Log Scale (Log₁₀)</button>
+              <button id="btn-collatz-scale-linear" class="btn-toggle-option" data-i18n="collatz_scale_linear">Linear Scale</button>
+            </div>
+          </div>
+
+          <!-- 初始正整数种子设置 -->
+          <div class="control-row" style="margin-top: 12px;">
+            <div class="control-label-group">
+              <span data-i18n="collatz_seed_label">Initial Seed (n₀)</span>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <input type="number" id="input-collatz-seed" min="1" max="1000000000000" value="27" style="flex: 1; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; color: #f8fafc; padding: 6px 10px; font-family: monospace; font-size: 13px;">
+              <button id="btn-collatz-random" class="btn-settings-pill" style="padding: 6px 10px;" data-i18n="btn_collatz_random">Random</button>
+              <button id="btn-collatz-compute" class="btn-sidebar-evolve" style="padding: 6px 12px; margin: 0; width: auto;" data-i18n="btn_collatz_compute">Simulate</button>
+            </div>
+          </div>
+
+          <!-- 名人堂经典极端冰雹种子 -->
+          <div class="control-row" style="margin-top: 12px;">
+            <span class="control-label" data-i18n="collatz_classic_title" style="font-size: 11px; color: #f59e0b;">Hall of Fame Extreme Seeds</span>
+            <div class="seed-pill-group">
+              <button class="seed-pill-btn active" data-seed="27" title="111 steps, peak 9,232">27 (111s)</button>
+              <button class="seed-pill-btn" data-seed="837799" title="524 steps, peak 100,774,904">837,799 (524s)</button>
+              <button class="seed-pill-btn" data-seed="670617279" title="949 steps, peak 5.69T">670,617,279 (949s)</button>
+              <button class="seed-pill-btn" data-seed="9780657630" title="1,132 steps, peak 26.8T">9.78B (1,132s)</button>
+            </div>
+          </div>
+
+          <!-- 极值停机时间探索器 -->
+          <div class="control-row" style="margin-top: 12px; background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px;">
+            <div style="font-size: 11px; font-weight: 600; color: #38bdf8;" data-i18n="collatz_explorer_title">Extremal Stopping Time Explorer</div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;" data-i18n="collatz_explorer_desc">Search range for longest-surviving hailstone seeds</div>
+            <div class="range-input-row">
+              <label data-i18n="collatz_range_start_label">N₁:</label>
+              <input type="number" id="collatz-range-start" value="1" min="1" max="1000000">
+              <label data-i18n="collatz_range_end_label">N₂:</label>
+              <input type="number" id="collatz-range-end" value="1000" min="1" max="1000000">
+            </div>
+            <button id="btn-collatz-find-extreme" class="btn-settings-pill" style="width: 100%; margin-top: 8px; justify-content: center; background: rgba(2, 132, 199, 0.25); border-color: #0284c7; color: #38bdf8;" data-i18n="btn_collatz_find_extreme">Find Range Champion</button>
+          </div>
+
+          <!-- 拓扑树深度与动画流速 -->
+          <div class="control-row" id="row-collatz-tree-depth" style="display: none; margin-top: 12px;">
+            <div class="control-label-group">
+              <span data-i18n="collatz_tree_depth_label">Tree Branching Depth</span>
+              <span class="control-val" id="collatz-depth-val">10</span>
+            </div>
+            <input type="range" id="collatz-depth-slider" min="4" max="16" value="10" step="1">
+          </div>
+
+          <div class="control-row" style="margin-top: 10px;">
+            <div class="control-label-group">
+              <span data-i18n="collatz_speed_label">Animation Speed</span>
+              <span class="control-val" id="collatz-speed-val">1.0x</span>
+            </div>
+            <input type="range" id="collatz-speed-slider" min="0.2" max="4.0" value="1.0" step="0.2">
+          </div>
+        </div>
+
+        <!-- 学术仪表盘 -->
+        <div class="sidebar-section">
+          <div class="section-title" data-i18n="collatz_dash_title">Discrete Dynamics Dashboard</div>
+          <div class="math-stat-card">
+            <div class="stat-item">
+              <span class="stat-label" data-i18n="collatz_dash_seed">Initial Seed (n₀)</span>
+              <span class="stat-value" id="stat-collatz-seed" style="color: #38bdf8;">27</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" data-i18n="collatz_dash_steps">Stopping Time (Steps)</span>
+              <span class="stat-value" id="stat-collatz-steps" style="color: #34d399;">111</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" data-i18n="collatz_dash_peak">Peak Flight Altitude</span>
+              <span class="stat-value" id="stat-collatz-peak" style="color: #f59e0b;">9,232</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" data-i18n="collatz_dash_ratio">Max Expansion</span>
+              <span class="stat-value" id="stat-collatz-ratio" style="color: #a78bfa;">341.93x</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" data-i18n="collatz_dash_odd_even">Odd / Even Steps</span>
+              <span class="stat-value" id="stat-collatz-odd-ratio" style="font-size: 12px;">36.9% (41/70)</span>
+            </div>
+          </div>
+
+          <!-- 数学理论卡片 -->
+          <div class="theory-card">
+            <div style="font-weight: 600; color: #f8fafc; margin-bottom: 4px;" data-i18n="collatz_theory_title">Mathematical Background & Tao (2019)</div>
+            <div data-i18n="collatz_theory_desc">Transformation: n/2 if even, 3n+1 if odd. Erdős noted "mathematics is not yet ready for such problems". In 2019, Fields medalist Terence Tao proved almost all orbits attain bounded values via logarithmic PDE methods. The inverse tree exhibits complete graph connectivity without cycles.</div>
+          </div>
+        </div>
+      </div>
     </aside>
   </main>
 
@@ -769,6 +936,7 @@
   <script src="js/cap_set_data.js?v=20260913_7"></script>
   <script src="js/model_platform.js?v=20260913_7"></script>
   <script src="js/math_discovery.js?v=20260913_7"></script>
-  <script src="js/app.js?v=20260913_7"></script>
+  <script src="js/collatz.js?v=20260919_1"></script>
+  <script src="js/app.js?v=20260919_1"></script>
 </body>
 </html>

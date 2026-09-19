@@ -19,6 +19,7 @@
       tab_koch: 'Koch Snowflake · Self-Similarity',
       tab_mandelbrot: 'Mandelbrot · Complex Dynamics',
       tab_funsearch: 'Cap Set · Program Evolution',
+      tab_collatz: 'Collatz · Hailstone Dynamics',
 
       // 顶部导航按钮
       btn_model_settings: 'AI Model Platform',
@@ -253,7 +254,44 @@
       hero_btn_view_reasoning: '🔍 View Full Reasoning Chain',
       hero_btn_copy_report: '📋 Copy Markdown Report',
       hero_title_prefix: 'AI Model Evolution Result',
-      hero_latency_detail: 'LLM {llm}s + CPU {sandbox}s (Total {total}s)'
+      hero_latency_detail: 'LLM {llm}s + CPU {sandbox}s (Total {total}s)',
+
+      // Module 4: Collatz Conjecture (Hailstone Dynamics & Inverse Tree)
+      collatz_stat_seed: 'Seed n₀: ',
+      collatz_stat_steps: 'Total Steps: ',
+      collatz_stat_peak: 'Peak Flight: ',
+      collatz_hud_action_tag: 'Dynamics',
+      collatz_hud_action_desc: 'Log/Linear Scale | Particle Flow | Tree Drag/Zoom',
+      collatz_ctrl_title: 'Hailstone Dynamics & Seed Controls',
+      collatz_mode_label: 'Visualization Mode',
+      collatz_mode_traj: 'Hailstone Trajectory Flow (2D Curve)',
+      collatz_mode_tree: 'Inverse Fractal Tree (Topological Network)',
+      collatz_scale_label: 'Coordinate Scale',
+      collatz_scale_log: 'Logarithmic Scale (Log₁₀)',
+      collatz_scale_linear: 'Linear Scale',
+      collatz_seed_label: 'Initial Seed (n₀)',
+      btn_collatz_random: 'Random Seed',
+      btn_collatz_compute: 'Simulate Flow',
+      collatz_classic_title: 'Hall of Fame Extreme Seeds',
+      collatz_explorer_title: 'Extremal Stopping Time Explorer',
+      collatz_explorer_desc: 'Search given integer interval for longest-surviving hailstone seeds',
+      collatz_range_start_label: 'Start (N₁):',
+      collatz_range_end_label: 'End (N₂):',
+      btn_collatz_find_extreme: 'Find Range Champion',
+      collatz_tree_depth_label: 'Tree Branching Depth',
+      collatz_speed_label: 'Animation Speed',
+      btn_collatz_play: 'Play Flow',
+      btn_collatz_pause: 'Pause Flow',
+      btn_collatz_reset: 'Reset Center',
+      btn_collatz_step: 'Step Next',
+      collatz_dash_title: 'Discrete Dynamics Dashboard',
+      collatz_dash_seed: 'Initial Seed (n₀)',
+      collatz_dash_steps: 'Stopping Time (Steps)',
+      collatz_dash_peak: 'Peak Flight Altitude',
+      collatz_dash_ratio: 'Max Expansion (Peak/n₀)',
+      collatz_dash_odd_even: 'Odd / Even Steps',
+      collatz_theory_title: 'Mathematical Background & Tao (2019)',
+      collatz_theory_desc: 'Transformation: n/2 if even, 3n+1 if odd. Erdős noted "mathematics is not yet ready for such problems". In 2019, Fields medalist Terence Tao proved almost all orbits attain bounded values via logarithmic PDE methods. The inverse tree exhibits complete graph connectivity without cycles.'
     },
 
     zh: {
@@ -265,6 +303,7 @@
       tab_koch: '科赫雪花 · 几何自相似',
       tab_mandelbrot: '曼德勃罗 · 复杂动力学',
       tab_funsearch: '极值帽集 · 启发式演化',
+      tab_collatz: '考拉兹猜想 · 冰雹动力学与拓扑树',
 
       // 顶部导航按钮
       btn_model_settings: 'AI 模型平台配置',
@@ -499,9 +538,47 @@
       hero_btn_view_reasoning: '🔍 展开完整推导思考链',
       hero_btn_copy_report: '📋 复制推演报告',
       hero_title_prefix: '大模型推演成果',
-      hero_latency_detail: '模型 {llm}s + 沙箱 {sandbox}s (总计 {total}s)'
+      hero_latency_detail: '模型 {llm}s + 沙箱 {sandbox}s (总计 {total}s)',
+
+      // 模块 4：考拉兹猜想
+      collatz_stat_seed: '种子 n₀: ',
+      collatz_stat_steps: '停机总步数: ',
+      collatz_stat_peak: '最高飞行海拔: ',
+      collatz_hud_action_tag: '离散动力学',
+      collatz_hud_action_desc: '对数/线性刻度 | 粒子轨迹流 | 拓扑树拖拽缩放',
+      collatz_ctrl_title: '冰雹动力学与种子控制',
+      collatz_mode_label: '推演可视化模式',
+      collatz_mode_traj: '冰雹起伏轨迹流 (2D 动力学折线)',
+      collatz_mode_tree: '逆向分形拓扑树 (宇宙连接网络)',
+      collatz_scale_label: '坐标刻度模式',
+      collatz_scale_log: '对数刻度 (Log₁₀ 消除暴冲)',
+      collatz_scale_linear: '线性绝对刻度',
+      collatz_seed_label: '初始正整数种子 (n₀)',
+      btn_collatz_random: '随机种子',
+      btn_collatz_compute: '开始推演',
+      collatz_classic_title: '名人堂经典极限冰雹种子',
+      collatz_explorer_title: '极值停机时间探索器',
+      collatz_explorer_desc: '在给定数值区间内，一键搜寻存活步数最长、反弹最顽强的极值种子',
+      collatz_range_start_label: '起始 (N₁):',
+      collatz_range_end_label: '截止 (N₂):',
+      btn_collatz_find_extreme: '一键搜寻区间冠军',
+      collatz_tree_depth_label: '拓扑树展开深度',
+      collatz_speed_label: '动画流速控制',
+      btn_collatz_play: '开始流动',
+      btn_collatz_pause: '暂停流动',
+      btn_collatz_reset: '重置居中',
+      btn_collatz_step: '单步演算',
+      collatz_dash_title: '离散动力学学术仪表盘',
+      collatz_dash_seed: '初始种子 (n₀)',
+      collatz_dash_steps: '停机时间 (总步数)',
+      collatz_dash_peak: '最高飞行海拔 (极大值)',
+      collatz_dash_ratio: '极大膨胀倍率 (峰值 / n₀)',
+      collatz_dash_odd_even: '奇数步 / 偶数步占比',
+      collatz_theory_title: '数学原理与陶哲轩 2019 前沿',
+      collatz_theory_desc: '变换规则：偶数除以 2，奇数乘 3 加 1。保罗·埃尔德什曾言“现代数学尚未成熟到足以解决此类问题”。2019年菲尔兹奖得主陶哲轩运用对数偏微分方程证明了几乎所有轨道均能跌至任意小的值。从 1 逆向生长的拓扑树展示了正整数被完全汇入主干的无环连通图。'
     }
   };
+
 
   class I18nManager {
     constructor() {
