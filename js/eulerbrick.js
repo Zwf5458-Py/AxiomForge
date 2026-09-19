@@ -39,6 +39,10 @@ class EulerBrickVisualizer {
     this.width = 800;
     this.height = 600;
 
+    // 交互聚焦高亮状态 ('a' | 'b' | 'c' | 'd_ab' | 'd_bc' | 'd_ca' | 'g' | null)
+    this.highlightTarget = null;
+    this.hasMoved = false;
+
     // 几何指标计算缓存
     this.metrics = {};
     this.modularCheck = {};
@@ -95,6 +99,62 @@ class EulerBrickVisualizer {
     if (edge === 'c') this.c = v;
     this.computeMetrics();
     this.render();
+  }
+
+  /**
+   * 设置或切换聚焦高亮目标 ('a' | 'b' | 'c' | 'd_ab' | 'd_bc' | 'd_ca' | 'g' | null)
+   */
+  setHighlight(target) {
+    if (this.highlightTarget === target) {
+      // 再次点击同项目时取消高亮，恢复全景
+      this.highlightTarget = null;
+    } else {
+      this.highlightTarget = target;
+    }
+    this.updateHighlightUI();
+    this.render();
+  }
+
+  /**
+   * 更新高亮状态在 DOM 卡片与棱长药丸上的激活样式
+   */
+  updateHighlightUI() {
+    const target = this.highlightTarget;
+    const cardMap = {
+      'd_ab': 'card-diag-ab',
+      'd_bc': 'card-diag-bc',
+      'd_ca': 'card-diag-ca',
+      'g': 'card-diag-g'
+    };
+    const pillMap = {
+      'a': 'pill-edge-a',
+      'b': 'pill-edge-b',
+      'c': 'pill-edge-c'
+    };
+
+    // 丢番图指标卡片样式切换
+    Object.entries(cardMap).forEach(([k, id]) => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (target === k) {
+          el.classList.add('highlight-active');
+        } else {
+          el.classList.remove('highlight-active');
+        }
+      }
+    });
+
+    // 棱长微调药丸标签样式切换
+    Object.entries(pillMap).forEach(([k, id]) => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (target === k) {
+          el.classList.add('highlight-active');
+        } else {
+          el.classList.remove('highlight-active');
+        }
+      }
+    });
   }
 
   /**
@@ -207,6 +267,9 @@ class EulerBrickVisualizer {
       if (e.button !== 0) return;
       e.preventDefault();
       this.isDragging = true;
+      this.hasMoved = false;
+      this.downX = e.clientX;
+      this.downY = e.clientY;
       this.dragStartX = e.clientX;
       this.dragStartY = e.clientY;
       this.canvas.style.cursor = 'grabbing';
@@ -218,6 +281,10 @@ class EulerBrickVisualizer {
       const dy = e.clientY - this.dragStartY;
       this.dragStartX = e.clientX;
       this.dragStartY = e.clientY;
+
+      if (!this.hasMoved && Math.hypot(e.clientX - this.downX, e.clientY - this.downY) > 4) {
+        this.hasMoved = true;
+      }
 
       if (e.shiftKey) {
         // Shift + 拖拽：平移
@@ -243,6 +310,13 @@ class EulerBrickVisualizer {
     window.addEventListener('mouseleave', () => {
       this.isDragging = false;
       this.canvas.style.cursor = 'grab';
+    });
+
+    // 画布轻点空白处取消高亮
+    this.canvas.addEventListener('click', () => {
+      if (!this.hasMoved && this.highlightTarget) {
+        this.setHighlight(null);
+      }
     });
 
     // 滚轮平滑缩放 (阻尼指数算法)
@@ -379,11 +453,64 @@ class EulerBrickVisualizer {
     // 绘制 3D 空间辅助网格底盘
     this.renderFloorGrid(ctx, maxDim);
 
-    // 绘制面对角线剖面切面高亮 (半透明薄纱)
-    if (this.showFaceDiagonals) {
+    const hl = this.highlightTarget;
+
+    // 1. 绘制面对角线剖面切面高亮 (半透明薄纱光晕)
+    if (hl === 'd_ab') {
+      // 聚焦高亮前表面 (顶点 4-5-6-7)
       ctx.save();
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
-      // 0-2-6-4 对角切面
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(v[4].x, v[4].y);
+      ctx.lineTo(v[5].x, v[5].y);
+      ctx.lineTo(v[6].x, v[6].y);
+      ctx.lineTo(v[7].x, v[7].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else if (hl === 'd_bc') {
+      // 聚焦高亮右侧面 (顶点 1-5-6-2)
+      ctx.save();
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.16)';
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(v[1].x, v[1].y);
+      ctx.lineTo(v[5].x, v[5].y);
+      ctx.lineTo(v[6].x, v[6].y);
+      ctx.lineTo(v[2].x, v[2].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else if (hl === 'd_ca') {
+      // 聚焦高亮底表面 (顶点 0-1-5-4)
+      ctx.save();
+      ctx.fillStyle = 'rgba(167, 139, 250, 0.16)';
+      ctx.strokeStyle = 'rgba(167, 139, 250, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(v[0].x, v[0].y);
+      ctx.lineTo(v[1].x, v[1].y);
+      ctx.lineTo(v[5].x, v[5].y);
+      ctx.lineTo(v[4].x, v[4].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else if (hl === 'g' || (this.showFaceDiagonals && !hl)) {
+      // 0-2-6-4 穿心对角切面
+      ctx.save();
+      if (hl === 'g') {
+        ctx.fillStyle = this.metrics.is_g_int ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)';
+        ctx.strokeStyle = this.metrics.is_g_int ? 'rgba(16, 185, 129, 0.6)' : 'rgba(244, 63, 94, 0.6)';
+        ctx.lineWidth = 1.5;
+      } else {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
+      }
       ctx.beginPath();
       ctx.moveTo(v[0].x, v[0].y);
       ctx.lineTo(v[2].x, v[2].y);
@@ -391,62 +518,114 @@ class EulerBrickVisualizer {
       ctx.lineTo(v[4].x, v[4].y);
       ctx.closePath();
       ctx.fill();
+      if (hl === 'g') ctx.stroke();
       ctx.restore();
     }
 
-    // 绘制长方体 12 条棱边线框 (Wireframe)
-    const edges = [
-      [0, 1], [1, 2], [2, 3], [3, 0], // 后表面
-      [4, 5], [5, 6], [6, 7], [7, 4], // 前表面
-      [0, 4], [1, 5], [2, 6], [3, 7]  // 连接纵向棱
-    ];
-
+    // 2. 绘制长方体 12 条棱边线框 (Wireframe: 支持 3 轴单独加粗与淡化)
     if (this.showWireframe) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
-      ctx.lineWidth = 1.8;
-      edges.forEach(([i, j]) => {
-        ctx.beginPath();
-        ctx.moveTo(v[i].x, v[i].y);
-        ctx.lineTo(v[j].x, v[j].y);
-        ctx.stroke();
-      });
-      ctx.restore();
+      const edgesA = [[0, 1], [3, 2], [4, 5], [7, 6]]; // X 轴平行棱 (长为 a)
+      const edgesB = [[0, 3], [1, 2], [4, 7], [5, 6]]; // Y 轴平行棱 (长为 b)
+      const edgesC = [[0, 4], [1, 5], [2, 6], [3, 7]]; // Z 轴平行棱 (长为 c)
+
+      const anyEdgeHl = (hl === 'a' || hl === 'b' || hl === 'c');
+      const anyDiagHl = (hl === 'd_ab' || hl === 'd_bc' || hl === 'd_ca' || hl === 'g');
+
+      const drawEdgeGroup = (groupEdges, isHl, isDim, activeColor) => {
+        ctx.save();
+        if (isHl) {
+          ctx.strokeStyle = activeColor;
+          ctx.lineWidth = 3.8;
+          ctx.shadowColor = activeColor;
+          ctx.shadowBlur = 16;
+        } else if (isDim) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+          ctx.lineWidth = 1.0;
+        } else {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+          ctx.lineWidth = 1.8;
+        }
+
+        groupEdges.forEach(([i, j]) => {
+          ctx.beginPath();
+          ctx.moveTo(v[i].x, v[i].y);
+          ctx.lineTo(v[j].x, v[j].y);
+          ctx.stroke();
+        });
+        ctx.restore();
+      };
+
+      drawEdgeGroup(edgesA, hl === 'a', anyDiagHl || (anyEdgeHl && hl !== 'a'), '#38bdf8');
+      drawEdgeGroup(edgesB, hl === 'b', anyDiagHl || (anyEdgeHl && hl !== 'b'), '#f59e0b');
+      drawEdgeGroup(edgesC, hl === 'c', anyDiagHl || (anyEdgeHl && hl !== 'c'), '#a78bfa');
     }
 
-    // 绘制面对角线 (Face Diagonals: 严格贴附在外表面)
-    if (this.showFaceDiagonals) {
-      // 1. 前表面对角线 d_ab (X-Y 面): 点 4 到 点 6, 长度 √(a²+b²)
-      this.drawDiagonal(ctx, v[4], v[6], this.metrics.is_ab_int);
-      // 2. 右侧面对角线 d_bc (Y-Z 面): 点 1 到 点 6, 长度 √(b²+c²)
-      this.drawDiagonal(ctx, v[1], v[6], this.metrics.is_bc_int);
-      // 3. 底表面对角线 d_ca (Z-X 面): 点 4 到 点 1, 长度 √(c²+a²)
-      this.drawDiagonal(ctx, v[4], v[1], this.metrics.is_ca_int);
+    // 3. 绘制面对角线 (Face Diagonals)
+    if (this.showFaceDiagonals || hl === 'd_ab' || hl === 'd_bc' || hl === 'd_ca') {
+      const isAnyDiagHl = (hl === 'd_ab' || hl === 'd_bc' || hl === 'd_ca' || hl === 'g');
+      const isAnyEdgeHl = (hl === 'a' || hl === 'b' || hl === 'c');
+
+      // 1. 前表面对角线 d_ab (X-Y 面): 点 4 到 点 6
+      this.drawDiagonal(
+        ctx, v[4], v[6], this.metrics.is_ab_int,
+        hl === 'd_ab',
+        (isAnyDiagHl && hl !== 'd_ab') || isAnyEdgeHl,
+        '#38bdf8'
+      );
+      // 2. 右侧面对角线 d_bc (Y-Z 面): 点 1 到 点 6
+      this.drawDiagonal(
+        ctx, v[1], v[6], this.metrics.is_bc_int,
+        hl === 'd_bc',
+        (isAnyDiagHl && hl !== 'd_bc') || isAnyEdgeHl,
+        '#f59e0b'
+      );
+      // 3. 底表面对角线 d_ca (Z-X 面): 点 4 到 点 1
+      this.drawDiagonal(
+        ctx, v[4], v[1], this.metrics.is_ca_int,
+        hl === 'd_ca',
+        (isAnyDiagHl && hl !== 'd_ca') || isAnyEdgeHl,
+        '#a78bfa'
+      );
     }
 
-    // 绘制体对角线 (Space Body Diagonal g: 0 号点到 6 号点，穿透体心)
-    if (this.showBodyDiagonal) {
-      const gColor = this.metrics.is_g_int ? '#10b981' : '#f43f5e';
+    // 4. 绘制体对角线 (Space Body Diagonal g: 0 号点到 6 号点，穿透体心)
+    if (this.showBodyDiagonal || hl === 'g') {
+      const isHl = (hl === 'g');
+      const isDim = (hl !== null && hl !== 'g');
+      const baseGColor = this.metrics.is_g_int ? '#10b981' : '#f43f5e';
+      const gColor = isDim ? (this.metrics.is_g_int ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)') : baseGColor;
+
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(v[0].x, v[0].y);
       ctx.lineTo(v[6].x, v[6].y);
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = isHl ? 4.8 : (isDim ? 1.0 : 2.5);
       ctx.strokeStyle = gColor;
-      ctx.shadowColor = gColor;
-      ctx.shadowBlur = 10;
-      if (!this.metrics.is_g_int) ctx.setLineDash([6, 4]);
+      if (isHl) {
+        ctx.shadowColor = baseGColor;
+        ctx.shadowBlur = 24;
+      } else if (!isDim) {
+        ctx.shadowColor = baseGColor;
+        ctx.shadowBlur = 10;
+      }
+      if (!this.metrics.is_g_int && !isHl) ctx.setLineDash([6, 4]);
       ctx.stroke();
       ctx.restore();
 
-      // 体对角线中点浮动数值药丸标签
-      const mx = (v[0].x + v[6].x) / 2;
-      const my = (v[0].y + v[6].y) / 2;
-      const gLabel = `Space Diag g = ${this.metrics.g.toFixed(3)} ${this.metrics.is_g_int ? '✓ INT' : `(Δ=${this.metrics.residual_g.toFixed(4)})`}`;
-      this.drawPill(ctx, mx, my - 12, gLabel, gColor, gColor);
+      // 体对角线中点浮动数值药丸标签 (高亮时或未淡化时显示)
+      if (!isDim || isHl) {
+        const mx = (v[0].x + v[6].x) / 2;
+        const my = (v[0].y + v[6].y) / 2;
+        const gLabel = `Space Diag g = ${this.metrics.g.toFixed(3)} ${this.metrics.is_g_int ? '✓ INT' : `(Δ=${this.metrics.residual_g.toFixed(4)})`}`;
+        this.drawPill(
+          ctx, mx, my - 12, gLabel, baseGColor,
+          isHl ? '#ffffff' : baseGColor,
+          isHl ? 'rgba(15, 23, 42, 0.98)' : 'rgba(15, 23, 42, 0.92)'
+        );
+      }
     }
 
-    // 绘制 8 个顶点圆珠
+    // 5. 绘制 8 个顶点圆珠
     v.forEach((pt) => {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
@@ -457,18 +636,54 @@ class EulerBrickVisualizer {
       ctx.shadowBlur = 0;
     });
 
-    // 标注 3 条主棱长尺寸药丸 (风格、字形与侧边栏轴向 100% 对应对齐)
-    // 棱长 a (X 轴 · 前底横棱 4-5)
+    // 6. 面对角线聚焦时的专用中点标签
+    if (hl === 'd_ab') {
+      const mid_ab = { x: (v[4].x + v[6].x) / 2, y: (v[4].y + v[6].y) / 2 };
+      this.drawPill(
+        ctx, mid_ab.x, mid_ab.y - 14,
+        `Face Diag d_ab = ${this.metrics.d_ab.toFixed(3)} ${this.metrics.is_ab_int ? '✓ INT' : ''}`,
+        '#38bdf8', '#ffffff', 'rgba(15, 23, 42, 0.98)'
+      );
+    } else if (hl === 'd_bc') {
+      const mid_bc = { x: (v[1].x + v[6].x) / 2, y: (v[1].y + v[6].y) / 2 };
+      this.drawPill(
+        ctx, mid_bc.x + 16, mid_bc.y - 14,
+        `Face Diag d_bc = ${this.metrics.d_bc.toFixed(3)} ${this.metrics.is_bc_int ? '✓ INT' : ''}`,
+        '#f59e0b', '#ffffff', 'rgba(15, 23, 42, 0.98)'
+      );
+    } else if (hl === 'd_ca') {
+      const mid_ca = { x: (v[4].x + v[1].x) / 2, y: (v[4].y + v[1].y) / 2 };
+      this.drawPill(
+        ctx, mid_ca.x, mid_ca.y + 18,
+        `Face Diag d_ca = ${this.metrics.d_ca.toFixed(3)} ${this.metrics.is_ca_int ? '✓ INT' : ''}`,
+        '#a78bfa', '#ffffff', 'rgba(15, 23, 42, 0.98)'
+      );
+    }
+
+    // 7. 标注 3 条主棱长尺寸药丸
     const midA = { x: (v[4].x + v[5].x) / 2, y: (v[4].y + v[5].y) / 2 };
-    this.drawPill(ctx, midA.x, midA.y + 16, `a = ${a} (X)`, '#38bdf8', 'rgba(56, 189, 248, 0.45)');
+    const hlA = (hl === 'a');
+    this.drawPill(
+      ctx, midA.x, midA.y + 16, `a = ${a} (X)`, '#38bdf8',
+      hlA ? '#ffffff' : 'rgba(56, 189, 248, 0.45)',
+      hlA ? 'rgba(15, 23, 42, 0.98)' : 'rgba(15, 23, 42, 0.92)'
+    );
 
-    // 棱长 b (Y 轴 · 前右垂直棱 5-6)
     const midB = { x: (v[5].x + v[6].x) / 2, y: (v[5].y + v[6].y) / 2 };
-    this.drawPill(ctx, midB.x + 36, midB.y, `b = ${b} (Y)`, '#f59e0b', 'rgba(245, 158, 11, 0.45)');
+    const hlB = (hl === 'b');
+    this.drawPill(
+      ctx, midB.x + 36, midB.y, `b = ${b} (Y)`, '#f59e0b',
+      hlB ? '#ffffff' : 'rgba(245, 158, 11, 0.45)',
+      hlB ? 'rgba(15, 23, 42, 0.98)' : 'rgba(15, 23, 42, 0.92)'
+    );
 
-    // 棱长 c (Z 轴 · 底面左侧纵深棱 0-4)
     const midC = { x: (v[0].x + v[4].x) / 2, y: (v[0].y + v[4].y) / 2 };
-    this.drawPill(ctx, midC.x - 38, midC.y + 12, `c = ${c} (Z)`, '#a78bfa', 'rgba(167, 139, 250, 0.45)');
+    const hlC = (hl === 'c');
+    this.drawPill(
+      ctx, midC.x - 38, midC.y + 12, `c = ${c} (Z)`, '#a78bfa',
+      hlC ? '#ffffff' : 'rgba(167, 139, 250, 0.45)',
+      hlC ? 'rgba(15, 23, 42, 0.98)' : 'rgba(15, 23, 42, 0.92)'
+    );
     ctx.restore();
   }
 
@@ -502,18 +717,34 @@ class EulerBrickVisualizer {
     ctx.restore();
   }
 
-  drawDiagonal(ctx, p1, p2, isInt) {
-    const color = isInt ? 'rgba(245, 158, 11, 0.95)' : 'rgba(148, 163, 184, 0.4)';
+  drawDiagonal(ctx, p1, p2, isInt, isHighlighted = false, isDimmed = false, customColor = null) {
+    let color;
+    let width = 1.8;
+    let blur = 0;
+
+    if (isHighlighted) {
+      color = customColor || (isInt ? '#10b981' : '#f59e0b');
+      width = 4.2;
+      blur = 20;
+    } else if (isDimmed) {
+      color = isInt ? 'rgba(245, 158, 11, 0.12)' : 'rgba(148, 163, 184, 0.08)';
+      width = 1.0;
+    } else {
+      color = isInt ? 'rgba(245, 158, 11, 0.95)' : 'rgba(148, 163, 184, 0.4)';
+      width = isInt ? 1.8 : 1.0;
+      blur = isInt ? 8 : 0;
+    }
+
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
-    ctx.lineWidth = isInt ? 1.8 : 1.0;
-    if (!isInt) ctx.setLineDash([4, 4]);
+    ctx.lineWidth = width;
+    if (!isInt && !isHighlighted) ctx.setLineDash([4, 4]);
     ctx.strokeStyle = color;
-    if (isInt) {
-      ctx.shadowColor = 'rgba(245, 158, 11, 0.6)';
-      ctx.shadowBlur = 8;
+    if (blur > 0) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = blur;
     }
     ctx.stroke();
     ctx.restore();

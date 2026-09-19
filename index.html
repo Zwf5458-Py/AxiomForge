@@ -844,7 +844,7 @@
           <!-- 棱长 a 控制 (X 轴 · 宽度) -->
           <div class="control-row euler-edge-row">
             <div class="control-label-group">
-              <div class="edge-label-pill">
+              <div class="edge-label-pill clickable" id="pill-edge-a" title="Click to highlight Edge a (X-axis) in 3D cuboid">
                 <span class="edge-color-dot" style="background: #38bdf8; box-shadow: 0 0 6px #38bdf8;"></span>
                 <span data-i18n="eulerbrick_edge_a">Edge a (Width · X)</span>
                 <span id="eulerbrick-val-a" style="display: none;">44</span>
@@ -857,7 +857,7 @@
           <!-- 棱长 b 控制 (Y 轴 · 高度) -->
           <div class="control-row euler-edge-row">
             <div class="control-label-group">
-              <div class="edge-label-pill">
+              <div class="edge-label-pill clickable" id="pill-edge-b" title="Click to highlight Edge b (Y-axis) in 3D cuboid">
                 <span class="edge-color-dot" style="background: #f59e0b; box-shadow: 0 0 6px #f59e0b;"></span>
                 <span data-i18n="eulerbrick_edge_b">Edge b (Height · Y)</span>
                 <span id="eulerbrick-val-b" style="display: none;">117</span>
@@ -870,7 +870,7 @@
           <!-- 棱长 c 控制 (Z 轴 · 深度) -->
           <div class="control-row euler-edge-row">
             <div class="control-label-group">
-              <div class="edge-label-pill">
+              <div class="edge-label-pill clickable" id="pill-edge-c" title="Click to highlight Edge c (Z-axis) in 3D cuboid">
                 <span class="edge-color-dot" style="background: #a78bfa; box-shadow: 0 0 6px #a78bfa;"></span>
                 <span data-i18n="eulerbrick_edge_c">Edge c (Depth · Z)</span>
                 <span id="eulerbrick-val-c" style="display: none;">240</span>
@@ -910,22 +910,26 @@
           <div class="section-title" data-i18n="eulerbrick_metrics_title">7-Tuple Diophantine Metrics</div>
 
           <div class="stat-grid" style="grid-template-columns: 1fr 1fr; gap: 6px;">
-            <div class="stat-card" id="card-diag-ab">
+            <div class="stat-card stat-card-clickable" id="card-diag-ab" title="Click to highlight Face Diagonal d_ab (x-y) in 3D cuboid">
+              <span class="highlight-hint-badge">🔍 Focus</span>
               <div class="stat-label">Face Diag d_ab (x-y)</div>
               <div class="stat-number" id="val-diag-ab" style="font-size: 14px; color: #38bdf8;">125.000</div>
               <div class="stat-desc" id="status-diag-ab" style="font-size: 10px; color: #34d399;">✓ Integer</div>
             </div>
-            <div class="stat-card" id="card-diag-bc">
+            <div class="stat-card stat-card-clickable" id="card-diag-bc" title="Click to highlight Face Diagonal d_bc (y-z) in 3D cuboid">
+              <span class="highlight-hint-badge">🔍 Focus</span>
               <div class="stat-label">Face Diag d_bc (y-z)</div>
               <div class="stat-number" id="val-diag-bc" style="font-size: 14px; color: #38bdf8;">267.000</div>
               <div class="stat-desc" id="status-diag-bc" style="font-size: 10px; color: #34d399;">✓ Integer</div>
             </div>
-            <div class="stat-card" id="card-diag-ca">
+            <div class="stat-card stat-card-clickable" id="card-diag-ca" title="Click to highlight Face Diagonal d_ca (z-x) in 3D cuboid">
+              <span class="highlight-hint-badge">🔍 Focus</span>
               <div class="stat-label">Face Diag d_ca (z-x)</div>
               <div class="stat-number" id="val-diag-ca" style="font-size: 14px; color: #38bdf8;">244.000</div>
               <div class="stat-desc" id="status-diag-ca" style="font-size: 10px; color: #34d399;">✓ Integer</div>
             </div>
-            <div class="stat-card" id="card-diag-g">
+            <div class="stat-card stat-card-clickable" id="card-diag-g" title="Click to highlight Space Diagonal g (x-y-z) in 3D cuboid">
+              <span class="highlight-hint-badge">🔍 Focus</span>
               <div class="stat-label">Space Diag g (x-y-z)</div>
               <div class="stat-number" id="val-diag-g" style="font-size: 14px; color: #f59e0b;">270.601</div>
               <div class="stat-desc" id="status-diag-g" style="font-size: 10px; color: #f43f5e;">✗ Non-integer</div>
@@ -1145,7 +1149,7 @@
   <script src="js/model_platform.js?v=20260913_7"></script>
   <script src="js/math_discovery.js?v=20260913_7"></script>
   <script src="js/collatz.js?v=20260919_1"></script>
-  <script src="js/eulerbrick.js?v=20260919_4"></script>
-  <script src="js/app.js?v=20260919_4"></script>
+  <script src="js/eulerbrick.js?v=20260919_5"></script>
+  <script src="js/app.js?v=20260919_5"></script>
 </body>
 </html>

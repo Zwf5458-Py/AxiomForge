@@ -1803,6 +1803,28 @@ ${JSON.stringify(points, null, 2)}
       eulerbrickEngine.resetView();
     });
   }
+
+  // 数值指标与 3D 几何线条双向联动高亮聚焦
+  const highlightBindings = [
+    { id: 'card-diag-ab', target: 'd_ab' },
+    { id: 'card-diag-bc', target: 'd_bc' },
+    { id: 'card-diag-ca', target: 'd_ca' },
+    { id: 'card-diag-g', target: 'g' },
+    { id: 'pill-edge-a', target: 'a' },
+    { id: 'pill-edge-b', target: 'b' },
+    { id: 'pill-edge-c', target: 'c' }
+  ];
+
+  highlightBindings.forEach(({ id, target }) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('click', (e) => {
+        // 防止误触阻止内部 input 行为
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+        eulerbrickEngine.setHighlight(target);
+      });
+    }
+  });
 });
 
 

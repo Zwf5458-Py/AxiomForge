@@ -1843,3 +1843,81 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 0 8px #f59e0b !important;
 }
 
+/* ============================================== */
+/* 数论指标卡片交互高亮系统 (Click to Focus Line) */
+/* ============================================== */
+
+.stat-card-clickable {
+  cursor: pointer !important;
+  position: relative;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  user-select: none;
+}
+
+.stat-card-clickable:hover {
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  background: rgba(15, 23, 42, 0.82) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.22);
+}
+
+.stat-card-clickable.highlight-active {
+  border-color: #38bdf8 !important;
+  background: rgba(2, 132, 199, 0.24) !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5) !important;
+  transform: translateY(-2px);
+}
+
+.stat-card-clickable.highlight-active .stat-label {
+  color: #38bdf8 !important;
+  font-weight: 700;
+}
+
+.stat-card-clickable.highlight-active .stat-number {
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+.highlight-hint-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  color: #64748b;
+  letter-spacing: 0.2px;
+  transition: all 0.2s;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.stat-card-clickable:hover .highlight-hint-badge,
+.stat-card-clickable.highlight-active .highlight-hint-badge {
+  color: #38bdf8;
+}
+
+.stat-card-clickable.highlight-active .highlight-hint-badge {
+  font-weight: 700;
+}
+
+.edge-label-pill.clickable {
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.edge-label-pill.clickable:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.edge-label-pill.clickable.highlight-active {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+
