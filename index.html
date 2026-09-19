@@ -892,16 +892,49 @@
             </div>
           </div>
 
-          <!-- 局部极小残差探索器 -->
+          <!-- 局部极小残差探索器与 AI 模型推理引擎 -->
           <div class="control-row" style="margin-top: 14px; background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px;">
-            <div style="font-size: 11px; font-weight: 600; color: #38bdf8;" data-i18n="eulerbrick_explorer_title">Local Minimal Residual Explorer</div>
-            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;" data-i18n="eulerbrick_explorer_desc">Probe neighborhood for minimal space diagonal residual Δ = |g - round(g)|</div>
+            <div style="font-size: 11px; font-weight: 600; color: #38bdf8;" data-i18n="eulerbrick_explorer_title">Local Minimal Residual Explorer & AI Reasoner</div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;" data-i18n="eulerbrick_explorer_desc">Probe neighborhood or invoke AI model reasoning for minimal space diagonal residual Δ = |g - round(g)|</div>
             <div class="range-input-row" style="margin-top: 6px;">
               <label data-i18n="eulerbrick_radius_label">Radius ±R:</label>
               <input type="number" id="eulerbrick-search-radius" value="50" min="10" max="200">
             </div>
-            <button id="btn-eulerbrick-search-min" class="btn-settings-pill" style="width: 100%; margin-top: 8px; justify-content: center; background: rgba(2, 132, 199, 0.25); border-color: #0284c7; color: #38bdf8;" data-i18n="btn_eulerbrick_search">Search Minimal Δ Brick</button>
+
+            <!-- 并排双按钮: 启发式搜索 vs AI 模型推理 -->
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button id="btn-eulerbrick-search-min" class="btn-settings-pill" style="flex: 1; justify-content: center; background: rgba(2, 132, 199, 0.25); border-color: #0284c7; color: #38bdf8;" data-i18n="btn_eulerbrick_search">Search Min Residual</button>
+              <button id="btn-eulerbrick-ai-reason" class="btn-settings-pill btn-ai-reasoning" style="flex: 1; justify-content: center; background: linear-gradient(135deg, rgba(14, 165, 233, 0.28) 0%, rgba(99, 102, 241, 0.35) 100%); border: 1px solid #818cf8; color: #e0e7ff; box-shadow: 0 0 12px rgba(99, 102, 241, 0.3); font-weight: 600;" data-i18n="btn_eulerbrick_ai_reason">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+                AI 模型推理
+              </button>
+            </div>
+
             <div id="eulerbrick-search-result" style="font-size: 11px; color: #34d399; margin-top: 6px; display: none;"></div>
+
+            <!-- AI 模型深度数论推演视窗面板 -->
+            <div id="eulerbrick-ai-result-panel" class="euler-ai-card" style="display: none; margin-top: 10px; background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(129, 140, 248, 0.45); border-radius: 8px; padding: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span id="eulerbrick-ai-model-tag" class="euler-ai-badge">DeepSeek-R1 (Reasoning)</span>
+                <span id="eulerbrick-ai-status-text" style="font-size: 10px; color: #38bdf8;">Thinking...</span>
+              </div>
+              
+              <!-- 思维链折叠区 -->
+              <details class="euler-ai-cot-details" open style="margin-top: 6px; font-size: 11px; color: #cbd5e1;">
+                <summary style="cursor: pointer; color: #a5b4fc; font-weight: 600; outline: none; user-select: none;" data-i18n="eulerbrick_ai_cot_summary">⚡ AI 数学推演链 (CoT)</summary>
+                <div id="eulerbrick-ai-cot-box" style="margin-top: 6px; max-height: 140px; overflow-y: auto; padding: 6px 8px; background: rgba(2, 6, 23, 0.6); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.05); font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.45; white-space: pre-wrap; color: #93c5fd;"></div>
+              </details>
+
+              <!-- 推理结果呈现 -->
+              <div id="eulerbrick-ai-solution-row" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 11px;">
+                <div style="color: #fde047; font-weight: 600;" id="eulerbrick-ai-solution-text">Candidate: (a, b, c)</div>
+                <div style="color: #34d399; font-size: 10px; margin-top: 2px;" id="eulerbrick-ai-residual-text">Residual Δ = ...</div>
+              </div>
+
+              <button id="btn-apply-euler-ai" class="btn btn-sm btn-primary" style="width: 100%; margin-top: 8px; background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);" data-i18n="btn_eulerbrick_apply_ai">Apply & Render 3D</button>
+            </div>
           </div>
         </div>
 
@@ -1149,7 +1182,7 @@
   <script src="js/model_platform.js?v=20260913_7"></script>
   <script src="js/math_discovery.js?v=20260913_7"></script>
   <script src="js/collatz.js?v=20260919_1"></script>
-  <script src="js/eulerbrick.js?v=20260919_5"></script>
-  <script src="js/app.js?v=20260919_6"></script>
+  <script src="js/eulerbrick.js?v=20260919_7"></script>
+  <script src="js/app.js?v=20260919_7"></script>
 </body>
 </html>

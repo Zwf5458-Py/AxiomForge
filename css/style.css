@@ -1920,4 +1920,49 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
 }
 
+/* ============================================== */
+/* 欧拉砖 AI 模型推理系统视觉样式 */
+/* ============================================== */
+
+.btn-ai-reasoning {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-ai-reasoning:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(129, 140, 248, 0.6) !important;
+  border-color: #a5b4fc !important;
+}
+
+.btn-ai-reasoning:active {
+  transform: translateY(0);
+}
+
+.euler-ai-badge {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  color: #c7d2fe;
+}
+
+.euler-ai-card {
+  animation: fadeInEulerAI 0.3s ease-out;
+}
+
+@keyframes fadeInEulerAI {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 
