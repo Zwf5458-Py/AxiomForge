@@ -841,40 +841,43 @@
         <div class="sidebar-section">
           <div class="section-title" data-i18n="eulerbrick_ctrl_title">Cuboid Edges & Dimension Controls</div>
 
-          <!-- 棱长 a 控制 -->
-          <div class="control-row">
+          <!-- 棱长 a 控制 (X 轴 · 宽度) -->
+          <div class="control-row euler-edge-row">
             <div class="control-label-group">
-              <span data-i18n="eulerbrick_edge_a">Edge a</span>
-              <span class="control-val" id="eulerbrick-val-a">44</span>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <input type="range" id="eulerbrick-slider-a" min="1" max="1000" value="44" style="flex: 1;">
+              <div class="edge-label-pill">
+                <span class="edge-color-dot" style="background: #38bdf8; box-shadow: 0 0 6px #38bdf8;"></span>
+                <span data-i18n="eulerbrick_edge_a">Edge a (Width · X)</span>
+                <span id="eulerbrick-val-a" style="display: none;">44</span>
+              </div>
               <input type="number" id="eulerbrick-input-a" min="1" max="1000000" value="44" class="eulerbrick-num-input">
             </div>
+            <input type="range" id="eulerbrick-slider-a" min="1" max="1000" value="44">
           </div>
 
-          <!-- 棱长 b 控制 -->
-          <div class="control-row" style="margin-top: 8px;">
+          <!-- 棱长 b 控制 (Y 轴 · 高度) -->
+          <div class="control-row euler-edge-row">
             <div class="control-label-group">
-              <span data-i18n="eulerbrick_edge_b">Edge b</span>
-              <span class="control-val" id="eulerbrick-val-b">117</span>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <input type="range" id="eulerbrick-slider-b" min="1" max="1000" value="117" style="flex: 1;">
+              <div class="edge-label-pill">
+                <span class="edge-color-dot" style="background: #f59e0b; box-shadow: 0 0 6px #f59e0b;"></span>
+                <span data-i18n="eulerbrick_edge_b">Edge b (Height · Y)</span>
+                <span id="eulerbrick-val-b" style="display: none;">117</span>
+              </div>
               <input type="number" id="eulerbrick-input-b" min="1" max="1000000" value="117" class="eulerbrick-num-input">
             </div>
+            <input type="range" id="eulerbrick-slider-b" min="1" max="1000" value="117">
           </div>
 
-          <!-- 棱长 c 控制 -->
-          <div class="control-row" style="margin-top: 8px;">
+          <!-- 棱长 c 控制 (Z 轴 · 深度) -->
+          <div class="control-row euler-edge-row">
             <div class="control-label-group">
-              <span data-i18n="eulerbrick_edge_c">Edge c</span>
-              <span class="control-val" id="eulerbrick-val-c">240</span>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <input type="range" id="eulerbrick-slider-c" min="1" max="1000" value="240" style="flex: 1;">
+              <div class="edge-label-pill">
+                <span class="edge-color-dot" style="background: #a78bfa; box-shadow: 0 0 6px #a78bfa;"></span>
+                <span data-i18n="eulerbrick_edge_c">Edge c (Depth · Z)</span>
+                <span id="eulerbrick-val-c" style="display: none;">240</span>
+              </div>
               <input type="number" id="eulerbrick-input-c" min="1" max="1000000" value="240" class="eulerbrick-num-input">
             </div>
+            <input type="range" id="eulerbrick-slider-c" min="1" max="1000" value="240">
           </div>
 
           <!-- 经典欧拉砖名人堂预设 -->
@@ -1134,7 +1137,7 @@
   </div>
 
   <!-- 脚本加载 (i18n 率先加载完成字典注入，防缓存版本号确保即时生效) -->
-  <script src="js/i18n.js?v=20260913_7"></script>
+  <script src="js/i18n.js?v=20260919_3"></script>
   <script src="js/koch.js?v=20260913_7"></script>
   <script src="js/orbit.js?v=20260913_7"></script>
   <script src="js/mandelbrot.js?v=20260913_7"></script>
@@ -1142,7 +1145,7 @@
   <script src="js/model_platform.js?v=20260913_7"></script>
   <script src="js/math_discovery.js?v=20260913_7"></script>
   <script src="js/collatz.js?v=20260919_1"></script>
-  <script src="js/eulerbrick.js?v=20260919_2"></script>
-  <script src="js/app.js?v=20260919_2"></script>
+  <script src="js/eulerbrick.js?v=20260919_3"></script>
+  <script src="js/app.js?v=20260919_3"></script>
 </body>
 </html>

@@ -402,17 +402,17 @@ class EulerBrickVisualizer {
       ctx.restore();
     }
 
-    // 绘制面对角线 (Face Diagonals)
+    // 绘制面对角线 (Face Diagonals: 严格贴附在外表面)
     if (this.showFaceDiagonals) {
-      // 1. 底面/顶面对角线 d_ab (点 0-2)
-      this.drawDiagonal(ctx, v[0], v[2], this.metrics.is_ab_int);
-      // 2. 侧面对角线 d_bc (点 1-6)
+      // 1. 前表面对角线 d_ab (X-Y 面): 点 4 到 点 6, 长度 √(a²+b²)
+      this.drawDiagonal(ctx, v[4], v[6], this.metrics.is_ab_int);
+      // 2. 右侧面对角线 d_bc (Y-Z 面): 点 1 到 点 6, 长度 √(b²+c²)
       this.drawDiagonal(ctx, v[1], v[6], this.metrics.is_bc_int);
-      // 3. 正面对角线 d_ca (点 4-2)
-      this.drawDiagonal(ctx, v[4], v[2], this.metrics.is_ca_int);
+      // 3. 底表面对角线 d_ca (Z-X 面): 点 4 到 点 1, 长度 √(c²+a²)
+      this.drawDiagonal(ctx, v[4], v[1], this.metrics.is_ca_int);
     }
 
-    // 绘制体对角线 (Space Body Diagonal g: 0 号点到 6 号点)
+    // 绘制体对角线 (Space Body Diagonal g: 0 号点到 6 号点，穿透体心)
     if (this.showBodyDiagonal) {
       const gColor = this.metrics.is_g_int ? '#10b981' : '#f43f5e';
       ctx.save();
@@ -427,21 +427,11 @@ class EulerBrickVisualizer {
       ctx.stroke();
       ctx.restore();
 
-      // 体对角线中点浮动数值标签
+      // 体对角线中点浮动数值药丸标签
       const mx = (v[0].x + v[6].x) / 2;
       const my = (v[0].y + v[6].y) / 2;
-      ctx.save();
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-      const gLabel = `Space Diag g = ${this.metrics.g.toFixed(3)} ${this.metrics.is_g_int ? '✓ INT' : `(Δ=${this.metrics.residual_g.toFixed(3)})`}`;
-      ctx.font = 'bold 11px JetBrains Mono, monospace';
-      const tw = ctx.measureText(gLabel).width;
-      ctx.fillRect(mx - tw / 2 - 8, my - 14, tw + 16, 22);
-      ctx.strokeStyle = gColor;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(mx - tw / 2 - 8, my - 14, tw + 16, 22);
-      ctx.fillStyle = gColor;
-      ctx.fillText(gLabel, mx - tw / 2, my + 1);
-      ctx.restore();
+      const gLabel = `Space Diag g = ${this.metrics.g.toFixed(3)} ${this.metrics.is_g_int ? '✓ INT' : `(Δ=${this.metrics.residual_g.toFixed(4)})`}`;
+      this.drawPill(ctx, mx, my - 12, gLabel, gColor, gColor);
     }
 
     // 绘制 8 个顶点圆珠
@@ -455,19 +445,48 @@ class EulerBrickVisualizer {
       ctx.shadowBlur = 0;
     });
 
-    // 标注 3 条主棱长尺寸文字
+    // 标注 3 条主棱长尺寸药丸 (风格、字形与侧边栏轴向 100% 对应对齐)
+    // 棱长 a (X 轴 · 前底横棱 4-5)
+    const midA = { x: (v[4].x + v[5].x) / 2, y: (v[4].y + v[5].y) / 2 };
+    this.drawPill(ctx, midA.x, midA.y + 16, `a = ${a} (X)`, '#38bdf8', 'rgba(56, 189, 248, 0.45)');
+
+    // 棱长 b (Y 轴 · 前右垂直棱 5-6)
+    const midB = { x: (v[5].x + v[6].x) / 2, y: (v[5].y + v[6].y) / 2 };
+    this.drawPill(ctx, midB.x + 36, midB.y, `b = ${b} (Y)`, '#f59e0b', 'rgba(245, 158, 11, 0.45)');
+
+    // 棱长 c (Z 轴 · 底面左侧纵深棱 0-4)
+    const midC = { x: (v[0].x + v[4].x) / 2, y: (v[0].y + v[4].y) / 2 };
+    this.drawPill(ctx, midC.x - 38, midC.y + 12, `c = ${c} (Z)`, '#a78bfa', 'rgba(167, 139, 250, 0.45)');
+    ctx.restore();
+  }
+
+  drawPill(ctx, x, y, text, color, borderColor, bgColor = 'rgba(15, 23, 42, 0.92)') {
     ctx.save();
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '11px JetBrains Mono, monospace';
-    // a 轴 (0-1)
-    const midA = { x: (v[0].x + v[1].x) / 2, y: (v[0].y + v[1].y) / 2 };
-    ctx.fillText(`a = ${a}`, midA.x - 14, midA.y + 14);
-    // b 轴 (1-2)
-    const midB = { x: (v[1].x + v[2].x) / 2, y: (v[1].y + v[2].y) / 2 };
-    ctx.fillText(`b = ${b}`, midB.x + 8, midB.y);
-    // c 轴 (1-5)
-    const midC = { x: (v[1].x + v[5].x) / 2, y: (v[1].y + v[5].y) / 2 };
-    ctx.fillText(`c = ${c}`, midC.x + 8, midC.y + 12);
+    ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    const tw = ctx.measureText(text).width;
+    const th = 18;
+    const px = 8;
+    const w = tw + px * 2;
+    const h = th;
+    const rx = x - w / 2;
+    const ry = y - h / 2;
+
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(rx, ry, w, h, 6);
+    } else {
+      ctx.rect(rx, ry, w, h);
+    }
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+    ctx.strokeStyle = borderColor || color;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y + 0.5);
     ctx.restore();
   }
 
