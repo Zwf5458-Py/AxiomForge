@@ -85,8 +85,22 @@ class CollatzVisualizer {
 
     this.sequence = seq;
     const totalSteps = seq.length - 1;
+
+    // 计算经典数论停机时间 (Stopping Time: 首次跌破起始值 n₀ 的步数)
+    let stoppingTime = 0;
+    let stoppingStepVal = this.seed;
+    for (let i = 1; i < seq.length; i++) {
+      if (seq[i] < this.seed) {
+        stoppingTime = i;
+        stoppingStepVal = seq[i];
+        break;
+      }
+    }
+
     this.stats = {
       totalSteps,
+      stoppingTime,
+      stoppingStepVal,
       peakValue: peak,
       peakStep: peakIdx,
       oddSteps: oddCount,
@@ -547,6 +561,29 @@ class CollatzVisualizer {
       ctx.fillText(peakText, peakX, peakY);
     }
 
+    // 标出首次跌破初值停机点 (Stopping Time Point: aₖ < n₀)
+    if (this.stats.stoppingTime > 0 && this.stats.stoppingTime <= maxVisibleStep && this.stats.stoppingTime !== this.stats.peakStep) {
+      const sx = getScreenX(this.stats.stoppingTime);
+      const sy = getScreenY(this.stats.stoppingStepVal);
+
+      ctx.beginPath();
+      ctx.arc(sx, sy, 5 * Math.min(1.5, Math.max(0.7, this.trajZoom)), 0, Math.PI * 2);
+      ctx.fillStyle = '#38bdf8';
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // 文本标签
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 10.5px Inter, monospace';
+      const stopText = `Stop: ${this.stats.stoppingStepVal} < ${this.seed} (Step ${this.stats.stoppingTime})`;
+      const stopTw = ctx.measureText(stopText).width;
+      const stopX = Math.max(padding.left + 5, Math.min(sx - stopTw / 2, padding.left + chartW - stopTw - 5));
+      const stopY = (sy < padding.top + 32) ? (sy + 18) : (sy - 10);
+      ctx.fillText(stopText, stopX, stopY);
+    }
+
     // 绘制当前飞行粒子游标
     if (this.sequence.length > 0) {
       const curX = getScreenX(maxVisibleStep);
@@ -689,12 +726,20 @@ class CollatzVisualizer {
 
   updateDashboardUI() {
     const elSeed = document.getElementById('stat-collatz-seed');
+    const elStopping = document.getElementById('stat-collatz-stopping-time');
     const elSteps = document.getElementById('stat-collatz-steps');
     const elPeak = document.getElementById('stat-collatz-peak');
     const elRatio = document.getElementById('stat-collatz-ratio');
     const elOddRatio = document.getElementById('stat-collatz-odd-ratio');
 
     if (elSeed) elSeed.textContent = this.seed.toLocaleString();
+    if (elStopping) {
+      if (this.seed === 1) {
+        elStopping.textContent = '0';
+      } else {
+        elStopping.textContent = `${this.stats.stoppingTime} (n=${this.stats.stoppingStepVal})`;
+      }
+    }
     if (elSteps) elSteps.textContent = this.stats.totalSteps.toLocaleString();
     if (elPeak) elPeak.textContent = this.stats.peakValue.toLocaleString();
     if (elRatio) elRatio.textContent = this.stats.expansionRatio.toFixed(2) + 'x';
@@ -708,7 +753,13 @@ class CollatzVisualizer {
     const hudSteps = document.getElementById('hud-collatz-steps');
     const hudPeak = document.getElementById('hud-collatz-peak');
     if (hudSeed) hudSeed.textContent = this.seed.toLocaleString();
-    if (hudSteps) hudSteps.textContent = this.stats.totalSteps.toLocaleString();
+    if (hudSteps) {
+      if (this.seed > 1 && this.stats.stoppingTime > 0) {
+        hudSteps.textContent = `${this.stats.totalSteps} (停机: ${this.stats.stoppingTime})`;
+      } else {
+        hudSteps.textContent = this.stats.totalSteps.toLocaleString();
+      }
+    }
     if (hudPeak) hudPeak.textContent = this.stats.peakValue.toLocaleString();
   }
 }

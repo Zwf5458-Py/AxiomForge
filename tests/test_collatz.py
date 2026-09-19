@@ -19,15 +19,24 @@ def get_collatz_sequence(n: int) -> list[int]:
 
 
 def get_collatz_stats(n: int) -> dict:
-    """Calculate key dynamical stats: total steps, peak value, odd/even counts."""
+    """Calculate key dynamical stats: total steps, stopping time, peak value, odd/even counts."""
     seq = get_collatz_sequence(n)
     total_steps = len(seq) - 1
     peak_value = max(seq)
     odd_steps = sum(1 for x in seq[:-1] if x % 2 != 0)
     even_steps = total_steps - odd_steps
+
+    # Stopping time: inf { k : a_k < a_0 }
+    stopping_time = 0
+    for idx, val in enumerate(seq):
+        if idx > 0 and val < n:
+            stopping_time = idx
+            break
+
     return {
         "start": n,
         "total_steps": total_steps,
+        "stopping_time": stopping_time,
         "peak_value": peak_value,
         "odd_steps": odd_steps,
         "even_steps": even_steps,
@@ -99,3 +108,16 @@ def test_range_max_stopping_time():
     best_seed, max_steps, best_peak = find_max_stopping_time_in_range(1, 20)
     assert max_steps == 20
     assert best_seed in [18, 19]
+
+
+def test_collatz_seed_11_stopping_time_vs_total_steps():
+    """
+    Mathematical verification of Seed 11:
+    - Stopping time (first drops below 11): Step 8 (a_8 = 10 < 11)
+    - Total stopping time (reaches 1): Step 14 (a_14 = 1)
+    """
+    stats = get_collatz_stats(11)
+    assert stats["stopping_time"] == 8, f"Seed 11 stopping time must be 8, got {stats['stopping_time']}"
+    assert stats["total_steps"] == 14, f"Seed 11 total steps must be 14, got {stats['total_steps']}"
+    assert stats["peak_value"] == 52, f"Seed 11 peak value must be 52, got {stats['peak_value']}"
+
