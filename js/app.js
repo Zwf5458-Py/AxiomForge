@@ -1472,14 +1472,17 @@ ${JSON.stringify(points, null, 2)}
       collatzEngine.mode = 'trajectory';
       btnCollatzModeTraj.classList.add('active');
       btnCollatzModeTree.classList.remove('active');
+      if (viewCollatz) viewCollatz.classList.remove('mode-tree');
       if (rowCollatzScale) rowCollatzScale.style.display = 'block';
       if (rowCollatzTreeDepth) rowCollatzTreeDepth.style.display = 'none';
+      collatzEngine.render();
     });
 
     btnCollatzModeTree.addEventListener('click', () => {
       collatzEngine.mode = 'tree';
       btnCollatzModeTree.classList.add('active');
       btnCollatzModeTraj.classList.remove('active');
+      if (viewCollatz) viewCollatz.classList.add('mode-tree');
       if (rowCollatzScale) rowCollatzScale.style.display = 'none';
       if (rowCollatzTreeDepth) rowCollatzTreeDepth.style.display = 'block';
       collatzEngine.resetTreeCenter();
@@ -1594,6 +1597,27 @@ ${JSON.stringify(points, null, 2)}
       } else {
         collatzEngine.resetTreeCenter();
       }
+    });
+  }
+
+  // 右下角缩放工具条按钮监听 (支持触控与点击缩放拓扑树)
+  const btnCollatzZoomIn = document.getElementById('btn-collatz-zoom-in');
+  const btnCollatzZoomOut = document.getElementById('btn-collatz-zoom-out');
+  const btnCollatzResetView = document.getElementById('btn-collatz-reset-view');
+
+  if (btnCollatzZoomIn) {
+    btnCollatzZoomIn.addEventListener('click', () => {
+      collatzEngine.zoomIn();
+    });
+  }
+  if (btnCollatzZoomOut) {
+    btnCollatzZoomOut.addEventListener('click', () => {
+      collatzEngine.zoomOut();
+    });
+  }
+  if (btnCollatzResetView) {
+    btnCollatzResetView.addEventListener('click', () => {
+      collatzEngine.resetTreeCenter();
     });
   }
 });

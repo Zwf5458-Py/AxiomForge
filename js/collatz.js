@@ -245,12 +245,19 @@ class CollatzVisualizer {
   setupInteractions() {
     if (!this.canvas) return;
 
+    // 鼠标按下：启动平移拖拽
     this.canvas.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // 仅限鼠标左键
+      e.preventDefault();
       this.isDragging = true;
       this.dragStartX = e.clientX;
       this.dragStartY = e.clientY;
+      if (this.mode === 'tree') {
+        this.canvas.style.cursor = 'grabbing';
+      }
     });
 
+    // 鼠标移动：计算拖拽增量并检测悬停节点
     window.addEventListener('mousemove', (e) => {
       if (this.isDragging && this.mode === 'tree') {
         const dx = e.clientX - this.dragStartX;
@@ -259,6 +266,7 @@ class CollatzVisualizer {
         this.treePanY += dy;
         this.dragStartX = e.clientX;
         this.dragStartY = e.clientY;
+        this.render(); // 拖拽平移立即重绘，零延迟
       }
 
       if (this.mode === 'tree') {
@@ -266,17 +274,63 @@ class CollatzVisualizer {
       }
     });
 
+    // 鼠标松开：结束拖拽
     window.addEventListener('mouseup', () => {
-      this.isDragging = false;
+      if (this.isDragging) {
+        this.isDragging = false;
+        if (this.mode === 'tree') {
+          this.canvas.style.cursor = 'grab';
+        }
+      }
     });
 
+    // 鼠标离开窗口
+    window.addEventListener('mouseleave', () => {
+      this.isDragging = false;
+      if (this.mode === 'tree') {
+        this.canvas.style.cursor = 'grab';
+      }
+    });
+
+    // 鼠标滚轮/触控板缩放 (阻尼指数算法，彻底解决 Safari 缩放过冲与卡顿)
     this.canvas.addEventListener('wheel', (e) => {
       if (this.mode === 'tree') {
         e.preventDefault();
-        const factor = e.deltaY < 0 ? 1.12 : 0.89;
-        this.treeZoom = Math.max(0.2, Math.min(5.0, this.treeZoom * factor));
+        const delta = Math.max(-50, Math.min(50, e.deltaY));
+        const factor = Math.exp(-delta * 0.003);
+        this.zoomBy(factor);
       }
     }, { passive: false });
+  }
+
+  zoomBy(factor) {
+    this.treeZoom *= factor;
+    this.treeZoom = Math.max(0.15, Math.min(8.0, this.treeZoom));
+    this.updateZoomBadge();
+    this.render();
+  }
+
+  zoomIn() {
+    this.zoomBy(1.25);
+  }
+
+  zoomOut() {
+    this.zoomBy(0.8);
+  }
+
+  resetTreeCenter() {
+    this.treeZoom = 1.0;
+    this.treePanX = 0;
+    this.treePanY = 40;
+    this.updateZoomBadge();
+    this.render();
+  }
+
+  updateZoomBadge() {
+    const badge = document.getElementById('collatz-zoom-val');
+    if (badge) {
+      badge.textContent = `${Math.round(this.treeZoom * 100)}%`;
+    }
   }
 
   detectHoveredNode(e) {
@@ -292,18 +346,15 @@ class CollatzVisualizer {
       const sx = centerX + node.x * this.treeZoom;
       const sy = centerY + node.y * this.treeZoom;
       const dist = Math.hypot(mx - sx, my - sy);
-      if (dist < 12 * Math.max(0.8, this.treeZoom)) {
+      if (dist < 14 * Math.max(0.7, this.treeZoom)) {
         found = node;
         break;
       }
     }
-    this.hoveredNode = found;
-  }
-
-  resetTreeCenter() {
-    this.treeZoom = 1.0;
-    this.treePanX = 0;
-    this.treePanY = 40;
+    if (this.hoveredNode !== found) {
+      this.hoveredNode = found;
+      this.render();
+    }
   }
 
   update(timestamp) {
@@ -342,7 +393,8 @@ class CollatzVisualizer {
   }
 
   renderTrajectory(ctx, w, h) {
-    const padding = { top: 60, right: 60, bottom: 65, left: 80 };
+    // 预留顶部与右侧空间（右侧为 HUD 卡片提供优雅安全缓冲区，左侧完全释放展示波峰）
+    const padding = { top: 40, right: 260, bottom: 65, left: 75 };
     const chartW = w - padding.left - padding.right;
     const chartH = h - padding.top - padding.bottom;
 
@@ -434,10 +486,14 @@ class CollatzVisualizer {
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // 文本标签
+      // 文本标签（智能边界保护，绝不被裁切或遮挡）
       ctx.fillStyle = '#fbbf24';
       ctx.font = 'bold 11px Inter, sans-serif';
-      ctx.fillText(`Peak: ${this.stats.peakValue.toLocaleString()} (Step ${this.stats.peakStep})`, px - 35, py - 12);
+      const peakText = `Peak: ${this.stats.peakValue.toLocaleString()} (Step ${this.stats.peakStep})`;
+      const peakTw = ctx.measureText(peakText).width;
+      const peakX = Math.max(padding.left + 5, Math.min(px - peakTw / 2, w - padding.right - peakTw - 5));
+      const peakY = (py < padding.top + 25) ? (py + 20) : (py - 12);
+      ctx.fillText(peakText, peakX, peakY);
     }
 
     // 绘制当前飞行粒子游标

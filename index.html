@@ -361,6 +361,19 @@
               <path d="M3 3v5h5"></path>
             </svg>
             <span data-i18n="btn_collatz_reset">Reset Center</span>
+        </div>
+
+        <!-- 画布视窗缩放浮动微控制器 (右下角，支持鼠标滚轮与点击快速缩放) -->
+        <div class="canvas-zoom-toolbar">
+          <button id="btn-collatz-zoom-in" class="zoom-btn" title="Zoom In (or Scroll Wheel Up)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <span id="collatz-zoom-val" class="zoom-val-badge" title="Zoom Scale">100%</span>
+          <button id="btn-collatz-zoom-out" class="zoom-btn" title="Zoom Out (or Scroll Wheel Down)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <button id="btn-collatz-reset-view" class="zoom-btn" title="Reset Center View">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
           </button>
         </div>
       </div>
