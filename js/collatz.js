@@ -47,6 +47,7 @@ class CollatzVisualizer {
     this.dragStartX = 0;
     this.dragStartY = 0;
     this.hoveredNode = null;
+    this.hoveredTrajStep = null;
 
     // 粒子效果
     this.pulsePhase = 0;
@@ -296,6 +297,8 @@ class CollatzVisualizer {
 
       if (this.mode === 'tree') {
         this.detectHoveredNode(e);
+      } else if (this.mode === 'trajectory') {
+        this.detectHoveredTrajPoint(e);
       }
     });
 
@@ -388,6 +391,56 @@ class CollatzVisualizer {
     }
     if (this.hoveredNode !== found) {
       this.hoveredNode = found;
+      this.render();
+    }
+  }
+
+  detectHoveredTrajPoint(e) {
+    if (!this.canvas || this.sequence.length === 0) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const padding = { top: 20, right: 18, bottom: 42, left: 52 };
+    const chartW = this.width - padding.left - padding.right;
+    const chartH = this.height - padding.top - padding.bottom;
+    if (chartW <= 0 || chartH <= 0) return;
+
+    const chartCenterX = padding.left + chartW / 2;
+    const chartCenterY = padding.top + chartH / 2;
+    const maxSteps = Math.max(1, this.sequence.length - 1);
+    const maxY = this.stats.peakValue;
+    const useLog = (this.scaleType === 'log');
+
+    const getBaseX = (step) => padding.left + (step / maxSteps) * chartW;
+    const getBaseY = (val) => {
+      if (useLog) {
+        const logMax = Math.max(0.5, Math.log10(Math.max(1, maxY)));
+        const logVal = Math.log10(Math.max(1, val));
+        return padding.top + chartH - (logVal / logMax) * chartH;
+      } else {
+        return padding.top + chartH - (val / maxY) * chartH;
+      }
+    };
+    const getScreenX = (step) => chartCenterX + (getBaseX(step) - chartCenterX) * this.trajZoom + this.trajPanX;
+    const getScreenY = (val) => chartCenterY + (getBaseY(val) - chartCenterY) * this.trajZoom + this.trajPanY;
+
+    let foundStep = null;
+    let minDist = 22;
+    const maxVisibleStep = Math.min(this.sequence.length - 1, Math.max(0, this.animStep));
+
+    for (let i = 0; i <= maxVisibleStep; i++) {
+      const sx = getScreenX(i);
+      const sy = getScreenY(this.sequence[i]);
+      const dist = Math.hypot(mx - sx, my - sy);
+      if (dist < minDist) {
+        minDist = dist;
+        foundStep = i;
+      }
+    }
+
+    if (this.hoveredTrajStep !== foundStep) {
+      this.hoveredTrajStep = foundStep;
       this.render();
     }
   }
@@ -491,7 +544,7 @@ class CollatzVisualizer {
       }
     });
 
-    const stepInterval = Math.max(1, Math.floor(maxSteps / 5));
+    const stepInterval = (maxSteps <= 16) ? 1 : ((maxSteps <= 32) ? 2 : Math.max(1, Math.floor(maxSteps / 6)));
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
     for (let s = 0; s <= maxSteps; s += stepInterval) {
       const x = getScreenX(s);
@@ -582,6 +635,72 @@ class CollatzVisualizer {
       const stopX = Math.max(padding.left + 5, Math.min(sx - stopTw / 2, padding.left + chartW - stopTw - 5));
       const stopY = (sy < padding.top + 32) ? (sy + 18) : (sy - 10);
       ctx.fillText(stopText, stopX, stopY);
+    }
+
+    // 绘制所有离散步数数据节点圆点（彻底展示离散动力学的每一步，解决连续共线除以 2 导致的“只有一条直线”视觉误解）
+    const showNodeLabels = (maxSteps <= 20) || (this.trajZoom >= 2.0);
+    const baseNodeR = (maxSteps <= 30) ? 3.5 : (maxSteps <= 100 ? 2.5 : 1.5);
+
+    for (let i = 0; i <= maxVisibleStep; i++) {
+      const sx = getScreenX(i);
+      const sy = getScreenY(this.sequence[i]);
+      const val = this.sequence[i];
+      const isPeak = (i === this.stats.peakStep);
+      const isStop = (i === this.stats.stoppingTime);
+      const isLast = (i === maxVisibleStep);
+
+      // 绘制普通节点圆点
+      if (!isPeak && !isStop && !isLast) {
+        ctx.beginPath();
+        ctx.arc(sx, sy, baseNodeR * Math.min(1.4, Math.max(0.8, this.trajZoom)), 0, Math.PI * 2);
+        ctx.fillStyle = (val % 2 !== 0) ? '#f59e0b' : '#38bdf8';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // 当步数 <= 20 或用户放大视口时，直接在每个点上方标注当前数值，离散步数一目了然
+      if (showNodeLabels && !isPeak && !isStop && !isLast) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.font = '9.5px Inter, monospace';
+        const label = `${val}`;
+        const tw = ctx.measureText(label).width;
+        const textY = (sy < padding.top + 22) ? (sy + 14) : (sy - 8);
+        ctx.fillText(label, sx - tw / 2, textY);
+      }
+    }
+
+    // 绘制鼠标吸附悬停点高亮 (Hover Tooltip)
+    if (this.hoveredTrajStep !== null && this.hoveredTrajStep <= maxVisibleStep) {
+      const hStep = this.hoveredTrajStep;
+      const hx = getScreenX(hStep);
+      const hy = getScreenY(this.sequence[hStep]);
+      const hVal = this.sequence[hStep];
+
+      // 发光吸附圈
+      ctx.beginPath();
+      ctx.arc(hx, hy, 8 * Math.min(1.4, Math.max(0.8, this.trajZoom)), 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 吸附悬浮标签
+      const isEven = (hVal % 2 === 0);
+      const formulaStr = (hStep === 0) ? `Initial Seed` : (isEven ? `${hVal * 2} ÷ 2 = ${hVal}` : `(${hVal} - 1) ÷ 3 ...`);
+      const hTip = `Step ${hStep}: n = ${hVal.toLocaleString()}`;
+      ctx.font = '11px Inter, monospace';
+      const hTw = ctx.measureText(hTip).width;
+
+      const tipBoxX = Math.max(padding.left + 5, Math.min(hx - hTw / 2 - 8, padding.left + chartW - hTw - 20));
+      const tipBoxY = (hy < padding.top + 40) ? (hy + 16) : (hy - 32);
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      ctx.fillRect(tipBoxX, tipBoxY, hTw + 16, 24);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.strokeRect(tipBoxX, tipBoxY, hTw + 16, 24);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(hTip, tipBoxX + 8, tipBoxY + 16);
     }
 
     // 绘制当前飞行粒子游标
