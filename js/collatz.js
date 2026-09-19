@@ -414,8 +414,8 @@ class CollatzVisualizer {
   }
 
   renderTrajectory(ctx, w, h) {
-    // 预留顶部与右侧空间（右侧为 HUD 卡片提供优雅安全缓冲区，左侧完全释放展示波峰）
-    const padding = { top: 40, right: 260, bottom: 65, left: 75 };
+    // 极致全屏沉浸式画幅：彻底释放右侧与上方空白，折线图横贯全屏延展
+    const padding = { top: 20, right: 18, bottom: 42, left: 52 };
     const chartW = w - padding.left - padding.right;
     const chartH = h - padding.top - padding.bottom;
 
@@ -543,7 +543,7 @@ class CollatzVisualizer {
       const peakText = `Peak: ${this.stats.peakValue.toLocaleString()} (Step ${this.stats.peakStep})`;
       const peakTw = ctx.measureText(peakText).width;
       const peakX = Math.max(padding.left + 5, Math.min(px - peakTw / 2, padding.left + chartW - peakTw - 5));
-      const peakY = (py < padding.top + 25) ? (py + 20) : (py - 12);
+      const peakY = (py < padding.top + 28) ? (py + 20) : (py - 12);
       ctx.fillText(peakText, peakX, peakY);
     }
 

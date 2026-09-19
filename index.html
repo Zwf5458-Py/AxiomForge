@@ -322,7 +322,7 @@
       <div class="canvas-wrapper">
         <canvas id="collatz-canvas" class="render-canvas"></canvas>
 
-        <!-- 浮动信息条 (HUD) -->
+        <!-- 浮动信息条 (HUD: 极致轻量半透明浮动药丸，横向排布不占图表视野) -->
         <div class="hud-overlay">
           <div class="hud-pill">
             <span class="pulse-indicator"></span>
@@ -334,10 +334,6 @@
           <div class="hud-pill">
             <span class="pulse-indicator" style="background: #f59e0b; box-shadow: 0 0 8px #f59e0b;"></span>
             <span><span data-i18n="collatz_stat_peak">Peak: </span><strong id="hud-collatz-peak" style="color: #fbbf24;">9,232</strong></span>
-          </div>
-          <div class="hud-pill">
-            <span class="hud-tag" data-i18n="collatz_hud_action_tag">Dynamics</span>
-            <span data-i18n="collatz_hud_action_desc">Log/Linear Scale | Particle Flow | Tree Drag/Zoom</span>
           </div>
         </div>
 
@@ -361,6 +357,7 @@
               <path d="M3 3v5h5"></path>
             </svg>
             <span data-i18n="btn_collatz_reset">Reset Center</span>
+          </button>
         </div>
 
         <!-- 画布视窗缩放浮动微控制器 (右下角，支持鼠标滚轮与点击快速缩放) -->
@@ -683,8 +680,8 @@
             </div>
             <input type="number" id="input-collatz-seed" min="1" max="1000000000000" value="27" class="collatz-seed-input">
             <div class="collatz-seed-actions">
-              <button id="btn-collatz-random" class="btn-settings-pill" data-i18n="btn_collatz_random">Random Seed</button>
-              <button id="btn-collatz-compute" class="btn-sidebar-evolve" data-i18n="btn_collatz_compute">Simulate Flow</button>
+              <button id="btn-collatz-random" class="collatz-action-btn collatz-btn-secondary" data-i18n="btn_collatz_random">Random Seed</button>
+              <button id="btn-collatz-compute" class="collatz-action-btn collatz-btn-primary" data-i18n="btn_collatz_compute">Simulate Flow</button>
             </div>
           </div>
 
