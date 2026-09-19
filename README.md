@@ -90,9 +90,14 @@ Mathematical aesthetics extend from discrete algebra into continuous dynamical s
 
 Described by Paul Erdős as a puzzle for which "mathematics is not yet ready", the Collatz ($3x+1$) conjecture serves as a prime archetype for discrete dynamical systems and computational number theory:
 
-- **Hailstone Trajectory Dynamics**: Features particle flow animations, golden odd steps ($3n+1$), and ice-blue even drops ($n/2$), with dual logarithmic ($\log_{10}$) and linear axes to seamlessly explore extreme seeds (e.g., $27$ with 111 steps and 9,232 peak; $9.78\text{B}$ with 1,132 steps and $26.8\text{T}$ peak).
-- **Inverse Collatz Fractal Tree**: Roots from unity ($1$) and branches upward along even trunks ($2n$) and modular odd forks ($(n-1)/3$ when $n \equiv 4 \pmod 6$), revealing an infinite, cycle-free spanning network connecting all natural numbers.
-- **Extremal Stopping Time Explorer**: Instantly search bounded integer ranges $[N_1, N_2]$ to discover local champion seeds with maximal flight duration and expansion ratios.
+- **Hailstone Trajectory Full-Screen Engine**:
+  - **Immersive Viewport**: Edge-to-edge chart projection eliminating blank margins, with seamless dual logarithmic ($\log_{10}$) and linear scaling;
+  - **Discrete Step Node Annotations**: Plots individual data point circles and discrete values for every step along with hover tooltips, completely resolving collinear visual illusions caused by consecutive divisions by 2 under log coordinates;
+  - **Rigorous Number-Theoretic Distinction**: Concurrently highlights classical **Stopping Time** ($\sigma(n)$, e.g., Step 8 for $n=11$ where $a_8 = 10 < 11$) and **Total Stopping Time** ($\sigma_\infty(n)$, e.g., Step 14 for $n=11$ reaching $1$), pinpointing Peak, Stopping, and Convergence points;
+- **Full Dual-Mode Pan & Zoom**: Both trajectory lines and the inverse tree support native left-drag canvas panning, smooth exponential wheel zooming, and one-click view recentering;
+- **Inverse Collatz Fractal Tree**: Roots from unity ($1$) and branches upward along even trunks ($2n$) and modular odd forks ($(n-1)/3$ when $n \equiv 4 \pmod 6$), revealing an infinite, cycle-free spanning network connecting all natural numbers;
+- **Extremal Stopping Time Explorer**: Instantly search bounded integer ranges $[N_1, N_2]$ to discover local champion seeds with maximal flight duration and expansion ratios;
+- **Robust Symmetrical Controls**: Symmetrical button grid (`1fr 1fr`) locked to strict 32px height, preventing text overflow across English and Chinese localizations.
 
 ---
 
