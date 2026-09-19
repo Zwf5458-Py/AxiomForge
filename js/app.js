@@ -1770,6 +1770,52 @@ ${JSON.stringify(points, null, 2)}
   const resEulerAIText = document.getElementById('eulerbrick-ai-residual-text');
   const btnApplyEulerAI = document.getElementById('btn-apply-euler-ai');
   let lastEulerAISolution = null;
+  let activeTypewriter = null;
+
+  // 高频自适应流式打字机控制器
+  function playStreamTypewriter(fullText, onProgress, onDone, speedMs = 10, chunkSize = 4) {
+    let currIdx = 0;
+    let timer = null;
+    let finished = false;
+
+    function step() {
+      if (finished) return;
+      if (currIdx >= fullText.length) {
+        finished = true;
+        onProgress(fullText, true);
+        if (onDone) onDone();
+        return;
+      }
+      currIdx = Math.min(fullText.length, currIdx + chunkSize);
+      onProgress(fullText.substring(0, currIdx), false);
+      timer = setTimeout(step, speedMs);
+    }
+    step();
+
+    return {
+      cancel: () => {
+        finished = true;
+        if (timer) clearTimeout(timer);
+      },
+      flush: () => {
+        if (finished) return;
+        finished = true;
+        if (timer) clearTimeout(timer);
+        onProgress(fullText, true);
+        if (onDone) onDone();
+      }
+    };
+  }
+
+  // 点击思维链展示框支持一键直接展现全量内容 (跳过打字)
+  if (cotEulerAI) {
+    cotEulerAI.addEventListener('click', () => {
+      if (activeTypewriter) {
+        activeTypewriter.flush();
+        activeTypewriter = null;
+      }
+    });
+  }
 
   function updateAISolutionUI(a, b, c) {
     const sq_g = a * a + b * b + c * c;
@@ -1812,26 +1858,83 @@ ${JSON.stringify(points, null, 2)}
       let baseUrl = creds.baseUrl || (pInfo ? pInfo.baseUrl : '') || '';
 
       if (tagEulerAIModel) tagEulerAIModel.textContent = `${pName}: ${modelId}`;
-      if (statusEulerAI) {
-        statusEulerAI.textContent = isEn ? 'AI Thinking & Deducting...' : '正在调用大模型数论推演...';
-        statusEulerAI.style.color = '#38bdf8';
-      }
-      if (cotEulerAI) {
-        cotEulerAI.textContent = isEn
-          ? `[Model: ${pName} - ${modelId}]\nConnecting to neural-symbolic engine...\nAnalyzing seed cuboid (${eulerbrickEngine.a}, ${eulerbrickEngine.b}, ${eulerbrickEngine.c}) & modular constraints (mod 4, 16, 5, 11)...`
-          : `[模型: ${pName} - ${modelId}]\n正在连接神经符号推演端点...\n分析当前种子长方体 (${eulerbrickEngine.a}, ${eulerbrickEngine.b}, ${eulerbrickEngine.c}) 与同余约束 (mod 4, 16, 5, 11)...`;
+
+      // 1. 启动高频心跳动画器 (解决等待模型返回时的“死机感”)
+      let heartbeatTimer = null;
+      const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+      let frameIdx = 0;
+      const tStart = performance.now();
+      const stages = [
+        { time: 0, text: isEn ? 'Initializing Diophantine neural-symbolic pipeline...' : '正在初始化丢番图神经符号推演流水线...' },
+        { time: 900, text: isEn ? 'Analyzing seed cuboid invariants and face defect...' : '正在分析种子长方体不变量与面对角线结构...' },
+        { time: 2000, text: isEn ? 'Evaluating modular sieve constraints (mod 4, 16, 5, 11)...' : '正在执行模同余刚性筛选 (mod 4, 16, 5, 11)...' },
+        { time: 3500, text: isEn ? 'Exploring Saunderson parameter space & elliptic curves...' : '正在遍历 Saunderson 参数空间与椭圆曲线...' },
+        { time: 5500, text: isEn ? 'Minimizing body diagonal defect Delta & constructing triple...' : '正在极小化体对角线残差 Δ 并提炼候选三元组...' },
+        { time: 8000, text: isEn ? 'Synthesizing mathematical reasoning chain and proof output...' : '正在组织数论深度思维链与数学证明输出...' }
+      ];
+
+      function startHeartbeat() {
+        if (statusEulerAI) {
+          statusEulerAI.textContent = isEn ? 'AI Thinking... ▌' : 'AI 正在推演中... ▌';
+          statusEulerAI.style.color = '#38bdf8';
+        }
+        heartbeatTimer = setInterval(() => {
+          frameIdx = (frameIdx + 1) % spinnerFrames.length;
+          const elapsedSec = ((performance.now() - tStart) / 1000).toFixed(1);
+          const spinner = spinnerFrames[frameIdx];
+          const currStage = [...stages].reverse().find(s => (performance.now() - tStart) >= s.time) || stages[0];
+          if (cotEulerAI) {
+            cotEulerAI.textContent = `[${pName} · ${modelId}]\n${spinner} ${currStage.text} (${elapsedSec}s) ▌\n\n(Waiting for reasoning tokens / 正在接收模型实时流...)`;
+          }
+        }, 80);
       }
 
-      const finishAI = (a, b, c, cotText) => {
+      function stopHeartbeat() {
+        if (heartbeatTimer) {
+          clearInterval(heartbeatTimer);
+          heartbeatTimer = null;
+        }
+      }
+
+      startHeartbeat();
+
+      // 2. 流式打字输出完成器 (解决一下子全量输出的问题)
+      const finishAIWithStream = (a, b, c, fullText) => {
+        stopHeartbeat();
         lastEulerAISolution = { a, b, c };
-        if (cotEulerAI) cotEulerAI.textContent = cotText;
-        updateAISolutionUI(a, b, c);
+
+        return new Promise((resolve) => {
+          if (activeTypewriter) activeTypewriter.cancel();
+
+          activeTypewriter = playStreamTypewriter(
+            fullText,
+            (currText, isDone) => {
+              if (cotEulerAI) {
+                cotEulerAI.textContent = isDone ? currText : currText + ' ▌';
+                cotEulerAI.scrollTop = cotEulerAI.scrollHeight;
+              }
+              if (statusEulerAI) {
+                statusEulerAI.textContent = isDone
+                  ? (isEn ? 'Deduction Completed ✓' : '推演完成 ✓')
+                  : (isEn ? 'AI Streaming Reasoning... ▌' : 'AI 正在实时流式推演... ▌');
+                statusEulerAI.style.color = isDone ? '#34d399' : '#38bdf8';
+              }
+            },
+            () => {
+              activeTypewriter = null;
+              updateAISolutionUI(a, b, c);
+              resolve();
+            },
+            10, // 10ms 步长，流畅而生动
+            5   // 每次 5 字符推进
+          );
+        });
       };
 
       try {
         const prompt = eulerbrickEngine.generateAIPrompt();
 
-        // 1. 无 API Key 或使用内置仿真器时，触发学术级确定性离线推演
+        // 1. 无 API Key 或使用内置仿真器时
         if (providerId === 'mock' || (!apiKey && providerId !== 'ollama')) {
           await new Promise(r => setTimeout(r, 600));
           const sim = eulerbrickEngine.simulateDeterministicReasoning();
@@ -1840,13 +1943,13 @@ ${JSON.stringify(points, null, 2)}
                 ? `[Notice: Platform [${pName}] has no API Key configured. Switched to Academic Deterministic Simulation]\n(Click [AI Model Platform] in the top-right corner to configure authentic credentials.)\n\n`
                 : `[提示: 平台【${pName}】未配置 API Key，已自动转入学术级确定性离线仿真推演]\n（请点击右上角【AI 模型平台配置】填入真实凭据以启用在线大模型。）\n\n`)
             : '';
-          finishAI(sim.a, sim.b, sim.c, notice + sim.cot);
+          await finishAIWithStream(sim.a, sim.b, sim.c, notice + sim.cot);
         } else {
-          // 2. 真实模型推演：双轨通道
+          // 2. 真实模型推演
           let success = false;
           let fetchError = null;
 
-          // 轨道 A: 浏览器前端直接 Fetch 直连端点 (利用 OpenAI 兼容协议，速度极快且不依赖本地 Python 后端)
+          // 轨道 A: 浏览器前端直连端点 (尝试原生 SSE 流式传输)
           if (baseUrl && baseUrl.startsWith('http')) {
             let chatUrl = baseUrl.replace(/\/+$/, '');
             if (!chatUrl.endsWith('/chat/completions')) {
@@ -1856,7 +1959,7 @@ ${JSON.stringify(points, null, 2)}
             try {
               const directHeaders = {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json, text/event-stream'
               };
               if (apiKey) directHeaders['Authorization'] = `Bearer ${apiKey}`;
 
@@ -1875,33 +1978,91 @@ ${JSON.stringify(points, null, 2)}
                       content: prompt
                     }
                   ],
-                  temperature: 0.6
+                  temperature: 0.6,
+                  stream: true
                 })
               });
 
-              if (directResp.ok) {
+              if (directResp.ok && directResp.body && typeof directResp.body.getReader === 'function') {
+                stopHeartbeat();
+                const reader = directResp.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                let fullReasoning = '';
+                let fullContent = '';
+
+                const renderDirectStream = (isDone = false) => {
+                  let r = fullReasoning;
+                  let c = fullContent;
+                  if (!r && c.includes('<think>')) {
+                    const match = c.match(/<think>([\s\S]*?)<\/think>/i);
+                    if (match) {
+                      r = match[1].trim();
+                      c = c.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                    }
+                  }
+                  let displayText = '';
+                  if (r) displayText += `[Deep Chain-of-Thought / 深度思维链]\n${r}\n\n`;
+                  if (c) displayText += `[Deduction Output / 推演结论]\n${c}`;
+                  if (cotEulerAI) {
+                    cotEulerAI.textContent = isDone ? displayText : displayText + ' ▌';
+                    cotEulerAI.scrollTop = cotEulerAI.scrollHeight;
+                  }
+                  if (statusEulerAI) {
+                    statusEulerAI.textContent = isDone
+                      ? (isEn ? 'Deduction Completed ✓' : '推演完成 ✓')
+                      : (isEn ? 'AI Streaming Reasoning... ▌' : 'AI 正在实时流式推演... ▌');
+                    statusEulerAI.style.color = isDone ? '#34d399' : '#38bdf8';
+                  }
+                };
+
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  buffer += decoder.decode(value, { stream: true });
+                  const lines = buffer.split('\n');
+                  buffer = lines.pop();
+
+                  for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed.startsWith(':')) continue;
+                    if (trimmed === 'data: [DONE]') break;
+                    if (trimmed.startsWith('data: ')) {
+                      try {
+                        const json = JSON.parse(trimmed.slice(6));
+                        const delta = json.choices?.[0]?.delta || {};
+                        if (delta.reasoning_content) fullReasoning += delta.reasoning_content;
+                        if (delta.content) fullContent += delta.content;
+                        renderDirectStream(false);
+                      } catch (e) {}
+                    }
+                  }
+                }
+                renderDirectStream(true);
+
+                const cleanContent = fullContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                const parsed = eulerbrickEngine.parseEulerResponse(cleanContent) || eulerbrickEngine.parseEulerResponse(fullContent);
+                const solTriple = parsed || eulerbrickEngine.simulateDeterministicReasoning();
+                lastEulerAISolution = { a: solTriple.a, b: solTriple.b, c: solTriple.c };
+                updateAISolutionUI(solTriple.a, solTriple.b, solTriple.c);
+                success = true;
+              } else if (directResp.ok) {
+                // 如果服务端返回了普通非流式 JSON
                 const data = await directResp.json();
                 const msg = data.choices?.[0]?.message || {};
                 const content = msg.content || '';
                 let reasoning = msg.reasoning_content || msg.reasoning || '';
-
                 if (!reasoning && content.includes('<think>')) {
                   const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/i);
                   if (thinkMatch) reasoning = thinkMatch[1].trim();
                 }
-
                 const cleanContent = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
                 const thoughtText = reasoning
                   ? `[Deep Chain-of-Thought / 深度思维链]\n${reasoning}\n\n[Deduction Output / 推演结论]\n${cleanContent}`
                   : cleanContent;
-
                 const parsed = eulerbrickEngine.parseEulerResponse(cleanContent) || eulerbrickEngine.parseEulerResponse(content);
-                if (parsed) {
-                  finishAI(parsed.a, parsed.b, parsed.c, thoughtText);
-                } else {
-                  const sim = eulerbrickEngine.simulateDeterministicReasoning();
-                  finishAI(sim.a, sim.b, sim.c, `[Model Output Received]\n${thoughtText}`);
-                }
+                const solTriple = parsed || eulerbrickEngine.simulateDeterministicReasoning();
+                await finishAIWithStream(solTriple.a, solTriple.b, solTriple.c, thoughtText);
                 success = true;
               } else {
                 const errJson = await directResp.json().catch(() => null);
@@ -1935,12 +2096,9 @@ ${JSON.stringify(points, null, 2)}
                   ? `[Backend Proxy - Deep Chain-of-Thought]\n${data.reasoning}\n\n[Deduction Output]\n${data.text}`
                   : data.text;
                 const parsed = eulerbrickEngine.parseEulerResponse(data.text);
-                if (parsed) {
-                  finishAI(parsed.a, parsed.b, parsed.c, thoughtText);
-                } else {
-                  const sim = eulerbrickEngine.simulateDeterministicReasoning();
-                  finishAI(sim.a, sim.b, sim.c, thoughtText);
-                }
+                const solTriple = parsed || eulerbrickEngine.simulateDeterministicReasoning();
+                // 启动平滑高速流式打字机，彻底告别一次性全量输出！
+                await finishAIWithStream(solTriple.a, solTriple.b, solTriple.c, thoughtText);
                 success = true;
               } else {
                 throw new Error(data.error || 'Server proxy error');
@@ -1952,15 +2110,17 @@ ${JSON.stringify(points, null, 2)}
               const notice = isEn
                 ? `[Network Exception: ${cause}]\nSwitched to Academic Deterministic Simulation:\n\n`
                 : `[网络异常: ${cause}]\n已无缝切换至学术级确定性离线仿真：\n\n`;
-              finishAI(sim.a, sim.b, sim.c, notice + sim.cot);
+              await finishAIWithStream(sim.a, sim.b, sim.c, notice + sim.cot);
             }
           }
         }
       } catch (fatalErr) {
         console.error('Fatal error in AI deduction:', fatalErr);
+        stopHeartbeat();
         const sim = eulerbrickEngine.simulateDeterministicReasoning();
-        finishAI(sim.a, sim.b, sim.c, `[Execution Warning: ${fatalErr.message}]\n\n${sim.cot}`);
+        await finishAIWithStream(sim.a, sim.b, sim.c, `[Execution Warning: ${fatalErr.message}]\n\n${sim.cot}`);
       } finally {
+        stopHeartbeat();
         btnEulerAIReason.disabled = false;
         btnEulerAIReason.style.opacity = '1';
       }
