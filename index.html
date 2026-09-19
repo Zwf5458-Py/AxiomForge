@@ -47,6 +47,13 @@
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
         <span data-i18n="tab_collatz">Collatz · Hailstone Dynamics</span>
+      <button id="tab-eulerbrick" class="tab-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        <span data-i18n="tab_eulerbrick">Euler Brick · Diophantine Geometry</span>
       </button>
     </div>
 
@@ -370,6 +377,70 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           </button>
           <button id="btn-collatz-reset-view" class="zoom-btn" title="Reset Center View">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 模块五：完美欧拉砖 (Euler Brick & Perfect Cuboid) 视窗 -->
+    <!-- ============================================== -->
+    <section id="view-eulerbrick" class="view-panel" style="display: none;">
+      <div class="canvas-wrapper">
+        <canvas id="eulerbrick-canvas" class="render-canvas"></canvas>
+
+        <!-- 浮动信息条 (HUD 药丸：实时显示当前棱长与体对角线状态) -->
+        <div class="hud-overlay">
+          <div class="hud-pill">
+            <span class="pulse-indicator" id="hud-eulerbrick-status-pulse"></span>
+            <span><span data-i18n="eulerbrick_stat_type">Brick Status: </span><strong id="hud-eulerbrick-type">Euler Brick</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span>(a, b, c): <strong id="hud-eulerbrick-edges">44, 117, 240</strong></span>
+          </div>
+          <div class="hud-pill">
+            <span><span data-i18n="eulerbrick_stat_space_diag">Space Diag g: </span><strong id="hud-eulerbrick-diag">270.601</strong></span>
+          </div>
+          <div class="hud-pill" id="hud-pill-residual">
+            <span><span data-i18n="eulerbrick_stat_residual">Residual Δ: </span><strong id="hud-eulerbrick-residual" style="color: #f59e0b;">0.3988</strong></span>
+          </div>
+        </div>
+
+        <!-- 底部快捷操作条 -->
+        <div class="canvas-bottom-controls">
+          <button class="quick-action-btn" id="btn-eulerbrick-rotate-bottom" title="Auto Rotate Toggle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="label-eulerbrick-rotate" data-i18n="btn_eulerbrick_autorotate">Pause Auto-Rotate</span>
+          </button>
+          <button class="quick-action-btn" id="btn-eulerbrick-reset-bottom" title="Reset Camera / View">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span data-i18n="btn_eulerbrick_reset_view">Reset Camera</span>
+          </button>
+          <button class="quick-action-btn" id="btn-eulerbrick-toggle-diag" title="Toggle Diagonals">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="2" y1="2" x2="22" y2="22"></line>
+              <path d="M17 2h5v5"></path>
+            </svg>
+            <span id="label-eulerbrick-diag-toggle" data-i18n="btn_eulerbrick_toggle_diag">Diagonals: ON</span>
+          </button>
+        </div>
+
+        <!-- 画布视窗缩放浮动微控制器 (右下角) -->
+        <div class="canvas-zoom-toolbar">
+          <button id="btn-eulerbrick-zoom-in" class="zoom-btn" title="Zoom In (or Scroll Wheel Up)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <span id="eulerbrick-zoom-val" class="zoom-val-badge" title="Zoom Scale">100%</span>
+          <button id="btn-eulerbrick-zoom-out" class="zoom-btn" title="Zoom Out (or Scroll Wheel Down)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <button id="btn-eulerbrick-reset-view" class="zoom-btn" title="Reset Center View">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
           </button>
         </div>
@@ -764,6 +835,126 @@
           </div>
         </div>
       </div>
+
+      <!-- 侧边栏：完美欧拉砖控制与数学推导 -->
+      <div id="sidebar-eulerbrick" style="display: none;">
+        <div class="sidebar-section">
+          <div class="section-title" data-i18n="eulerbrick_ctrl_title">Cuboid Edges & Dimension Controls</div>
+
+          <!-- 棱长 a 控制 -->
+          <div class="control-row">
+            <div class="control-label-group">
+              <span data-i18n="eulerbrick_edge_a">Edge a</span>
+              <span class="control-val" id="eulerbrick-val-a">44</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="range" id="eulerbrick-slider-a" min="1" max="1000" value="44" style="flex: 1;">
+              <input type="number" id="eulerbrick-input-a" min="1" max="1000000" value="44" class="eulerbrick-num-input">
+            </div>
+          </div>
+
+          <!-- 棱长 b 控制 -->
+          <div class="control-row" style="margin-top: 8px;">
+            <div class="control-label-group">
+              <span data-i18n="eulerbrick_edge_b">Edge b</span>
+              <span class="control-val" id="eulerbrick-val-b">117</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="range" id="eulerbrick-slider-b" min="1" max="1000" value="117" style="flex: 1;">
+              <input type="number" id="eulerbrick-input-b" min="1" max="1000000" value="117" class="eulerbrick-num-input">
+            </div>
+          </div>
+
+          <!-- 棱长 c 控制 -->
+          <div class="control-row" style="margin-top: 8px;">
+            <div class="control-label-group">
+              <span data-i18n="eulerbrick_edge_c">Edge c</span>
+              <span class="control-val" id="eulerbrick-val-c">240</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="range" id="eulerbrick-slider-c" min="1" max="1000" value="240" style="flex: 1;">
+              <input type="number" id="eulerbrick-input-c" min="1" max="1000000" value="240" class="eulerbrick-num-input">
+            </div>
+          </div>
+
+          <!-- 经典欧拉砖名人堂预设 -->
+          <div class="control-row" style="margin-top: 14px;">
+            <span class="control-label" data-i18n="eulerbrick_hall_title" style="font-size: 11px; color: #f59e0b;">Euler Brick Hall of Fame</span>
+            <div class="seed-pill-group" style="margin-top: 6px;">
+              <button class="seed-pill-btn active" data-brick="44,117,240" title="Halcke 1719 Minimal Brick (44, 117, 240)">Halcke (44,117,240)</button>
+              <button class="seed-pill-btn" data-brick="85,132,720" title="Second Smallest (85, 132, 720)">Second (85,132,720)</button>
+              <button class="seed-pill-btn" data-brick="160,231,792" title="Primitive Brick (160, 231, 792)">(160,231,792)</button>
+              <button class="seed-pill-btn" data-brick="240,252,275" title="Saunderson Brick (240, 252, 275)">Saunderson (240,252,275)</button>
+              <button class="seed-pill-btn" data-brick="429,880,2340" title="Primitive Brick (429, 880, 2340)">(429,880,2340)</button>
+            </div>
+          </div>
+
+          <!-- 局部极小残差探索器 -->
+          <div class="control-row" style="margin-top: 14px; background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px;">
+            <div style="font-size: 11px; font-weight: 600; color: #38bdf8;" data-i18n="eulerbrick_explorer_title">Local Minimal Residual Explorer</div>
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;" data-i18n="eulerbrick_explorer_desc">Probe neighborhood for minimal space diagonal residual Δ = |g - round(g)|</div>
+            <div class="range-input-row" style="margin-top: 6px;">
+              <label data-i18n="eulerbrick_radius_label">Radius ±R:</label>
+              <input type="number" id="eulerbrick-search-radius" value="50" min="10" max="200">
+            </div>
+            <button id="btn-eulerbrick-search-min" class="btn-settings-pill" style="width: 100%; margin-top: 8px; justify-content: center; background: rgba(2, 132, 199, 0.25); border-color: #0284c7; color: #38bdf8;" data-i18n="btn_eulerbrick_search">Search Minimal Δ Brick</button>
+            <div id="eulerbrick-search-result" style="font-size: 11px; color: #34d399; margin-top: 6px; display: none;"></div>
+          </div>
+        </div>
+
+        <!-- 7/7 整数状态与同余筛检测仪表盘 -->
+        <div class="sidebar-section">
+          <div class="section-title" data-i18n="eulerbrick_metrics_title">7-Tuple Diophantine Metrics</div>
+
+          <div class="stat-grid" style="grid-template-columns: 1fr 1fr; gap: 6px;">
+            <div class="stat-card" id="card-diag-ab">
+              <div class="stat-label">Face Diag d_ab (x-y)</div>
+              <div class="stat-number" id="val-diag-ab" style="font-size: 14px; color: #38bdf8;">125.000</div>
+              <div class="stat-desc" id="status-diag-ab" style="font-size: 10px; color: #34d399;">✓ Integer</div>
+            </div>
+            <div class="stat-card" id="card-diag-bc">
+              <div class="stat-label">Face Diag d_bc (y-z)</div>
+              <div class="stat-number" id="val-diag-bc" style="font-size: 14px; color: #38bdf8;">267.000</div>
+              <div class="stat-desc" id="status-diag-bc" style="font-size: 10px; color: #34d399;">✓ Integer</div>
+            </div>
+            <div class="stat-card" id="card-diag-ca">
+              <div class="stat-label">Face Diag d_ca (z-x)</div>
+              <div class="stat-number" id="val-diag-ca" style="font-size: 14px; color: #38bdf8;">244.000</div>
+              <div class="stat-desc" id="status-diag-ca" style="font-size: 10px; color: #34d399;">✓ Integer</div>
+            </div>
+            <div class="stat-card" id="card-diag-g">
+              <div class="stat-label">Space Diag g (x-y-z)</div>
+              <div class="stat-number" id="val-diag-g" style="font-size: 14px; color: #f59e0b;">270.601</div>
+              <div class="stat-desc" id="status-diag-g" style="font-size: 10px; color: #f43f5e;">✗ Non-integer</div>
+            </div>
+          </div>
+
+          <!-- 同余条件检验 (Modular Obstructions) -->
+          <div style="margin-top: 10px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; padding: 8px; border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div style="font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;" data-i18n="eulerbrick_mod_title">Modular Arithmetic Constraints</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div class="mod-pill-row">
+                <span class="mod-pill-tag" id="tag-mod-4-16">Mod 4 / 16</span>
+                <span class="mod-pill-desc" id="desc-mod-4-16" style="font-size: 10px; color: #94a3b8;">Two even, one div 16</span>
+              </div>
+              <div class="mod-pill-row">
+                <span class="mod-pill-tag" id="tag-mod-5">Mod 5</span>
+                <span class="mod-pill-desc" id="desc-mod-5" style="font-size: 10px; color: #94a3b8;">At least one div 5</span>
+              </div>
+              <div class="mod-pill-row">
+                <span class="mod-pill-tag" id="tag-mod-11">Mod 11</span>
+                <span class="mod-pill-desc" id="desc-mod-11" style="font-size: 10px; color: #94a3b8;">At least one div 11</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 数学背景卡片 -->
+          <div class="theory-card" style="margin-top: 10px;">
+            <div style="font-weight: 600; color: #f8fafc; margin-bottom: 4px;" data-i18n="eulerbrick_theory_title">Perfect Euler Brick & Elliptic Curves</div>
+            <div data-i18n="eulerbrick_theory_desc">An Euler Brick requires integer edges and face diagonals: a²+b²=d₁², b²+c²=d₂², c²+a²=d₃². If the space diagonal g=√(a²+b²+c²) is also an integer, it becomes a Perfect Cuboid. Spohn & Bremner proved this corresponds to rational points on specific families of elliptic curves y² = x(x-α)(x-β). No perfect cuboid has been discovered up to edges exceeding 10¹².</div>
+          </div>
+        </div>
+      </div>
     </aside>
   </main>
 
@@ -951,6 +1142,7 @@
   <script src="js/model_platform.js?v=20260913_7"></script>
   <script src="js/math_discovery.js?v=20260913_7"></script>
   <script src="js/collatz.js?v=20260919_1"></script>
+  <script src="js/eulerbrick.js?v=20260919_1"></script>
   <script src="js/app.js?v=20260919_1"></script>
 </body>
 </html>

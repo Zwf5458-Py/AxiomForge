@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const funsearchEngine = new MultiDimCapSetVisualizer('funsearch-canvas');
   funsearchEngine.updateUI();
   const collatzEngine = new CollatzVisualizer('collatz-canvas');
+  const eulerbrickEngine = new EulerBrickVisualizer('eulerbrick-canvas');
 
   window.updateActiveModelBadge = function() {
     const activeModelBadge = document.getElementById('active-model-badge');
@@ -39,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (collatzEngine && typeof collatzEngine.updateDashboardUI === 'function') {
       collatzEngine.updateDashboardUI();
     }
+    if (eulerbrickEngine && typeof eulerbrickEngine.updateUI === 'function') {
+      eulerbrickEngine.updateUI();
+    }
   });
 
   let activeTab = 'mandelbrot'; // 默认进入震撼的广义高阶分形视窗
@@ -49,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mandelbrotEngine.resize();
     funsearchEngine.resize();
     if (collatzEngine) collatzEngine.resize();
+    if (eulerbrickEngine) eulerbrickEngine.resize();
   }
   window.addEventListener('resize', handleResize);
   requestAnimationFrame(handleResize);
@@ -64,6 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
       funsearchEngine.render(timestamp);
     } else if (activeTab === 'collatz') {
       collatzEngine.update(timestamp);
+    } else if (activeTab === 'eulerbrick') {
+      eulerbrickEngine.update(timestamp);
     }
     requestAnimationFrame(mainLoop);
   }
@@ -74,23 +81,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabMandelBtn = document.getElementById('tab-mandelbrot');
   const tabFunsearchBtn = document.getElementById('tab-funsearch');
   const tabCollatzBtn = document.getElementById('tab-collatz');
+  const tabEulerbrickBtn = document.getElementById('tab-eulerbrick');
   const viewKoch = document.getElementById('view-koch');
   const viewMandel = document.getElementById('view-mandelbrot');
   const viewFunsearch = document.getElementById('view-funsearch');
   const viewCollatz = document.getElementById('view-collatz');
+  const viewEulerbrick = document.getElementById('view-eulerbrick');
   const sidebarKoch = document.getElementById('sidebar-koch');
   const sidebarMandel = document.getElementById('sidebar-mandelbrot');
   const sidebarFunsearch = document.getElementById('sidebar-funsearch');
   const sidebarCollatz = document.getElementById('sidebar-collatz');
+  const sidebarEulerbrick = document.getElementById('sidebar-eulerbrick');
 
   function switchTab(target) {
     activeTab = target;
-    [tabKochBtn, tabMandelBtn, tabFunsearchBtn, tabCollatzBtn].forEach(b => b && b.classList.remove('active'));
-    [viewKoch, viewMandel, viewFunsearch, viewCollatz].forEach(v => v && v.classList.remove('active'));
+    [tabKochBtn, tabMandelBtn, tabFunsearchBtn, tabCollatzBtn, tabEulerbrickBtn].forEach(b => b && b.classList.remove('active'));
+    [viewKoch, viewMandel, viewFunsearch, viewCollatz, viewEulerbrick].forEach(v => v && v.classList.remove('active'));
     if (sidebarKoch) sidebarKoch.style.display = 'none';
     if (sidebarMandel) sidebarMandel.style.display = 'none';
     if (sidebarFunsearch) sidebarFunsearch.style.display = 'none';
     if (sidebarCollatz) sidebarCollatz.style.display = 'none';
+    if (sidebarEulerbrick) sidebarEulerbrick.style.display = 'none';
 
     if (target === 'koch') {
       tabKochBtn.classList.add('active');
@@ -113,6 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (sidebarCollatz) sidebarCollatz.style.display = 'block';
       collatzEngine.resize();
       collatzEngine.updateZoomBadge();
+    } else if (target === 'eulerbrick') {
+      if (tabEulerbrickBtn) tabEulerbrickBtn.classList.add('active');
+      if (viewEulerbrick) viewEulerbrick.classList.add('active');
+      if (sidebarEulerbrick) sidebarEulerbrick.style.display = 'block';
+      eulerbrickEngine.resize();
+      eulerbrickEngine.updateZoomBadge();
+      eulerbrickEngine.updateUI();
     }
   }
 
@@ -123,6 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (tabCollatzBtn) {
     tabCollatzBtn.addEventListener('click', () => switchTab('collatz'));
+  }
+  if (tabEulerbrickBtn) {
+    tabEulerbrickBtn.addEventListener('click', () => switchTab('eulerbrick'));
   }
 
   // ==========================
@@ -1620,6 +1641,155 @@ ${JSON.stringify(points, null, 2)}
   if (btnCollatzResetView) {
     btnCollatzResetView.addEventListener('click', () => {
       collatzEngine.resetCurrentView();
+    });
+  }
+
+  // ==============================================
+  // 6. 完美欧拉砖 (Euler Brick) 控制事件绑定
+  // ==============================================
+  const sliderEulerA = document.getElementById('eulerbrick-slider-a');
+  const inputEulerA = document.getElementById('eulerbrick-input-a');
+  const valEulerA = document.getElementById('eulerbrick-val-a');
+
+  const sliderEulerB = document.getElementById('eulerbrick-slider-b');
+  const inputEulerB = document.getElementById('eulerbrick-input-b');
+  const valEulerB = document.getElementById('eulerbrick-val-b');
+
+  const sliderEulerC = document.getElementById('eulerbrick-slider-c');
+  const inputEulerC = document.getElementById('eulerbrick-input-c');
+  const valEulerC = document.getElementById('eulerbrick-val-c');
+
+  function syncEulerEdgeUI(edge, val) {
+    if (edge === 'a') {
+      if (sliderEulerA) sliderEulerA.value = Math.min(val, 1000);
+      if (inputEulerA) inputEulerA.value = val;
+      if (valEulerA) valEulerA.textContent = val;
+    } else if (edge === 'b') {
+      if (sliderEulerB) sliderEulerB.value = Math.min(val, 1000);
+      if (inputEulerB) inputEulerB.value = val;
+      if (valEulerB) valEulerB.textContent = val;
+    } else if (edge === 'c') {
+      if (sliderEulerC) sliderEulerC.value = Math.min(val, 1000);
+      if (inputEulerC) inputEulerC.value = val;
+      if (valEulerC) valEulerC.textContent = val;
+    }
+  }
+
+  function handleEdgeChange(edge, val) {
+    const v = Math.max(1, Math.round(Number(val) || 1));
+    syncEulerEdgeUI(edge, v);
+    if (edge === 'a') eulerbrickEngine.a = v;
+    if (edge === 'b') eulerbrickEngine.b = v;
+    if (edge === 'c') eulerbrickEngine.c = v;
+    eulerbrickEngine.updateUI();
+  }
+
+  if (sliderEulerA) sliderEulerA.addEventListener('input', (e) => handleEdgeChange('a', e.target.value));
+  if (inputEulerA) inputEulerA.addEventListener('change', (e) => handleEdgeChange('a', e.target.value));
+
+  if (sliderEulerB) sliderEulerB.addEventListener('input', (e) => handleEdgeChange('b', e.target.value));
+  if (inputEulerB) inputEulerB.addEventListener('change', (e) => handleEdgeChange('b', e.target.value));
+
+  if (sliderEulerC) sliderEulerC.addEventListener('input', (e) => handleEdgeChange('c', e.target.value));
+  if (inputEulerC) inputEulerC.addEventListener('change', (e) => handleEdgeChange('c', e.target.value));
+
+  // 名人堂经典欧拉砖预设
+  const eulerBrickPills = document.querySelectorAll('#sidebar-eulerbrick .seed-pill-btn[data-brick]');
+  eulerBrickPills.forEach(btn => {
+    btn.addEventListener('click', () => {
+      eulerBrickPills.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const raw = btn.getAttribute('data-brick');
+      if (!raw) return;
+      const parts = raw.split(',').map(s => parseInt(s.trim(), 10));
+      if (parts.length === 3 && parts.every(n => !isNaN(n) && n > 0)) {
+        syncEulerEdgeUI('a', parts[0]);
+        syncEulerEdgeUI('b', parts[1]);
+        syncEulerEdgeUI('c', parts[2]);
+        eulerbrickEngine.setEdges(parts[0], parts[1], parts[2]);
+      }
+    });
+  });
+
+  // 局部极小残差智能探索器
+  const btnEulerSearchMin = document.getElementById('btn-eulerbrick-search-min');
+  const inputEulerSearchRadius = document.getElementById('eulerbrick-search-radius');
+  const divEulerSearchResult = document.getElementById('eulerbrick-search-result');
+
+  if (btnEulerSearchMin) {
+    btnEulerSearchMin.addEventListener('click', () => {
+      const radius = Number(inputEulerSearchRadius ? inputEulerSearchRadius.value : 50) || 50;
+      const res = eulerbrickEngine.searchMinimalResidual(radius);
+      if (res && divEulerSearchResult) {
+        divEulerSearchResult.style.display = 'block';
+        divEulerSearchResult.innerHTML = `
+          <span>Best: (${res.a}, ${res.b}, ${res.c}) · Δ = ${res.residual.toFixed(5)}</span>
+          <button id="btn-apply-euler-search" class="btn-tool-link" style="margin-left: 8px; color: #38bdf8; text-decoration: underline; cursor: pointer; border: none; background: transparent;">Apply</button>
+        `;
+        const applyBtn = document.getElementById('btn-apply-euler-search');
+        if (applyBtn) {
+          applyBtn.addEventListener('click', () => {
+            syncEulerEdgeUI('a', res.a);
+            syncEulerEdgeUI('b', res.b);
+            syncEulerEdgeUI('c', res.c);
+            eulerbrickEngine.setEdges(res.a, res.b, res.c);
+          });
+        }
+      }
+    });
+  }
+
+  // 底部操作栏按钮绑定
+  const btnEulerRotateBottom = document.getElementById('btn-eulerbrick-rotate-bottom');
+  const labelEulerRotate = document.getElementById('label-eulerbrick-rotate');
+  const btnEulerResetBottom = document.getElementById('btn-eulerbrick-reset-bottom');
+  const btnEulerToggleDiag = document.getElementById('btn-eulerbrick-toggle-diag');
+  const labelEulerDiagToggle = document.getElementById('label-eulerbrick-diag-toggle');
+
+  if (btnEulerRotateBottom) {
+    btnEulerRotateBottom.addEventListener('click', () => {
+      eulerbrickEngine.isRotating = !eulerbrickEngine.isRotating;
+      if (labelEulerRotate) {
+        labelEulerRotate.textContent = eulerbrickEngine.isRotating ? 'Pause Auto-Rotate' : 'Auto Rotate 3D';
+        labelEulerRotate.setAttribute('data-i18n', eulerbrickEngine.isRotating ? 'btn_eulerbrick_autorotate' : 'btn_eulerbrick_playrotate');
+      }
+    });
+  }
+
+  if (btnEulerResetBottom) {
+    btnEulerResetBottom.addEventListener('click', () => {
+      eulerbrickEngine.resetView();
+    });
+  }
+
+  if (btnEulerToggleDiag) {
+    btnEulerToggleDiag.addEventListener('click', () => {
+      eulerbrickEngine.showDiagonals = !eulerbrickEngine.showDiagonals;
+      if (labelEulerDiagToggle) {
+        labelEulerDiagToggle.textContent = eulerbrickEngine.showDiagonals ? 'Diagonals: ON' : 'Diagonals: OFF';
+      }
+      eulerbrickEngine.render();
+    });
+  }
+
+  // 视窗右下角缩放工具条
+  const btnEulerZoomIn = document.getElementById('btn-eulerbrick-zoom-in');
+  const btnEulerZoomOut = document.getElementById('btn-eulerbrick-zoom-out');
+  const btnEulerResetView = document.getElementById('btn-eulerbrick-reset-view');
+
+  if (btnEulerZoomIn) {
+    btnEulerZoomIn.addEventListener('click', () => {
+      eulerbrickEngine.zoomIn();
+    });
+  }
+  if (btnEulerZoomOut) {
+    btnEulerZoomOut.addEventListener('click', () => {
+      eulerbrickEngine.zoomOut();
+    });
+  }
+  if (btnEulerResetView) {
+    btnEulerResetView.addEventListener('click', () => {
+      eulerbrickEngine.resetView();
     });
   }
 });

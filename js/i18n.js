@@ -20,6 +20,7 @@
       tab_mandelbrot: 'Mandelbrot · Complex Dynamics',
       tab_funsearch: 'Cap Set · Program Evolution',
       tab_collatz: 'Collatz · Hailstone Dynamics',
+      tab_eulerbrick: 'Euler Brick · Perfect Cuboid',
 
       // 顶部导航按钮
       btn_model_settings: 'AI Model Platform',
@@ -292,7 +293,29 @@
       collatz_dash_ratio: 'Max Expansion (Peak/n₀)',
       collatz_dash_odd_even: 'Odd / Even Steps',
       collatz_theory_title: 'Mathematical Background & Tao (2019)',
-      collatz_theory_desc: 'Transformation: n/2 if even, 3n+1 if odd. Erdős noted "mathematics is not yet ready for such problems". In 2019, Fields medalist Terence Tao proved almost all orbits attain bounded values via logarithmic PDE methods. The inverse tree exhibits complete graph connectivity without cycles.'
+      collatz_theory_desc: 'Transformation: n/2 if even, 3n+1 if odd. Erdős noted "mathematics is not yet ready for such problems". In 2019, Fields medalist Terence Tao proved almost all orbits attain bounded values via logarithmic PDE methods. The inverse tree exhibits complete graph connectivity without cycles.',
+
+      // 模块 5：完美欧拉砖 (Euler Brick)
+      eulerbrick_stat_type: 'Cuboid Type: ',
+      eulerbrick_stat_space_diag: 'Space Diag g: ',
+      eulerbrick_stat_residual: 'Residual Δ: ',
+      btn_eulerbrick_autorotate: 'Pause Auto-Rotate',
+      btn_eulerbrick_playrotate: 'Auto Rotate 3D',
+      btn_eulerbrick_reset_view: 'Reset Camera',
+      btn_eulerbrick_toggle_diag: 'Diagonals: ON',
+      eulerbrick_ctrl_title: 'Cuboid Edges & Dimension Controls',
+      eulerbrick_edge_a: 'Edge a',
+      eulerbrick_edge_b: 'Edge b',
+      eulerbrick_edge_c: 'Edge c',
+      eulerbrick_hall_title: 'Euler Brick Hall of Fame',
+      eulerbrick_explorer_title: 'Local Minimal Residual Explorer',
+      eulerbrick_explorer_desc: 'Probe neighborhood for minimal space diagonal residual Δ = |g - round(g)|',
+      eulerbrick_radius_label: 'Radius ±R:',
+      btn_eulerbrick_search: 'Search Minimal Δ Brick',
+      eulerbrick_metrics_title: '7-Tuple Diophantine Metrics',
+      eulerbrick_mod_title: 'Modular Arithmetic Constraints',
+      eulerbrick_theory_title: 'Perfect Euler Brick & Elliptic Curves',
+      eulerbrick_theory_desc: 'An Euler Brick requires integer edges and face diagonals: a²+b²=d₁², b²+c²=d₂², c²+a²=d₃². If the space diagonal g=√(a²+b²+c²) is also an integer, it becomes a Perfect Cuboid. Spohn & Bremner proved this corresponds to rational points on specific families of elliptic curves y² = x(x-α)(x-β). No perfect cuboid has been discovered up to edges exceeding 10¹².'
     },
 
     zh: {
@@ -305,6 +328,7 @@
       tab_mandelbrot: '曼德勃罗 · 复杂动力学',
       tab_funsearch: '极值帽集 · 启发式演化',
       tab_collatz: '考拉兹猜想 · 冰雹动力学与拓扑树',
+      tab_eulerbrick: '完美欧拉砖 · 空间几何极限',
 
       // 顶部导航按钮
       btn_model_settings: 'AI 模型平台配置',
@@ -577,7 +601,29 @@
       collatz_dash_ratio: '极大膨胀倍率 (峰值 / n₀)',
       collatz_dash_odd_even: '奇数步 / 偶数步占比',
       collatz_theory_title: '数学原理与陶哲轩 2019 前沿',
-      collatz_theory_desc: '变换规则：偶数除以 2，奇数乘 3 加 1。保罗·埃尔德什曾言“现代数学尚未成熟到足以解决此类问题”。2019年菲尔兹奖得主陶哲轩运用对数偏微分方程证明了几乎所有轨道均能跌至任意小的值。从 1 逆向生长的拓扑树展示了正整数被完全汇入主干的无环连通图。'
+      collatz_theory_desc: '变换规则：偶数除以 2，奇数乘 3 加 1。保罗·埃尔德什曾言“现代数学尚未成熟到足以解决此类问题”。2019年菲尔兹奖得主陶哲轩运用对数偏微分方程证明了几乎所有轨道均能跌至任意小的值。从 1 逆向生长的拓扑树展示了正整数被完全汇入主干的无环连通图。',
+
+      // 模块 5：完美欧拉砖 (Euler Brick)
+      eulerbrick_stat_type: '长方体形态: ',
+      eulerbrick_stat_space_diag: '体对角线 g: ',
+      eulerbrick_stat_residual: '残差量 Δ: ',
+      btn_eulerbrick_autorotate: '暂停 3D 旋转',
+      btn_eulerbrick_playrotate: '自动 3D 旋转',
+      btn_eulerbrick_reset_view: '重置视角',
+      btn_eulerbrick_toggle_diag: '对角线显示: 开',
+      eulerbrick_ctrl_title: '长方体棱长与几何微调',
+      eulerbrick_edge_a: '棱长 a',
+      eulerbrick_edge_b: '棱长 b',
+      eulerbrick_edge_c: '棱长 c',
+      eulerbrick_hall_title: '欧拉砖名人堂经典族',
+      eulerbrick_explorer_title: '局部极小残差智能探索器',
+      eulerbrick_explorer_desc: '在给定参数邻域内探测使体对角线最接近整数的极值长方体 Δ = |g - round(g)|',
+      eulerbrick_radius_label: '搜索半径 ±R:',
+      btn_eulerbrick_search: '搜索极小残差砖',
+      eulerbrick_metrics_title: '七元组丢番图数论指标',
+      eulerbrick_mod_title: '同余筛选与整除障碍',
+      eulerbrick_theory_title: '完美欧拉砖与椭圆曲线参数化',
+      eulerbrick_theory_desc: '欧拉砖要求长方体的三条棱与三个面对角线均为正整数。若体对角线 g 亦为正整数，则称为“完美欧拉砖（完美长方体）”。Spohn 与 Bremner 证明其等价于特定椭圆曲线族 y² = x(x-α)(x-β) 上的有理点分布。超级计算机已搜索至棱长超过 10¹²，至今未发现任何完美解。'
     }
   };
 

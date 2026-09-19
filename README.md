@@ -36,7 +36,7 @@
 
 ---
 
-## 🏛️ Three Core Technical Pillars
+## 🏛️ Five Core Technical Pillars
 
 ### Pillar 1: AI Extremal Mathematical Discovery & Finite Field Cap Sets
 
@@ -98,6 +98,21 @@ Described by Paul Erdős as a puzzle for which "mathematics is not yet ready", t
 - **Inverse Collatz Fractal Tree**: Roots from unity ($1$) and branches upward along even trunks ($2n$) and modular odd forks ($(n-1)/3$ when $n \equiv 4 \pmod 6$), revealing an infinite, cycle-free spanning network connecting all natural numbers;
 - **Extremal Stopping Time Explorer**: Instantly search bounded integer ranges $[N_1, N_2]$ to discover local champion seeds with maximal flight duration and expansion ratios;
 - **Robust Symmetrical Controls**: Symmetrical button grid (`1fr 1fr`) locked to strict 32px height, preventing text overflow across English and Chinese localizations.
+
+---
+
+### Pillar 5: Perfect Euler Brick (Spatial Geometry Extremes, Modular Sieve, & Elliptic Curves)
+
+The Perfect Euler Brick (Perfect Cuboid) problem represents the pinnacle of 3D Euclidean geometry and Diophantine arithmetic: finding a rectangular cuboid whose edges $a, b, c$, face diagonals $d_{ab}, d_{bc}, d_{ca}$, and space diagonal $g$ are all strictly positive integers. Open for nearly three centuries since Euler, its existence remains neither proven nor disproven.
+
+- **3D Affine Perspective Engine**: Pure native Canvas 2D implementation of 3D perspective projection and affine transformation matrices, supporting free-angle mouse drag rotation, zoom control, and dynamic face/space diagonal cross-section highlighting;
+- **Diophantine Modular Sieve Telemetry**:
+  - **Modulo 4 & 16 Obstructions**: Any primitive brick must have exactly two even edges and one odd edge, with at least one even edge divisible by 16;
+  - **Modulo 5 & 11 Obstructions**: Enforces $5 \mid abc$ and $11 \mid abc$;
+  - Live inspection card dynamically highlighting constraints to filter $>99.8\%$ candidate triplets;
+- **Euler Brick Hall of Fame**: One-click switching between historical landmarks including Halcke's 1719 minimal brick $(44, 117, 240)$, the second-smallest $(85, 132, 720)$, and Saunderson's parametric brick $(240, 252, 275)$;
+- **Local Space Diagonal Residual Explorer**: Real-time evaluation of the space diagonal integer residual $\Delta = |g - \operatorname{round}(g)|$, with automated neighborhood heuristic search for minimal residual configurations;
+- **Algebraic Geometry Research Monograph**: Thoroughly analyzed in our dedicated academic report: [**Euler Brick Theoretical Monograph**](docs/EULER_BRICK_THEORY.md) ([Chinese Version](docs/EULER_BRICK_THEORY_CN.md)).
 
 ---
 
