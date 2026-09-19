@@ -131,6 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
       eulerbrickEngine.resize();
       eulerbrickEngine.updateZoomBadge();
       eulerbrickEngine.updateUI();
+      eulerbrickEngine.render();
+      requestAnimationFrame(() => {
+        eulerbrickEngine.resize();
+        eulerbrickEngine.render();
+      });
     }
   }
 

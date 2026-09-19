@@ -35,6 +35,10 @@ class EulerBrickVisualizer {
     this.showBodyDiagonal = true;
     this.showWireframe = true;
 
+    // 画布像素尺寸保底
+    this.width = 800;
+    this.height = 600;
+
     // 几何指标计算缓存
     this.metrics = {};
     this.modularCheck = {};
@@ -44,6 +48,23 @@ class EulerBrickVisualizer {
     this.resize();
   }
 
+  get isRotating() {
+    return this.autoRotate;
+  }
+
+  set isRotating(val) {
+    this.autoRotate = !!val;
+  }
+
+  get showDiagonals() {
+    return this.showFaceDiagonals && this.showBodyDiagonal;
+  }
+
+  set showDiagonals(val) {
+    this.showFaceDiagonals = !!val;
+    this.showBodyDiagonal = !!val;
+  }
+
   /**
    * 判定整数平方根
    */
@@ -51,6 +72,17 @@ class EulerBrickVisualizer {
     if (n < 0) return { isSquare: false, root: 0 };
     const r = Math.round(Math.sqrt(n));
     return { isSquare: (r * r === n), root: r };
+  }
+
+  /**
+   * 设定棱长并同步更新
+   */
+  setEdges(a, b, c) {
+    this.a = Math.max(1, Math.round(Number(a) || 1));
+    this.b = Math.max(1, Math.round(Number(b) || 1));
+    this.c = Math.max(1, Math.round(Number(c) || 1));
+    this.computeMetrics();
+    this.render();
   }
 
   /**
@@ -64,32 +96,31 @@ class EulerBrickVisualizer {
     this.b = b;
     this.c = c;
 
-    // 面对角线
+    // 面对角线 d_ab, d_bc, d_ca
     const sq_ab = a * a + b * b;
     const res_ab = this.isSquare(sq_ab);
     const d_ab = res_ab.isSquare ? res_ab.root : Math.sqrt(sq_ab);
-
-    const sq_ac = a * a + c * c;
-    const res_ac = this.isSquare(sq_ac);
-    const d_ac = res_ac.isSquare ? res_ac.root : Math.sqrt(sq_ac);
 
     const sq_bc = b * b + c * c;
     const res_bc = this.isSquare(sq_bc);
     const d_bc = res_bc.isSquare ? res_bc.root : Math.sqrt(sq_bc);
 
-    // 体对角线
+    const sq_ca = c * c + a * a;
+    const res_ca = this.isSquare(sq_ca);
+    const d_ca = res_ca.isSquare ? res_ca.root : Math.sqrt(sq_ca);
+
+    // 体对角线 g
     const sq_g = a * a + b * b + c * c;
     const res_g = this.isSquare(sq_g);
     const g = res_g.isSquare ? res_g.root : Math.sqrt(sq_g);
     const round_g = Math.round(g);
     const residual_g = Math.abs(g - round_g);
 
-    const isEuler = res_ab.isSquare && res_ac.isSquare && res_bc.isSquare;
+    const isEuler = res_ab.isSquare && res_bc.isSquare && res_ca.isSquare;
     const isPerfect = isEuler && res_g.isSquare;
+    const intCount = 3 + (res_ab.isSquare ? 1 : 0) + (res_bc.isSquare ? 1 : 0) + (res_ca.isSquare ? 1 : 0) + (res_g.isSquare ? 1 : 0);
 
-    const intCount = 3 + (res_ab.isSquare ? 1 : 0) + (res_ac.isSquare ? 1 : 0) + (res_bc.isSquare ? 1 : 0) + (res_g.isSquare ? 1 : 0);
-
-    // 同余必要条件判定
+    // 同余必要条件判定 (Modular Constraints)
     const edges = [a, b, c];
     const evenCount = edges.filter(x => x % 2 === 0).length;
     const div4Count = edges.filter(x => x % 4 === 0).length;
@@ -102,8 +133,8 @@ class EulerBrickVisualizer {
     this.metrics = {
       a, b, c,
       d_ab, is_ab_int: res_ab.isSquare,
-      d_ac, is_ac_int: res_ac.isSquare,
       d_bc, is_bc_int: res_bc.isSquare,
+      d_ca, is_ca_int: res_ca.isSquare,
       g, is_g_int: res_g.isSquare,
       residual_g,
       isEuler,
@@ -123,49 +154,24 @@ class EulerBrickVisualizer {
   }
 
   /**
-   * 加载历史经典欧拉砖预设
-   */
-  loadPreset(name) {
-    if (name === 'halcke') {
-      // 1719 最小欧拉砖
-      this.a = 44;
-      this.b = 117;
-      this.c = 240;
-    } else if (name === 'second') {
-      // 经典次小欧拉砖
-      this.a = 85;
-      this.b = 132;
-      this.c = 720;
-    } else if (name === 'saunderson') {
-      // Saunderson 参数构造砖
-      this.a = 240;
-      this.b = 252;
-      this.c = 275;
-    } else if (name === 'near_miss') {
-      // 极小残差伪完美长方体
-      this.a = 271;
-      this.b = 264;
-      this.c = 480;
-    }
-    this.computeMetrics();
-    this.resetView();
-  }
-
-  /**
    * 启发式搜索邻近极小残差长方体
    */
-  searchLocalMinimalResidual(range = 25) {
+  searchMinimalResidual(radius = 50) {
+    const range = Math.max(5, Math.min(200, Math.round(radius)));
     const baseA = this.a;
     const baseB = this.b;
     const baseC = this.c;
     let bestResidual = 1.0;
     let bestTrip = [baseA, baseB, baseC];
+    let bestG = Math.sqrt(baseA * baseA + baseB * baseB + baseC * baseC);
 
-    for (let da = -range; da <= range; da++) {
+    // 智能步进抽样搜索，兼顾速度与精度
+    const step = range > 60 ? 2 : 1;
+    for (let da = -range; da <= range; da += step) {
       const na = Math.max(1, baseA + da);
-      for (let db = -range; db <= range; db++) {
+      for (let db = -range; db <= range; db += step) {
         const nb = Math.max(1, baseB + db);
-        for (let dc = -range; dc <= range; dc++) {
+        for (let dc = -range; dc <= range; dc += step) {
           const nc = Math.max(1, baseC + dc);
           const sq = na * na + nb * nb + nc * nc;
           const g = Math.sqrt(sq);
@@ -173,16 +179,13 @@ class EulerBrickVisualizer {
           if (res < bestResidual) {
             bestResidual = res;
             bestTrip = [na, nb, nc];
+            bestG = g;
           }
         }
       }
     }
 
-    this.a = bestTrip[0];
-    this.b = bestTrip[1];
-    this.c = bestTrip[2];
-    this.computeMetrics();
-    return { a: this.a, b: this.b, c: this.c, residual: bestResidual };
+    return { a: bestTrip[0], b: bestTrip[1], c: bestTrip[2], residual: bestResidual, g: bestG };
   }
 
   setupInteractions() {
@@ -275,12 +278,17 @@ class EulerBrickVisualizer {
   resize() {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
+    const w = rect.width || this.canvas.parentElement?.clientWidth || window.innerWidth - 380;
+    const h = rect.height || this.canvas.parentElement?.clientHeight || window.innerHeight - 56;
+    if (w <= 0 || h <= 0) return;
+
     const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
+    this.canvas.width = w * dpr;
+    this.canvas.height = h * dpr;
+    this.ctx.resetTransform?.();
     this.ctx.scale(dpr, dpr);
-    this.width = rect.width;
-    this.height = rect.height;
+    this.width = w;
+    this.height = h;
   }
 
   update(timestamp) {
@@ -300,13 +308,13 @@ class EulerBrickVisualizer {
    * 3D 仿射变换与透视投影
    */
   project(x, y, z, maxDimension) {
-    // 归一化缩放 (确保长方体在视口中大小自适应)
+    // 归一化缩放 (确保长方体在视口中自适应居中)
     const scale = (Math.min(this.width, this.height) * 0.42 * this.zoom) / maxDimension;
     let px = x * scale;
     let py = y * scale;
     let pz = z * scale;
 
-    // 绕 Y 轴旋转 (方位角偏航)
+    // 绕 Y 轴旋转 (偏航角)
     const cosY = Math.cos(this.rotY);
     const sinY = Math.sin(this.rotY);
     const x1 = px * cosY + pz * sinY;
@@ -331,8 +339,8 @@ class EulerBrickVisualizer {
   render() {
     const ctx = this.ctx;
     if (!ctx) return;
-    const w = this.width;
-    const h = this.height;
+    const w = this.width || 800;
+    const h = this.height || 600;
 
     ctx.clearRect(0, 0, w, h);
 
@@ -341,7 +349,7 @@ class EulerBrickVisualizer {
     const c = this.c;
     const maxDim = Math.max(a, b, c, 1);
 
-    // 8 个顶点几何坐标 (以长方体几何几何中心为原点)
+    // 8 个顶点几何坐标 (以长方体几何中心为原点)
     const hx = a / 2, hy = b / 2, hz = c / 2;
     const rawVertices = [
       [-hx, -hy, -hz], // 0: 左下后
@@ -356,8 +364,23 @@ class EulerBrickVisualizer {
 
     const v = rawVertices.map(pt => this.project(pt[0], pt[1], pt[2], maxDim));
 
-    // 绘制 3D 空间微弱辅助网格底盘
+    // 绘制 3D 空间辅助网格底盘
     this.renderFloorGrid(ctx, maxDim);
+
+    // 绘制面对角线剖面切面高亮 (半透明薄纱)
+    if (this.showFaceDiagonals) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
+      // 0-2-6-4 对角切面
+      ctx.beginPath();
+      ctx.moveTo(v[0].x, v[0].y);
+      ctx.lineTo(v[2].x, v[2].y);
+      ctx.lineTo(v[6].x, v[6].y);
+      ctx.lineTo(v[4].x, v[4].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
 
     // 绘制长方体 12 条棱边线框 (Wireframe)
     const edges = [
@@ -367,24 +390,26 @@ class EulerBrickVisualizer {
     ];
 
     if (this.showWireframe) {
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-      ctx.lineWidth = 1.6;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+      ctx.lineWidth = 1.8;
       edges.forEach(([i, j]) => {
         ctx.beginPath();
         ctx.moveTo(v[i].x, v[i].y);
         ctx.lineTo(v[j].x, v[j].y);
         ctx.stroke();
       });
+      ctx.restore();
     }
 
     // 绘制面对角线 (Face Diagonals)
     if (this.showFaceDiagonals) {
-      // 1. 底面/顶面对角线 d_ab (点 0-2, 或点 4-6)
-      this.drawDiagonal(ctx, v[0], v[2], this.metrics.is_ab_int, `d_ab=${this.metrics.d_ab.toFixed(2)}`);
-      // 2. 侧面对角线 d_bc (点 1-6, 或点 0-7)
-      this.drawDiagonal(ctx, v[1], v[6], this.metrics.is_bc_int, `d_bc=${this.metrics.d_bc.toFixed(2)}`);
-      // 3. 正面对角线 d_ac (点 4-2, 或点 5-3)
-      this.drawDiagonal(ctx, v[4], v[2], this.metrics.is_ac_int, `d_ac=${this.metrics.d_ac.toFixed(2)}`);
+      // 1. 底面/顶面对角线 d_ab (点 0-2)
+      this.drawDiagonal(ctx, v[0], v[2], this.metrics.is_ab_int);
+      // 2. 侧面对角线 d_bc (点 1-6)
+      this.drawDiagonal(ctx, v[1], v[6], this.metrics.is_bc_int);
+      // 3. 正面对角线 d_ca (点 4-2)
+      this.drawDiagonal(ctx, v[4], v[2], this.metrics.is_ca_int);
     }
 
     // 绘制体对角线 (Space Body Diagonal g: 0 号点到 6 号点)
@@ -394,29 +419,33 @@ class EulerBrickVisualizer {
       ctx.beginPath();
       ctx.moveTo(v[0].x, v[0].y);
       ctx.lineTo(v[6].x, v[6].y);
-      ctx.lineWidth = 2.4;
+      ctx.lineWidth = 2.5;
       ctx.strokeStyle = gColor;
       ctx.shadowColor = gColor;
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 10;
+      if (!this.metrics.is_g_int) ctx.setLineDash([6, 4]);
       ctx.stroke();
       ctx.restore();
 
       // 体对角线中点浮动数值标签
       const mx = (v[0].x + v[6].x) / 2;
       const my = (v[0].y + v[6].y) / 2;
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      const gLabel = `Space Diagonal g = ${this.metrics.g.toFixed(3)} ${this.metrics.is_g_int ? '✓ INT' : `(Δ=${this.metrics.residual_g.toFixed(3)})`}`;
-      ctx.font = 'bold 11px Inter, monospace';
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      const gLabel = `Space Diag g = ${this.metrics.g.toFixed(3)} ${this.metrics.is_g_int ? '✓ INT' : `(Δ=${this.metrics.residual_g.toFixed(3)})`}`;
+      ctx.font = 'bold 11px JetBrains Mono, monospace';
       const tw = ctx.measureText(gLabel).width;
-      ctx.fillRect(mx - tw / 2 - 6, my - 18, tw + 12, 22);
+      ctx.fillRect(mx - tw / 2 - 8, my - 14, tw + 16, 22);
       ctx.strokeStyle = gColor;
-      ctx.strokeRect(mx - tw / 2 - 6, my - 18, tw + 12, 22);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(mx - tw / 2 - 8, my - 14, tw + 16, 22);
       ctx.fillStyle = gColor;
-      ctx.fillText(gLabel, mx - tw / 2, my - 3);
+      ctx.fillText(gLabel, mx - tw / 2, my + 1);
+      ctx.restore();
     }
 
     // 绘制 8 个顶点圆珠
-    v.forEach((pt, idx) => {
+    v.forEach((pt) => {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
@@ -427,20 +456,22 @@ class EulerBrickVisualizer {
     });
 
     // 标注 3 条主棱长尺寸文字
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '10px Inter, monospace';
+    ctx.save();
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '11px JetBrains Mono, monospace';
     // a 轴 (0-1)
     const midA = { x: (v[0].x + v[1].x) / 2, y: (v[0].y + v[1].y) / 2 };
-    ctx.fillText(`a = ${a}`, midA.x - 12, midA.y + 14);
+    ctx.fillText(`a = ${a}`, midA.x - 14, midA.y + 14);
     // b 轴 (1-2)
     const midB = { x: (v[1].x + v[2].x) / 2, y: (v[1].y + v[2].y) / 2 };
     ctx.fillText(`b = ${b}`, midB.x + 8, midB.y);
     // c 轴 (1-5)
     const midC = { x: (v[1].x + v[5].x) / 2, y: (v[1].y + v[5].y) / 2 };
-    ctx.fillText(`c = ${c}`, midC.x + 8, midC.y + 10);
+    ctx.fillText(`c = ${c}`, midC.x + 8, midC.y + 12);
+    ctx.restore();
   }
 
-  drawDiagonal(ctx, p1, p2, isInt, label) {
+  drawDiagonal(ctx, p1, p2, isInt) {
     const color = isInt ? 'rgba(245, 158, 11, 0.95)' : 'rgba(148, 163, 184, 0.4)';
     ctx.save();
     ctx.beginPath();
@@ -458,10 +489,11 @@ class EulerBrickVisualizer {
   }
 
   renderFloorGrid(ctx, maxDim) {
-    const floorY = -this.b / 2 - maxDim * 0.2;
-    const gridSpan = maxDim * 1.5;
+    const floorY = -this.b / 2 - maxDim * 0.25;
+    const gridSpan = maxDim * 1.6;
     const lines = 6;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.lineWidth = 1;
 
     for (let i = -lines; i <= lines; i++) {
@@ -480,69 +512,114 @@ class EulerBrickVisualizer {
       ctx.lineTo(q2.x, q2.y);
       ctx.stroke();
     }
+    ctx.restore();
   }
 
   updateUI() {
-    // 侧边栏数值与滑块同步
-    const inputA = document.getElementById('input-euler-a');
-    const inputB = document.getElementById('input-euler-b');
-    const inputC = document.getElementById('input-euler-c');
+    // 1. 侧边栏数值与滑块同步
+    const valA = document.getElementById('eulerbrick-val-a');
+    const valB = document.getElementById('eulerbrick-val-b');
+    const valC = document.getElementById('eulerbrick-val-c');
+    if (valA) valA.textContent = this.a;
+    if (valB) valB.textContent = this.b;
+    if (valC) valC.textContent = this.c;
+
+    const inputA = document.getElementById('eulerbrick-input-a');
+    const inputB = document.getElementById('eulerbrick-input-b');
+    const inputC = document.getElementById('eulerbrick-input-c');
     if (inputA && document.activeElement !== inputA) inputA.value = this.a;
     if (inputB && document.activeElement !== inputB) inputB.value = this.b;
     if (inputC && document.activeElement !== inputC) inputC.value = this.c;
 
-    // 7/7 整数状态更新
-    const elScore = document.getElementById('euler-int-score');
-    if (elScore) elScore.textContent = `${this.metrics.intCount} / 7`;
+    const sliderA = document.getElementById('eulerbrick-slider-a');
+    const sliderB = document.getElementById('eulerbrick-slider-b');
+    const sliderC = document.getElementById('eulerbrick-slider-c');
+    if (sliderA) sliderA.value = Math.min(this.a, 1000);
+    if (sliderB) sliderB.value = Math.min(this.b, 1000);
+    if (sliderC) sliderC.value = Math.min(this.c, 1000);
 
-    const setStatus = (id, isInt, val, label) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const valStr = isInt ? Math.round(val) : val.toFixed(2);
-      el.textContent = `${label}: ${valStr} (${isInt ? '✓ INT' : '✗ Real'})`;
-      el.className = isInt ? 'status-pill-pass' : 'status-pill-fail';
+    // 2. 7/7 整数状态卡片更新
+    const setDiagMetric = (valId, statusId, val, isInt, residual = null) => {
+      const elVal = document.getElementById(valId);
+      const elStatus = document.getElementById(statusId);
+      if (elVal) {
+        elVal.textContent = val.toFixed(3);
+        elVal.style.color = isInt ? '#38bdf8' : '#f59e0b';
+      }
+      if (elStatus) {
+        if (isInt) {
+          elStatus.textContent = '✓ Integer';
+          elStatus.style.color = '#34d399';
+        } else {
+          elStatus.textContent = residual !== null ? `✗ Non-int (Δ=${residual.toFixed(4)})` : '✗ Non-integer';
+          elStatus.style.color = '#f43f5e';
+        }
+      }
     };
 
-    setStatus('euler-status-ab', this.metrics.is_ab_int, this.metrics.d_ab, 'd_ab');
-    setStatus('euler-status-ac', this.metrics.is_ac_int, this.metrics.d_ac, 'd_ac');
-    setStatus('euler-status-bc', this.metrics.is_bc_int, this.metrics.d_bc, 'd_bc');
-    setStatus('euler-status-g', this.metrics.is_g_int, this.metrics.g, 'g (Body)');
+    setDiagMetric('val-diag-ab', 'status-diag-ab', this.metrics.d_ab, this.metrics.is_ab_int);
+    setDiagMetric('val-diag-bc', 'status-diag-bc', this.metrics.d_bc, this.metrics.is_bc_int);
+    setDiagMetric('val-diag-ca', 'status-diag-ca', this.metrics.d_ca, this.metrics.is_ca_int);
+    setDiagMetric('val-diag-g', 'status-diag-g', this.metrics.g, this.metrics.is_g_int, this.metrics.residual_g);
 
-    // 残差展示
-    const elRes = document.getElementById('euler-residual-val');
-    if (elRes) {
-      elRes.textContent = this.metrics.residual_g.toFixed(4);
-      elRes.style.color = this.metrics.residual_g < 0.05 ? '#10b981' : (this.metrics.residual_g < 0.2 ? '#f59e0b' : '#f43f5e');
+    // 3. 同余筛选约束检验
+    const tag416 = document.getElementById('tag-mod-4-16');
+    const desc416 = document.getElementById('desc-mod-4-16');
+    const pass416 = this.modularCheck.passMod4 && this.modularCheck.passMod16;
+    if (tag416) {
+      tag416.className = `mod-pill-tag ${pass416 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
+    }
+    if (desc416) {
+      desc416.textContent = pass416 ? 'Two even, one div 16 (✓ Satisfied)' : 'Two even, one div 16 (✗ Violated)';
+      desc416.style.color = pass416 ? '#34d399' : '#fb7185';
     }
 
-    // 同余检验结果
-    const elMod4 = document.getElementById('euler-mod-4');
-    const elMod16 = document.getElementById('euler-mod-16');
-    const elMod5 = document.getElementById('euler-mod-5');
-    const elMod11 = document.getElementById('euler-mod-11');
-    if (elMod4) elMod4.className = this.modularCheck.passMod4 ? 'mod-tag-pass' : 'mod-tag-fail';
-    if (elMod16) elMod16.className = this.modularCheck.passMod16 ? 'mod-tag-pass' : 'mod-tag-fail';
-    if (elMod5) elMod5.className = this.modularCheck.passMod5 ? 'mod-tag-pass' : 'mod-tag-fail';
-    if (elMod11) elMod11.className = this.modularCheck.passMod11 ? 'mod-tag-pass' : 'mod-tag-fail';
+    const tag5 = document.getElementById('tag-mod-5');
+    const desc5 = document.getElementById('desc-mod-5');
+    if (tag5) {
+      tag5.className = `mod-pill-tag ${this.modularCheck.passMod5 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
+    }
+    if (desc5) {
+      desc5.textContent = this.modularCheck.passMod5 ? 'At least one div 5 (✓ Satisfied)' : 'At least one div 5 (✗ Violated)';
+      desc5.style.color = this.modularCheck.passMod5 ? '#34d399' : '#fb7185';
+    }
 
-    // HUD 药丸更新
-    const hudTriad = document.getElementById('hud-euler-triad');
-    const hudStatus = document.getElementById('hud-euler-status');
-    const hudRes = document.getElementById('hud-euler-res');
-    if (hudTriad) hudTriad.textContent = `(${this.a}, ${this.b}, ${this.c})`;
-    if (hudStatus) {
+    const tag11 = document.getElementById('tag-mod-11');
+    const desc11 = document.getElementById('desc-mod-11');
+    if (tag11) {
+      tag11.className = `mod-pill-tag ${this.modularCheck.passMod11 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
+    }
+    if (desc11) {
+      desc11.textContent = this.modularCheck.passMod11 ? 'At least one div 11 (✓ Satisfied)' : 'At least one div 11 (✗ Violated)';
+      desc11.style.color = this.modularCheck.passMod11 ? '#34d399' : '#fb7185';
+    }
+
+    // 4. 视窗 HUD 浮动药丸更新
+    const hudPulse = document.getElementById('hud-eulerbrick-status-pulse');
+    const hudType = document.getElementById('hud-eulerbrick-type');
+    const hudEdges = document.getElementById('hud-eulerbrick-edges');
+    const hudDiag = document.getElementById('hud-eulerbrick-diag');
+    const hudResidual = document.getElementById('hud-eulerbrick-residual');
+
+    if (hudEdges) hudEdges.textContent = `${this.a}, ${this.b}, ${this.c}`;
+    if (hudDiag) hudDiag.textContent = this.metrics.g.toFixed(3);
+    if (hudResidual) hudResidual.textContent = this.metrics.residual_g.toFixed(4);
+
+    if (hudType) {
       if (this.metrics.isPerfect) {
-        hudStatus.textContent = 'PERFECT CUBOID!';
-        hudStatus.style.color = '#10b981';
+        hudType.textContent = 'PERFECT CUBOID (7/7)!';
+        hudType.style.color = '#10b981';
+        if (hudPulse) hudPulse.className = 'pulse-indicator status-pill-pass';
       } else if (this.metrics.isEuler) {
-        hudStatus.textContent = 'Euler Brick (6/7)';
-        hudStatus.style.color = '#f59e0b';
+        hudType.textContent = 'Euler Brick (6/7)';
+        hudType.style.color = '#38bdf8';
+        if (hudPulse) hudPulse.className = 'pulse-indicator status-pill-pass';
       } else {
-        hudStatus.textContent = `Ordinary (${this.metrics.intCount}/7)`;
-        hudStatus.style.color = '#94a3b8';
+        hudType.textContent = `Ordinary Cuboid (${this.metrics.intCount}/7)`;
+        hudType.style.color = '#94a3b8';
+        if (hudPulse) hudPulse.className = 'pulse-indicator status-pill-fail';
       }
     }
-    if (hudRes) hudRes.textContent = `Δg: ${this.metrics.residual_g.toFixed(3)}`;
   }
 }
 
