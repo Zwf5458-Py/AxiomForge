@@ -47,6 +47,7 @@
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
         <span data-i18n="tab_collatz">Collatz · Hailstone Dynamics</span>
+      </button>
       <button id="tab-eulerbrick" class="tab-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
@@ -917,8 +918,8 @@
             <!-- AI 模型深度数论推演视窗面板 -->
             <div id="eulerbrick-ai-result-panel" class="euler-ai-card" style="display: none; margin-top: 10px; background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(129, 140, 248, 0.45); border-radius: 8px; padding: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span id="eulerbrick-ai-model-tag" class="euler-ai-badge">DeepSeek-R1 (Reasoning)</span>
-                <span id="eulerbrick-ai-status-text" style="font-size: 10px; color: #38bdf8;">Thinking...</span>
+                <span id="eulerbrick-ai-model-tag" class="euler-ai-badge">DeepSeek: deepseek-chat</span>
+                <span id="eulerbrick-ai-status-text" style="font-size: 10px; color: #38bdf8;">Ready</span>
               </div>
               
               <!-- 思维链折叠区 -->
@@ -1174,15 +1175,15 @@
   </div>
 
   <!-- 脚本加载 (i18n 率先加载完成字典注入，防缓存版本号确保即时生效) -->
-  <script src="js/i18n.js?v=20260919_3"></script>
-  <script src="js/koch.js?v=20260913_7"></script>
-  <script src="js/orbit.js?v=20260919_6"></script>
-  <script src="js/mandelbrot.js?v=20260919_6"></script>
-  <script src="js/cap_set_data.js?v=20260913_7"></script>
-  <script src="js/model_platform.js?v=20260913_7"></script>
-  <script src="js/math_discovery.js?v=20260913_7"></script>
-  <script src="js/collatz.js?v=20260919_1"></script>
-  <script src="js/eulerbrick.js?v=20260919_7"></script>
-  <script src="js/app.js?v=20260919_7"></script>
+  <script src="js/i18n.js?v=20260919_8"></script>
+  <script src="js/koch.js?v=20260919_8"></script>
+  <script src="js/orbit.js?v=20260919_8"></script>
+  <script src="js/mandelbrot.js?v=20260919_8"></script>
+  <script src="js/cap_set_data.js?v=20260919_8"></script>
+  <script src="js/model_platform.js?v=20260919_8"></script>
+  <script src="js/math_discovery.js?v=20260919_8"></script>
+  <script src="js/collatz.js?v=20260919_8"></script>
+  <script src="js/eulerbrick.js?v=20260919_8"></script>
+  <script src="js/app.js?v=20260919_8"></script>
 </body>
 </html>

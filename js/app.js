@@ -14,10 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.updateActiveModelBadge = function() {
     const activeModelBadge = document.getElementById('active-model-badge');
-    if (activeModelBadge && window.modelPlatformManager) {
+    const tagEulerAIModel = document.getElementById('eulerbrick-ai-model-tag');
+    if (window.modelPlatformManager) {
       const curP = window.modelPlatformManager.getProviderInfo(window.modelPlatformManager.activeProvider);
       const pName = curP ? curP.name : window.modelPlatformManager.activeProvider;
-      activeModelBadge.textContent = `${pName}: ${window.modelPlatformManager.activeModel}`;
+      const mName = window.modelPlatformManager.activeModel || (curP ? curP.selectedModel : 'deepseek-chat');
+      const text = `${pName}: ${mName}`;
+      if (activeModelBadge) activeModelBadge.textContent = text;
+      if (tagEulerAIModel) tagEulerAIModel.textContent = text;
     }
   };
   window.updateActiveModelBadge();
@@ -42,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (eulerbrickEngine && typeof eulerbrickEngine.updateUI === 'function') {
       eulerbrickEngine.updateUI();
+    }
+    if (window.updateActiveModelBadge) {
+      window.updateActiveModelBadge();
     }
   });
 
@@ -131,6 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
       eulerbrickEngine.resize();
       eulerbrickEngine.updateZoomBadge();
       eulerbrickEngine.updateUI();
+      if (window.updateActiveModelBadge) {
+        window.updateActiveModelBadge();
+      }
       eulerbrickEngine.render();
       requestAnimationFrame(() => {
         eulerbrickEngine.resize();
@@ -1791,70 +1801,168 @@ ${JSON.stringify(points, null, 2)}
       const manager = window.modelPlatformManager;
       const providerId = manager ? manager.activeProvider : 'mock';
       const modelId = manager ? manager.activeModel : 'Deterministic Math Reasoner';
-      const creds = manager ? manager.getCredentials(providerId) : {};
-      const pInfo = manager ? manager.getProviderInfo(providerId) : null;
+      const creds = (manager && typeof manager.getCredentials === 'function')
+        ? manager.getCredentials(providerId)
+        : {};
+      const pInfo = (manager && typeof manager.getProviderInfo === 'function')
+        ? manager.getProviderInfo(providerId)
+        : null;
       const pName = pInfo ? pInfo.name : providerId;
+      const apiKey = creds.apiKey || (pInfo ? pInfo.apiKey : '') || '';
+      let baseUrl = creds.baseUrl || (pInfo ? pInfo.baseUrl : '') || '';
 
       if (tagEulerAIModel) tagEulerAIModel.textContent = `${pName}: ${modelId}`;
       if (statusEulerAI) {
-        statusEulerAI.textContent = isEn ? 'AI Thinking...' : '正在推演数论方程...';
+        statusEulerAI.textContent = isEn ? 'AI Thinking & Deducting...' : '正在调用大模型数论推演...';
         statusEulerAI.style.color = '#38bdf8';
       }
       if (cotEulerAI) {
         cotEulerAI.textContent = isEn
-          ? 'Initializing Diophantine reasoning pipeline...\nAnalyzing current seed cuboid and modular constraints (mod 4, 16, 5, 11)...'
-          : '正在初始化丢番图代数推演流水线...\n分析当前种子长方体与同余必要条件 (mod 4, 16, 5, 11)...';
+          ? `[Model: ${pName} - ${modelId}]\nConnecting to neural-symbolic engine...\nAnalyzing seed cuboid (${eulerbrickEngine.a}, ${eulerbrickEngine.b}, ${eulerbrickEngine.c}) & modular constraints (mod 4, 16, 5, 11)...`
+          : `[模型: ${pName} - ${modelId}]\n正在连接神经符号推演端点...\n分析当前种子长方体 (${eulerbrickEngine.a}, ${eulerbrickEngine.b}, ${eulerbrickEngine.c}) 与同余约束 (mod 4, 16, 5, 11)...`;
       }
-
-      const prompt = eulerbrickEngine.generateAIPrompt();
 
       const finishAI = (a, b, c, cotText) => {
         lastEulerAISolution = { a, b, c };
         if (cotEulerAI) cotEulerAI.textContent = cotText;
         updateAISolutionUI(a, b, c);
-        btnEulerAIReason.disabled = false;
-        btnEulerAIReason.style.opacity = '1';
       };
 
-      if (providerId === 'mock' || (!creds.apiKey && providerId !== 'ollama')) {
-        // 无 API Key 或使用内置仿真器时，秒级触发学术级确定性数论推演
-        setTimeout(() => {
+      try {
+        const prompt = eulerbrickEngine.generateAIPrompt();
+
+        // 1. 无 API Key 或使用内置仿真器时，触发学术级确定性离线推演
+        if (providerId === 'mock' || (!apiKey && providerId !== 'ollama')) {
+          await new Promise(r => setTimeout(r, 600));
           const sim = eulerbrickEngine.simulateDeterministicReasoning();
-          finishAI(sim.a, sim.b, sim.c, sim.cot);
-        }, 500);
-      } else {
-        // 调用真实模型服务
-        try {
-          const resp = await fetch('/api/llm/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              provider_id: providerId,
-              model_id: modelId,
-              prompt: prompt,
-              api_key: creds.apiKey || '',
-              api_base: creds.baseUrl || (pInfo ? pInfo.baseUrl : ''),
-              temperature: 0.6
-            })
-          });
-          const data = await resp.json();
-          if (data.success && data.text) {
-            const parsed = eulerbrickEngine.parseEulerResponse(data.text);
-            const thoughtText = data.reasoning ? `[Deep Chain-of-Thought]\n${data.reasoning}\n\n[Deduction Output]\n${data.text}` : data.text;
-            if (parsed) {
-              finishAI(parsed.a, parsed.b, parsed.c, thoughtText);
-            } else {
-              const sim = eulerbrickEngine.simulateDeterministicReasoning();
-              finishAI(sim.a, sim.b, sim.c, thoughtText);
+          const notice = (providerId !== 'mock' && !apiKey)
+            ? (isEn
+                ? `[Notice: Platform [${pName}] has no API Key configured. Switched to Academic Deterministic Simulation]\n(Click [AI Model Platform] in the top-right corner to configure authentic credentials.)\n\n`
+                : `[提示: 平台【${pName}】未配置 API Key，已自动转入学术级确定性离线仿真推演]\n（请点击右上角【AI 模型平台配置】填入真实凭据以启用在线大模型。）\n\n`)
+            : '';
+          finishAI(sim.a, sim.b, sim.c, notice + sim.cot);
+        } else {
+          // 2. 真实模型推演：双轨通道
+          let success = false;
+          let fetchError = null;
+
+          // 轨道 A: 浏览器前端直接 Fetch 直连端点 (利用 OpenAI 兼容协议，速度极快且不依赖本地 Python 后端)
+          if (baseUrl && baseUrl.startsWith('http')) {
+            let chatUrl = baseUrl.replace(/\/+$/, '');
+            if (!chatUrl.endsWith('/chat/completions')) {
+              chatUrl = `${chatUrl}/chat/completions`;
             }
-          } else {
-            throw new Error(data.error || 'Server error');
+
+            try {
+              const directHeaders = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              };
+              if (apiKey) directHeaders['Authorization'] = `Bearer ${apiKey}`;
+
+              const directResp = await fetch(chatUrl, {
+                method: 'POST',
+                headers: directHeaders,
+                body: JSON.stringify({
+                  model: modelId,
+                  messages: [
+                    {
+                      role: 'system',
+                      content: 'You are an elite research mathematician in Diophantine geometry and number theory, investigating the Perfect Euler Brick problem.'
+                    },
+                    {
+                      role: 'user',
+                      content: prompt
+                    }
+                  ],
+                  temperature: 0.6
+                })
+              });
+
+              if (directResp.ok) {
+                const data = await directResp.json();
+                const msg = data.choices?.[0]?.message || {};
+                const content = msg.content || '';
+                let reasoning = msg.reasoning_content || msg.reasoning || '';
+
+                if (!reasoning && content.includes('<think>')) {
+                  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/i);
+                  if (thinkMatch) reasoning = thinkMatch[1].trim();
+                }
+
+                const cleanContent = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                const thoughtText = reasoning
+                  ? `[Deep Chain-of-Thought / 深度思维链]\n${reasoning}\n\n[Deduction Output / 推演结论]\n${cleanContent}`
+                  : cleanContent;
+
+                const parsed = eulerbrickEngine.parseEulerResponse(cleanContent) || eulerbrickEngine.parseEulerResponse(content);
+                if (parsed) {
+                  finishAI(parsed.a, parsed.b, parsed.c, thoughtText);
+                } else {
+                  const sim = eulerbrickEngine.simulateDeterministicReasoning();
+                  finishAI(sim.a, sim.b, sim.c, `[Model Output Received]\n${thoughtText}`);
+                }
+                success = true;
+              } else {
+                const errJson = await directResp.json().catch(() => null);
+                const errMsg = errJson?.error?.message || errJson?.error || directResp.statusText;
+                fetchError = new Error(`HTTP ${directResp.status}: ${typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg}`);
+              }
+            } catch (err) {
+              console.warn('Direct browser fetch encountered error/CORS, falling back to local proxy:', err);
+              fetchError = err;
+            }
           }
-        } catch (err) {
-          console.warn('Fallback to local deterministic reasoning:', err);
-          const sim = eulerbrickEngine.simulateDeterministicReasoning();
-          finishAI(sim.a, sim.b, sim.c, `[Network Fallback Mode: ${err.message}]\n\n${sim.cot}`);
+
+          // 轨道 B: 降级走本地后端 Python 代理 (/api/llm/generate)
+          if (!success) {
+            try {
+              const resp = await fetch('/api/llm/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  provider_id: providerId,
+                  model_id: modelId,
+                  prompt: prompt,
+                  api_key: apiKey,
+                  api_base: baseUrl,
+                  temperature: 0.6
+                })
+              });
+              const data = await resp.json();
+              if (data.success && data.text) {
+                const thoughtText = data.reasoning
+                  ? `[Backend Proxy - Deep Chain-of-Thought]\n${data.reasoning}\n\n[Deduction Output]\n${data.text}`
+                  : data.text;
+                const parsed = eulerbrickEngine.parseEulerResponse(data.text);
+                if (parsed) {
+                  finishAI(parsed.a, parsed.b, parsed.c, thoughtText);
+                } else {
+                  const sim = eulerbrickEngine.simulateDeterministicReasoning();
+                  finishAI(sim.a, sim.b, sim.c, thoughtText);
+                }
+                success = true;
+              } else {
+                throw new Error(data.error || 'Server proxy error');
+              }
+            } catch (backendErr) {
+              console.warn('Backend proxy also failed, falling back to deterministic simulation:', backendErr);
+              const cause = fetchError ? fetchError.message : backendErr.message;
+              const sim = eulerbrickEngine.simulateDeterministicReasoning();
+              const notice = isEn
+                ? `[Network Exception: ${cause}]\nSwitched to Academic Deterministic Simulation:\n\n`
+                : `[网络异常: ${cause}]\n已无缝切换至学术级确定性离线仿真：\n\n`;
+              finishAI(sim.a, sim.b, sim.c, notice + sim.cot);
+            }
+          }
         }
+      } catch (fatalErr) {
+        console.error('Fatal error in AI deduction:', fatalErr);
+        const sim = eulerbrickEngine.simulateDeterministicReasoning();
+        finishAI(sim.a, sim.b, sim.c, `[Execution Warning: ${fatalErr.message}]\n\n${sim.cot}`);
+      } finally {
+        btnEulerAIReason.disabled = false;
+        btnEulerAIReason.style.opacity = '1';
       }
     });
   }

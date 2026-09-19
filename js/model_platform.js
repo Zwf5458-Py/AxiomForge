@@ -211,6 +211,18 @@ class ModelPlatformManager {
   }
 
   /**
+   * 快速获取指定平台（或当前激活平台）的 API Key 与 Base URL 凭据
+   */
+  getCredentials(providerId) {
+    const info = this.getProviderInfo(providerId || this.activeProvider);
+    return {
+      apiKey: info ? (info.apiKey || '') : '',
+      baseUrl: info ? (info.baseUrl || '') : '',
+      selectedModel: info ? (info.selectedModel || this.activeModel) : this.activeModel
+    };
+  }
+
+  /**
    * 立即持久化保存指定平台的可用模型列表 (无论内置还是自定义，均立刻存入 LocalStorage)
    */
   updateProviderModels(providerId, models) {
