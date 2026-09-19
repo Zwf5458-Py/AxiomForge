@@ -101,15 +101,22 @@ Described by Paul Erdős as a puzzle for which "mathematics is not yet ready", t
 
 ---
 
-### Pillar 5: Perfect Euler Brick (Spatial Geometry Extremes, Modular Sieve, & Elliptic Curves)
+### Pillar 5: Perfect Euler Brick (Spatial Geometry Extremes, Modular Sieve, AI Reasoning & Elliptic Curves)
 
 The Perfect Euler Brick (Perfect Cuboid) problem represents the pinnacle of 3D Euclidean geometry and Diophantine arithmetic: finding a rectangular cuboid whose edges $a, b, c$, face diagonals $d_{ab}, d_{bc}, d_{ca}$, and space diagonal $g$ are all strictly positive integers. Open for nearly three centuries since Euler, its existence remains neither proven nor disproven.
 
 - **3D Affine Perspective Engine**: Pure native Canvas 2D implementation of 3D perspective projection and affine transformation matrices, supporting free-angle mouse drag rotation, zoom control, and dynamic face/space diagonal cross-section highlighting;
+- **Interactive Bi-directional Highlighting**:
+  - Clicking any Diophantine metric card ($d_{ab}, d_{bc}, d_{ca}, g$) immediately renders the corresponding segment in thick luminous glow (`shadowBlur: 24`) alongside translucent spatial plane projection sheets (front, side, bottom, and body diagonal cross-sections);
+  - Clicking edge pills ($a, b, c$) highlights the 4 parallel edges along that axis; clicking the canvas background smoothly restores the panoramic view;
 - **Diophantine Modular Sieve Telemetry**:
   - **Modulo 4 & 16 Obstructions**: Any primitive brick must have exactly two even edges and one odd edge, with at least one even edge divisible by 16;
   - **Modulo 5 & 11 Obstructions**: Enforces $5 \mid abc$ and $11 \mid abc$;
   - Live inspection card dynamically highlighting constraints to filter $>99.8\%$ candidate triplets;
+- **AI-Powered Dual-Track Diophantine Reasoning System**:
+  - **End-to-End Real LLM Deduction**: Supports real-time reasoning with DeepSeek-R1, OpenAI o1/o3, SiliconFlow, and local Ollama;
+  - **Dual-Track High-Availability Pipeline**: Direct browser fetch to OpenAI-compatible endpoints with zero proxy overhead, seamless fallback to local backend `/api/llm/generate` on CORS anomalies, and deterministic offline simulation fallback on network disconnection—guaranteed by `try ... finally` state machine unlocking;
+  - **Native Chain-of-Thought Extraction**: Flawlessly streams and renders `[Deep Chain-of-Thought]` reasoning, automatically extracts structured candidate solutions `SOLUTION: [a, b, c]`, and applies them directly to the 3D canvas with one click;
 - **Euler Brick Hall of Fame**: One-click switching between historical landmarks including Halcke's 1719 minimal brick $(44, 117, 240)$, the second-smallest $(85, 132, 720)$, and Saunderson's parametric brick $(240, 252, 275)$;
 - **Local Space Diagonal Residual Explorer**: Real-time evaluation of the space diagonal integer residual $\Delta = |g - \operatorname{round}(g)|$, with automated neighborhood heuristic search for minimal residual configurations;
 - **Algebraic Geometry Research Monograph**: Thoroughly analyzed in our dedicated academic report: [**Euler Brick Theoretical Monograph**](docs/EULER_BRICK_THEORY.md) ([Chinese Version](docs/EULER_BRICK_THEORY_CN.md)).

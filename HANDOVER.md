@@ -58,7 +58,14 @@
   - **侧边栏对称网格控制**：对称网格（`1fr 1fr`）硬编码锁定 32px 统一规格与圆角，杜绝中英文语言切换下的任何文本溢出。
 - **支柱五：空间几何极限与完美欧拉砖问题 (Perfect Euler Brick & Diophantine Geometry)**：
   - **3D 仿射透视推演引擎**：纯原生 Canvas 2D 矩阵投影与自由旋转视角，面对角线与体对角线实时剖面；
+  - **3D 几何线条与数值卡片双向联动高亮**：
+    - 点击面对角线（$d_{ab}, d_{bc}, d_{ca}$）或体对角线（$g$）指标卡片，3D 视窗中即刻高亮发光对应线段并点亮半透明空间投影切面（前侧面、右侧面、底面与体对角截面），其余线条智能淡化；
+    - 点击棱长药丸（$a, b, c$）高亮 4 条平行棱，轻点空白处或再次点击平滑复原全景；
   - **同余筛选与整除障碍分析**：模 4/16、模 5、模 11 整除性检验卡，快速过滤非欧拉砖（过滤率 $>99.8\%$）；
+  - **AI 神经符号模型双轨数论推演系统**：
+    - 端到端连通真实大模型（DeepSeek-R1、OpenAI o1/o3、SiliconFlow、Ollama 等）；
+    - 采用“前端原生 Fetch 直连端点 $\to$ 本地 Python 代理 `/api/llm/generate` $\to$ 确定性学术离线仿真”三级自适应高可用通道与 `try ... finally` 状态机解锁保护，彻底杜绝按钮死锁；
+    - 原生捕获 `[Deep Chain-of-Thought]` 深度思维链，自动结构化解析候选三元组 `SOLUTION: [a, b, c]` 并支持一键应用至 3D 视窗与全量指标卡；
   - **经典砖名人堂预设**：Halcke 1719 最小砖 $(44, 117, 240)$、次小砖 $(85, 132, 720)$、Saunderson 参数砖 $(240, 252, 275)$ 等一键载入；
   - **局部极小残差智能探索器**：实时计算 $\Delta = |g - \lfloor g \rceil|$ 并搜寻邻近最优极值长方体；
   - **代数几何与椭圆曲线学术专著**：新增沉淀 [`docs/EULER_BRICK_THEORY_CN.md`](docs/EULER_BRICK_THEORY_CN.md) 与 [`docs/EULER_BRICK_THEORY.md`](docs/EULER_BRICK_THEORY.md)。
@@ -81,7 +88,7 @@
 
 ### 5. 质量工程与测试全绿
 - 配置文件：[`pyproject.toml`](file:///Users/oraclez/code/数学模型/pyproject.toml) 固化 `pythonpath = ["."]`；
-- 单元测试：`pytest` 覆盖核心功能（AI 适配器、Cap Set 共线校验、演化引擎、6D/7D 高维快速求解器与先验、考拉兹动力学），**25 项测试 100% 全部通过 (0.04s)**；
+- 单元测试：`pytest` 覆盖核心功能（AI 适配器、Cap Set 共线校验、演化引擎、6D/7D 高维快速求解器与先验、考拉兹动力学、欧拉砖数论算法与同余筛），**33 项测试 100% 全部通过 (0.05s)**；
 - GitHub Actions：`.github/workflows/tests.yml` 自动化 CI 持续集成保持绿灯。
 
 ---
@@ -149,6 +156,12 @@ AxiomForge 已正式在国际著名非营利资助平台 **Manifund** 完成全�
 3. **成果固化**：
    - [✓] 6D（81点）与 7D（166点）极值构造向量及跑分对比已持久化导出至 [`high_dim_results_dim_6.json`](file:///Users/oraclez/code/数学模型/high_dim_results_dim_6.json) 与 [`high_dim_results_dim_7.json`](file:///Users/oraclez/code/数学模型/high_dim_results_dim_7.json)；
    - [✓] 撰写完成中英文双语高维独立实验技术报告：国际英文版 [`EXPERIMENT_HIGH_DIM.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM.md) 与中文版 [`EXPERIMENT_HIGH_DIM_CN.md`](file:///Users/oraclez/code/数学模型/EXPERIMENT_HIGH_DIM_CN.md)。
+4. **完美欧拉砖空间几何与 AI 神经符号推演支柱全量交付**：
+   - [✓] **3D 交互视窗与双向几何高亮**：纯原生 Canvas 2D 矩阵投影，点击面对角线/体对角线数值卡片即刻高亮对应线条与半透明空间投影截面；
+   - [✓] **丢番图同余筛选约束卡**：模 4/16、模 5、模 11 刚性整除性校验与名人堂经典砖（Halcke 最小砖、Saunderson 参数砖）一键载入；
+   - [✓] **AI 神经符号模型双轨推演系统**：原生支持浏览器直连 + 本地 Python 后端代理 + 确定性离线仿真三级高可用通道，实时提取并折叠呈现 `[Deep Chain-of-Thought]` 深度思维链，自动解析候选解 `SOLUTION: [a, b, c]` 并一键应用于 3D 视窗；
+   - [✓] **单元测试全面扩容**：新增 8 项欧拉砖数论与同余算法单测，全量测试达到 33 项（0.05s 全绿通过）；
+   - [✓] **学术专著沉淀**：完成中英文深度理论报告 [`docs/EULER_BRICK_THEORY_CN.md`](docs/EULER_BRICK_THEORY_CN.md) 与 [`docs/EULER_BRICK_THEORY.md`](docs/EULER_BRICK_THEORY.md)。
 
 ---
 *本交接文档已在本地代码库根目录与系统存档中持久化保存，任何新会话或接替者均可通过阅读本文档在 1 分钟内无缝接管项目全部上下文。*
