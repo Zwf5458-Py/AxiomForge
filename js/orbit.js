@@ -29,7 +29,7 @@ class MandelbrotOrbitTracer {
   /**
    * 迭代计算复数轨迹 (支持任意实数幂次 power)
    */
-  computeOrbit(cRe, cIm, maxSteps = 40, power = 5.08) {
+  computeOrbit(cRe, cIm, maxSteps = 40, power = 2.0) {
     this.currentC = { re: cRe, im: cIm };
     this.orbitPoints = [];
     this.escaped = false;

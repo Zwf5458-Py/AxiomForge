@@ -15,14 +15,14 @@ class MandelbrotViewer {
     this.gl = null;
     this.program = null;
     
-    // 视口与坐标系统 (默认 100% 居中完整呈现)
-    this.center = { re: 0.0, im: 0.0 };
+    // 视口与坐标系统 (默认 100% 完整居中呈现经典曼德勃罗集全貌 · 图片 2 同款)
+    this.center = { re: -0.65, im: 0.0 };
     this.zoom = 1.0;
     this.maxIterations = 200;
-    this.colorPalette = 5; // 默认为 5: 分形蓝金光晕 (截图同款)
+    this.colorPalette = 6; // 默认为 6: 梦幻紫金螺旋 (图片 2 琥珀金与翡翠青同款)
     
     // 高阶多重分形参数: z_{n+1} = z^d + c
-    this.power = 5.08; // 默认直接呈现用户截图同款的 5.08 幂次四瓣开花！
+    this.power = 2.0; // 默认经典曼德勃罗集合 z² + c (完整结构)
     this.isMorphingPower = false;
     this.morphDir = 1;
     this.morphSpeed = 0.5;
