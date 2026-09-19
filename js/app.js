@@ -1683,20 +1683,26 @@ ${JSON.stringify(points, null, 2)}
   function handleEdgeChange(edge, val) {
     const v = Math.max(1, Math.round(Number(val) || 1));
     syncEulerEdgeUI(edge, v);
-    if (edge === 'a') eulerbrickEngine.a = v;
-    if (edge === 'b') eulerbrickEngine.b = v;
-    if (edge === 'c') eulerbrickEngine.c = v;
-    eulerbrickEngine.updateUI();
+    eulerbrickEngine.setEdge(edge, v);
   }
 
   if (sliderEulerA) sliderEulerA.addEventListener('input', (e) => handleEdgeChange('a', e.target.value));
-  if (inputEulerA) inputEulerA.addEventListener('change', (e) => handleEdgeChange('a', e.target.value));
+  if (inputEulerA) {
+    inputEulerA.addEventListener('input', (e) => handleEdgeChange('a', e.target.value));
+    inputEulerA.addEventListener('change', (e) => handleEdgeChange('a', e.target.value));
+  }
 
   if (sliderEulerB) sliderEulerB.addEventListener('input', (e) => handleEdgeChange('b', e.target.value));
-  if (inputEulerB) inputEulerB.addEventListener('change', (e) => handleEdgeChange('b', e.target.value));
+  if (inputEulerB) {
+    inputEulerB.addEventListener('input', (e) => handleEdgeChange('b', e.target.value));
+    inputEulerB.addEventListener('change', (e) => handleEdgeChange('b', e.target.value));
+  }
 
   if (sliderEulerC) sliderEulerC.addEventListener('input', (e) => handleEdgeChange('c', e.target.value));
-  if (inputEulerC) inputEulerC.addEventListener('change', (e) => handleEdgeChange('c', e.target.value));
+  if (inputEulerC) {
+    inputEulerC.addEventListener('input', (e) => handleEdgeChange('c', e.target.value));
+    inputEulerC.addEventListener('change', (e) => handleEdgeChange('c', e.target.value));
+  }
 
   // 名人堂经典欧拉砖预设
   const eulerBrickPills = document.querySelectorAll('#sidebar-eulerbrick .seed-pill-btn[data-brick]');

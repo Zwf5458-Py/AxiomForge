@@ -86,6 +86,18 @@ class EulerBrickVisualizer {
   }
 
   /**
+   * 单独设定某一条棱长并即时触发完整数论指标重新推演与渲染
+   */
+  setEdge(edge, val) {
+    const v = Math.max(1, Math.round(Number(val) || 1));
+    if (edge === 'a') this.a = v;
+    if (edge === 'b') this.b = v;
+    if (edge === 'c') this.c = v;
+    this.computeMetrics();
+    this.render();
+  }
+
+  /**
    * 计算当前长方体的 7 大几何长度指标、整数性与同余状态
    */
   computeMetrics() {
