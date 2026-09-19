@@ -37,6 +37,12 @@ class CollatzVisualizer {
     this.treeZoom = 1.0;
     this.treePanX = 0;
     this.treePanY = 0;
+
+    // 轨迹图视口变换状态 (支持折线图的鼠标拖拽平移与滚轮平滑缩放)
+    this.trajZoom = 1.0;
+    this.trajPanX = 0;
+    this.trajPanY = 0;
+
     this.isDragging = false;
     this.dragStartX = 0;
     this.dragStartY = 0;
@@ -245,28 +251,33 @@ class CollatzVisualizer {
   setupInteractions() {
     if (!this.canvas) return;
 
-    // 鼠标按下：启动平移拖拽
+    // 鼠标按下：启动平移拖拽 (轨迹与拓扑树双模式通用)
     this.canvas.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return; // 仅限鼠标左键
       e.preventDefault();
       this.isDragging = true;
       this.dragStartX = e.clientX;
       this.dragStartY = e.clientY;
-      if (this.mode === 'tree') {
-        this.canvas.style.cursor = 'grabbing';
-      }
+      this.canvas.style.cursor = 'grabbing';
     });
 
     // 鼠标移动：计算拖拽增量并检测悬停节点
     window.addEventListener('mousemove', (e) => {
-      if (this.isDragging && this.mode === 'tree') {
+      if (this.isDragging) {
         const dx = e.clientX - this.dragStartX;
         const dy = e.clientY - this.dragStartY;
-        this.treePanX += dx;
-        this.treePanY += dy;
         this.dragStartX = e.clientX;
         this.dragStartY = e.clientY;
-        this.render(); // 拖拽平移立即重绘，零延迟
+
+        if (this.mode === 'tree') {
+          this.treePanX += dx;
+          this.treePanY += dy;
+          this.render(); // 拓扑树平移立即重绘
+        } else if (this.mode === 'trajectory') {
+          this.trajPanX += dx;
+          this.trajPanY += dy;
+          this.render(); // 折线图平移立即重绘
+        }
       }
 
       if (this.mode === 'tree') {
@@ -278,34 +289,33 @@ class CollatzVisualizer {
     window.addEventListener('mouseup', () => {
       if (this.isDragging) {
         this.isDragging = false;
-        if (this.mode === 'tree') {
-          this.canvas.style.cursor = 'grab';
-        }
+        this.canvas.style.cursor = 'grab';
       }
     });
 
     // 鼠标离开窗口
     window.addEventListener('mouseleave', () => {
       this.isDragging = false;
-      if (this.mode === 'tree') {
-        this.canvas.style.cursor = 'grab';
-      }
+      this.canvas.style.cursor = 'grab';
     });
 
-    // 鼠标滚轮/触控板缩放 (阻尼指数算法，彻底解决 Safari 缩放过冲与卡顿)
+    // 鼠标滚轮/触控板缩放 (阻尼指数算法，双模式平滑缩放，防过冲)
     this.canvas.addEventListener('wheel', (e) => {
-      if (this.mode === 'tree') {
-        e.preventDefault();
-        const delta = Math.max(-50, Math.min(50, e.deltaY));
-        const factor = Math.exp(-delta * 0.003);
-        this.zoomBy(factor);
-      }
+      e.preventDefault();
+      const delta = Math.max(-50, Math.min(50, e.deltaY));
+      const factor = Math.exp(-delta * 0.003);
+      this.zoomBy(factor);
     }, { passive: false });
   }
 
   zoomBy(factor) {
-    this.treeZoom *= factor;
-    this.treeZoom = Math.max(0.15, Math.min(8.0, this.treeZoom));
+    if (this.mode === 'trajectory') {
+      this.trajZoom *= factor;
+      this.trajZoom = Math.max(0.3, Math.min(10.0, this.trajZoom));
+    } else {
+      this.treeZoom *= factor;
+      this.treeZoom = Math.max(0.15, Math.min(8.0, this.treeZoom));
+    }
     this.updateZoomBadge();
     this.render();
   }
@@ -318,18 +328,29 @@ class CollatzVisualizer {
     this.zoomBy(0.8);
   }
 
-  resetTreeCenter() {
-    this.treeZoom = 1.0;
-    this.treePanX = 0;
-    this.treePanY = 40;
+  resetCurrentView() {
+    if (this.mode === 'trajectory') {
+      this.trajZoom = 1.0;
+      this.trajPanX = 0;
+      this.trajPanY = 0;
+    } else {
+      this.treeZoom = 1.0;
+      this.treePanX = 0;
+      this.treePanY = 40;
+    }
     this.updateZoomBadge();
     this.render();
+  }
+
+  resetTreeCenter() {
+    this.resetCurrentView();
   }
 
   updateZoomBadge() {
     const badge = document.getElementById('collatz-zoom-val');
     if (badge) {
-      badge.textContent = `${Math.round(this.treeZoom * 100)}%`;
+      const zoomVal = (this.mode === 'trajectory') ? this.trajZoom : this.treeZoom;
+      badge.textContent = `${Math.round(zoomVal * 100)}%`;
     }
   }
 
@@ -400,15 +421,17 @@ class CollatzVisualizer {
 
     if (chartW <= 0 || chartH <= 0 || this.sequence.length === 0) return;
 
+    const chartCenterX = padding.left + chartW / 2;
+    const chartCenterY = padding.top + chartH / 2;
+
     // 标尺计算 (X 为步数，Y 为值)
     const maxSteps = Math.max(1, this.sequence.length - 1);
     const maxY = this.stats.peakValue;
     const useLog = (this.scaleType === 'log');
 
-    const getX = (step) => padding.left + (step / maxSteps) * chartW;
-    const getY = (val) => {
+    const getBaseX = (step) => padding.left + (step / maxSteps) * chartW;
+    const getBaseY = (val) => {
       if (useLog) {
-        const logMin = 0; // log10(1) = 0
         const logMax = Math.max(0.5, Math.log10(Math.max(1, maxY)));
         const logVal = Math.log10(Math.max(1, val));
         return padding.top + chartH - (logVal / logMax) * chartH;
@@ -417,56 +440,84 @@ class CollatzVisualizer {
       }
     };
 
-    // 绘制微弱网格与坐标轴
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.font = '10px Inter, system-ui, sans-serif';
+    const getScreenX = (step) => {
+      const bx = getBaseX(step);
+      return chartCenterX + (bx - chartCenterX) * this.trajZoom + this.trajPanX;
+    };
+    const getScreenY = (val) => {
+      const by = getBaseY(val);
+      return chartCenterY + (by - chartCenterY) * this.trajZoom + this.trajPanY;
+    };
 
-    // 水平网格线 (对数或线性)
-    const yTicks = useLog ? [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000] : [0, maxY * 0.25, maxY * 0.5, maxY * 0.75, maxY];
+    // 绘制坐标轴底框
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+    ctx.fillRect(padding.left, padding.top, chartW, chartH);
+
+    // 刻度列表定义
+    const yTicks = useLog
+      ? [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]
+      : [0, maxY * 0.25, maxY * 0.5, maxY * 0.75, maxY];
+
+    // 进入裁切区域，确保折线与内部网格平移缩放时不越过图表边缘
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(padding.left, padding.top, chartW, chartH);
+    ctx.clip();
+
+    // 绘制微弱动态网格线 (随平移与缩放自适应移动)
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     yTicks.forEach(tick => {
-      if (tick <= maxY * 1.2 && tick >= 1) {
-        const y = getY(tick);
+      if (tick <= maxY * 2.5 && tick >= 1) {
+        const y = getScreenY(tick);
         ctx.beginPath();
         ctx.moveTo(padding.left, y);
         ctx.lineTo(padding.left + chartW, y);
         ctx.stroke();
-        ctx.fillText(tick.toLocaleString(), padding.left - 45, y + 3);
       }
     });
 
+    const stepInterval = Math.max(1, Math.floor(maxSteps / 5));
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    for (let s = 0; s <= maxSteps; s += stepInterval) {
+      const x = getScreenX(s);
+      ctx.beginPath();
+      ctx.moveTo(x, padding.top);
+      ctx.lineTo(x, padding.top + chartH);
+      ctx.stroke();
+    }
+
     // 绘制冰雹背景微弱渐变
+    const maxVisibleStep = Math.min(this.sequence.length - 1, Math.max(0, this.animStep));
     const bgGrad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-    bgGrad.addColorStop(0, 'rgba(59, 130, 246, 0.08)');
+    bgGrad.addColorStop(0, 'rgba(59, 130, 246, 0.12)');
     bgGrad.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
 
-    const maxVisibleStep = Math.min(this.sequence.length - 1, Math.max(0, this.animStep));
-
+    const bottomY = chartCenterY + (padding.top + chartH - chartCenterY) * this.trajZoom + this.trajPanY;
     ctx.beginPath();
-    ctx.moveTo(getX(0), getY(this.sequence[0]));
+    ctx.moveTo(getScreenX(0), getScreenY(this.sequence[0]));
     for (let i = 1; i <= maxVisibleStep; i++) {
-      ctx.lineTo(getX(i), getY(this.sequence[i]));
+      ctx.lineTo(getScreenX(i), getScreenY(this.sequence[i]));
     }
-    ctx.lineTo(getX(maxVisibleStep), padding.top + chartH);
-    ctx.lineTo(getX(0), padding.top + chartH);
+    ctx.lineTo(getScreenX(maxVisibleStep), bottomY);
+    ctx.lineTo(getScreenX(0), bottomY);
     ctx.closePath();
     ctx.fillStyle = bgGrad;
     ctx.fill();
 
     // 绘制折线轨迹 (奇数飞跃呈金色，偶数下坠呈冰蓝色)
     for (let i = 0; i < maxVisibleStep; i++) {
-      const x1 = getX(i);
-      const y1 = getY(this.sequence[i]);
-      const x2 = getX(i + 1);
-      const y2 = getY(this.sequence[i + 1]);
+      const x1 = getScreenX(i);
+      const y1 = getScreenY(this.sequence[i]);
+      const x2 = getScreenX(i + 1);
+      const y2 = getScreenY(this.sequence[i + 1]);
       const isRising = this.sequence[i + 1] > this.sequence[i];
 
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
-      ctx.lineWidth = 2.2;
-      ctx.strokeStyle = isRising ? 'rgba(245, 158, 11, 0.95)' : 'rgba(56, 189, 248, 0.85)';
+      ctx.lineWidth = Math.max(1.5, 2.2 * Math.min(1.6, this.trajZoom));
+      ctx.strokeStyle = isRising ? 'rgba(245, 158, 11, 0.95)' : 'rgba(56, 189, 248, 0.88)';
       ctx.shadowColor = isRising ? 'rgba(245, 158, 11, 0.6)' : 'rgba(56, 189, 248, 0.4)';
       ctx.shadowBlur = 8;
       ctx.stroke();
@@ -475,35 +526,35 @@ class CollatzVisualizer {
 
     // 标出最高峰值 (Peak Indicator)
     if (this.stats.peakStep <= maxVisibleStep) {
-      const px = getX(this.stats.peakStep);
-      const py = getY(this.stats.peakValue);
+      const px = getScreenX(this.stats.peakStep);
+      const py = getScreenY(this.stats.peakValue);
 
       ctx.beginPath();
-      ctx.arc(px, py, 6, 0, Math.PI * 2);
+      ctx.arc(px, py, 6 * Math.min(1.5, Math.max(0.7, this.trajZoom)), 0, Math.PI * 2);
       ctx.fillStyle = '#f59e0b';
       ctx.shadowColor = '#f59e0b';
       ctx.shadowBlur = 12;
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // 文本标签（智能边界保护，绝不被裁切或遮挡）
+      // 文本标签
       ctx.fillStyle = '#fbbf24';
       ctx.font = 'bold 11px Inter, sans-serif';
       const peakText = `Peak: ${this.stats.peakValue.toLocaleString()} (Step ${this.stats.peakStep})`;
       const peakTw = ctx.measureText(peakText).width;
-      const peakX = Math.max(padding.left + 5, Math.min(px - peakTw / 2, w - padding.right - peakTw - 5));
+      const peakX = Math.max(padding.left + 5, Math.min(px - peakTw / 2, padding.left + chartW - peakTw - 5));
       const peakY = (py < padding.top + 25) ? (py + 20) : (py - 12);
       ctx.fillText(peakText, peakX, peakY);
     }
 
     // 绘制当前飞行粒子游标
     if (this.sequence.length > 0) {
-      const curX = getX(maxVisibleStep);
-      const curY = getY(this.sequence[maxVisibleStep]);
+      const curX = getScreenX(maxVisibleStep);
+      const curY = getScreenY(this.sequence[maxVisibleStep]);
       const curVal = this.sequence[maxVisibleStep];
 
       // 发光脉冲圈
-      const pulseR = 8 + Math.sin(this.pulsePhase) * 3;
+      const pulseR = (8 + Math.sin(this.pulsePhase) * 3) * Math.min(1.5, Math.max(0.7, this.trajZoom));
       ctx.beginPath();
       ctx.arc(curX, curY, pulseR, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
@@ -512,7 +563,7 @@ class CollatzVisualizer {
 
       // 实体光核
       ctx.beginPath();
-      ctx.arc(curX, curY, 4.5, 0, Math.PI * 2);
+      ctx.arc(curX, curY, 4.5 * Math.min(1.5, Math.max(0.7, this.trajZoom)), 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = '#38bdf8';
       ctx.shadowBlur = 14;
@@ -520,7 +571,7 @@ class CollatzVisualizer {
       ctx.shadowBlur = 0;
 
       // 悬浮当前值标签
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
       const labelText = `n = ${curVal.toLocaleString()} (Step ${maxVisibleStep}/${maxSteps})`;
       ctx.font = '11px Inter, monospace';
       const tw = ctx.measureText(labelText).width;
@@ -529,6 +580,34 @@ class CollatzVisualizer {
       ctx.strokeRect(curX - tw / 2 - 8, curY + 12, tw + 16, 22);
       ctx.fillStyle = '#38bdf8';
       ctx.fillText(labelText, curX - tw / 2, curY + 27);
+    }
+
+    ctx.restore(); // 结束裁切
+
+    // 绘制外边框
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(padding.left, padding.top, chartW, chartH);
+
+    // 绘制坐标轴文字（Y 轴数值与 X 轴步数）
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.font = '10px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    yTicks.forEach(tick => {
+      const y = getScreenY(tick);
+      if (y >= padding.top - 2 && y <= padding.top + chartH + 2) {
+        ctx.fillText(tick.toLocaleString(), padding.left - 8, y + 3);
+      }
+    });
+    ctx.textAlign = 'left';
+
+    // X 轴步数文本
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    for (let s = 0; s <= maxSteps; s += stepInterval) {
+      const x = getScreenX(s);
+      if (x >= padding.left - 5 && x <= padding.left + chartW + 5) {
+        ctx.fillText(`s${s}`, x - 8, padding.top + chartH + 16);
+      }
     }
   }
 

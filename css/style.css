@@ -1501,8 +1501,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* ============================================== */
 
 .seed-pill-group {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-top: 8px;
 }
@@ -1512,11 +1512,15 @@ input[type="range"]::-webkit-slider-thumb:hover {
   border: 1px solid rgba(56, 189, 248, 0.25);
   color: #94a3b8;
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 6px 4px;
   font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .seed-pill-btn:hover {
@@ -1530,6 +1534,48 @@ input[type="range"]::-webkit-slider-thumb:hover {
   border-color: #38bdf8;
   color: #38bdf8;
   font-weight: 600;
+}
+
+/* 种子输入与按钮对齐样式 (解决长英文溢出问题) */
+.collatz-seed-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.collatz-seed-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.collatz-seed-actions button {
+  width: 100% !important;
+  margin: 0 !important;
+  justify-content: center;
+  padding: 7px 8px !important;
+  font-size: 11.5px !important;
+  white-space: nowrap;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#view-collatz canvas.render-canvas {
+  cursor: grab;
+}
+
+#view-collatz canvas.render-canvas:active {
+  cursor: grabbing;
 }
 
 .btn-group-toggle {

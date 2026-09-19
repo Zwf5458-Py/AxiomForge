@@ -681,10 +681,10 @@
             <div class="control-label-group">
               <span data-i18n="collatz_seed_label">Initial Seed (n₀)</span>
             </div>
-            <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <input type="number" id="input-collatz-seed" min="1" max="1000000000000" value="27" style="flex: 1; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; color: #f8fafc; padding: 6px 10px; font-family: monospace; font-size: 13px;">
-              <button id="btn-collatz-random" class="btn-settings-pill" style="padding: 6px 10px;" data-i18n="btn_collatz_random">Random</button>
-              <button id="btn-collatz-compute" class="btn-sidebar-evolve" style="padding: 6px 12px; margin: 0; width: auto;" data-i18n="btn_collatz_compute">Simulate</button>
+            <input type="number" id="input-collatz-seed" min="1" max="1000000000000" value="27" class="collatz-seed-input">
+            <div class="collatz-seed-actions">
+              <button id="btn-collatz-random" class="btn-settings-pill" data-i18n="btn_collatz_random">Random Seed</button>
+              <button id="btn-collatz-compute" class="btn-sidebar-evolve" data-i18n="btn_collatz_compute">Simulate Flow</button>
             </div>
           </div>
 

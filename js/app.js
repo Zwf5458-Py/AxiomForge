@@ -112,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (viewCollatz) viewCollatz.classList.add('active');
       if (sidebarCollatz) sidebarCollatz.style.display = 'block';
       collatzEngine.resize();
+      collatzEngine.updateZoomBadge();
     }
   }
 
@@ -1475,6 +1476,7 @@ ${JSON.stringify(points, null, 2)}
       if (viewCollatz) viewCollatz.classList.remove('mode-tree');
       if (rowCollatzScale) rowCollatzScale.style.display = 'block';
       if (rowCollatzTreeDepth) rowCollatzTreeDepth.style.display = 'none';
+      collatzEngine.updateZoomBadge();
       collatzEngine.render();
     });
 
@@ -1617,7 +1619,7 @@ ${JSON.stringify(points, null, 2)}
   }
   if (btnCollatzResetView) {
     btnCollatzResetView.addEventListener('click', () => {
-      collatzEngine.resetTreeCenter();
+      collatzEngine.resetCurrentView();
     });
   }
 });
