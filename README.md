@@ -134,7 +134,9 @@ pip install -r requirements.txt
 
 ### 2. Run Test Suite
 ```bash
-pytest tests/
+pytest tests/                                  # Python: 33 tests (core algorithms)
+node tests/test_collatz_core.mjs               # JS: real shipped Collatz math + visualizer
+node tests/test_euler_brick_ui.mjs             # JS: real shipped Euler Brick validation/search
 # Or via standard unittest:
 python3 -m unittest discover -s tests
 ```

@@ -88,7 +88,7 @@
 
 ### 5. 质量工程与测试全绿
 - 配置文件：[`pyproject.toml`](file:///Users/oraclez/code/数学模型/pyproject.toml) 固化 `pythonpath = ["."]`；
-- 单元测试：`pytest` 覆盖核心功能（AI 适配器、Cap Set 共线校验、演化引擎、6D/7D 高维快速求解器与先验、考拉兹动力学、欧拉砖数论算法与同余筛），**33 项测试 100% 全部通过 (0.05s)**；
+- 单元测试：`pytest` 覆盖核心功能（AI 适配器、Cap Set 共线校验、演化引擎、6D/7D 高维快速求解器与先验、考拉兹动力学、欧拉砖数论算法与同余筛），**33 项 Python 测试 100% 通过**；浏览器前端逻辑由 Node 测试套件直接驱动真实生产代码（`node tests/test_collatz_core.mjs`、`node tests/test_euler_brick_ui.mjs`）保证；
 - GitHub Actions：`.github/workflows/tests.yml` 自动化 CI 持续集成保持绿灯。
 
 ---
@@ -160,7 +160,7 @@ AxiomForge 已正式在国际著名非营利资助平台 **Manifund** 完成全�
    - [✓] **3D 交互视窗与双向几何高亮**：纯原生 Canvas 2D 矩阵投影，点击面对角线/体对角线数值卡片即刻高亮对应线条与半透明空间投影截面；
    - [✓] **丢番图同余筛选约束卡**：模 4/16、模 5、模 11 刚性整除性校验与名人堂经典砖（Halcke 最小砖、Saunderson 参数砖）一键载入；
    - [✓] **AI 神经符号模型双轨推演系统**：原生支持浏览器直连 + 本地 Python 后端代理 + 确定性离线仿真三级高可用通道，实时提取并折叠呈现 `[Deep Chain-of-Thought]` 深度思维链，自动解析候选解 `SOLUTION: [a, b, c]` 并一键应用于 3D 视窗；
-   - [✓] **单元测试全面扩容**：新增 8 项欧拉砖数论与同余算法单测，全量测试达到 33 项（0.05s 全绿通过）；
+   - [✓] **单元测试全面扩容**：新增 8 项欧拉砖数论与同余算法单测，全量测试达到 33 项 Python 测试全绿；并新增 Node 测试套件直接测试浏览器实际加载的 `js/collatz_core.js` / `js/collatz.js` / `js/eulerbrick.js`（候选验证、残差搜索、逆向树分支、轨迹坐标变换），杜绝“测试全绿但前端回归”的假信心；
    - [✓] **学术专著沉淀**：完成中英文深度理论报告 [`docs/EULER_BRICK_THEORY_CN.md`](docs/EULER_BRICK_THEORY_CN.md) 与 [`docs/EULER_BRICK_THEORY.md`](docs/EULER_BRICK_THEORY.md)。
 
 ---

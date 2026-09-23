@@ -134,7 +134,9 @@ pip install -r requirements.txt
 
 ### 2. 运行单元测试
 ```bash
-pytest tests/
+pytest tests/                                  # Python：33 项核心算法测试
+node tests/test_collatz_core.mjs               # JS：真实浏览器代码的考拉兹数学 + 可视化
+node tests/test_euler_brick_ui.mjs             # JS：真实浏览器代码的欧拉砖验证/搜索
 ```
 
 ### 3. 运行完整的 FunSearch 真实算法演化系统

@@ -60,53 +60,21 @@ class CollatzVisualizer {
   }
 
   /**
-   * 计算指定正整数的考拉兹冰雹序列
+   * 计算指定正整数的考拉兹冰雹序列 (数学核心由 CollatzCore 提供，UI 只消费结果)
    */
   computeSequence(n) {
-    let val = Math.max(1, Math.floor(Number(n) || 1));
-    this.seed = val;
-    const seq = [val];
-    let peak = val;
-    let peakIdx = 0;
-    let oddCount = 0;
-
-    while (val !== 1 && seq.length < 5000) {
-      if (val % 2 === 0) {
-        val = val / 2;
-      } else {
-        oddCount++;
-        val = 3 * val + 1;
-      }
-      seq.push(val);
-      if (val > peak) {
-        peak = val;
-        peakIdx = seq.length - 1;
-      }
-    }
-
-    this.sequence = seq;
-    const totalSteps = seq.length - 1;
-
-    // 计算经典数论停机时间 (Stopping Time: 首次跌破起始值 n₀ 的步数)
-    let stoppingTime = 0;
-    let stoppingStepVal = this.seed;
-    for (let i = 1; i < seq.length; i++) {
-      if (seq[i] < this.seed) {
-        stoppingTime = i;
-        stoppingStepVal = seq[i];
-        break;
-      }
-    }
-
+    const result = CollatzCore.collatzSequence(n);
+    this.seed = result.seed;
+    this.sequence = result.sequence;
     this.stats = {
-      totalSteps,
-      stoppingTime,
-      stoppingStepVal,
-      peakValue: peak,
-      peakStep: peakIdx,
-      oddSteps: oddCount,
-      evenSteps: totalSteps - oddCount,
-      expansionRatio: peak / this.seed
+      totalSteps: result.totalSteps,
+      stoppingTime: result.stoppingTime,
+      stoppingStepVal: result.stoppingStepVal,
+      peakValue: result.peakValue,
+      peakStep: result.peakStep,
+      oddSteps: result.oddSteps,
+      evenSteps: result.evenSteps,
+      expansionRatio: result.expansionRatio
     };
 
     this.animStep = 0;
@@ -139,41 +107,23 @@ class CollatzVisualizer {
       const layerSize = currentLayer.length;
 
       currentLayer.forEach((node, idx) => {
-        // 偶数主分支：2 * n
-        const evenVal = node.val * 2;
-        if (!visited.has(evenVal)) {
-          visited.add(evenVal);
-          const evenNode = {
-            id: evenVal,
-            val: evenVal,
+        // 分支规则来自 CollatzCore，与测试共享同一实现
+        const children = CollatzCore.inverseCollatzChildren(node.val);
+        children.forEach(child => {
+          if (visited.has(child.value)) return;
+          visited.add(child.value);
+          const childNode = {
+            id: child.value,
+            val: child.value,
             depth: d,
             parent: node,
-            type: 'even',
-            angleOffset: -0.28
+            type: child.type,
+            angleOffset: child.type === 'even' ? -0.28 : 0.42
           };
-          this.treeNodes.push(evenNode);
-          this.treeLinks.push({ source: node, target: evenNode, type: 'even' });
-          nextLayer.push(evenNode);
-        }
-
-        // 奇数分叉分支：(n - 1) / 3 (当 n % 6 == 4 且 n > 4)
-        if (node.val % 6 === 4 && node.val > 4) {
-          const oddVal = Math.floor((node.val - 1) / 3);
-          if (oddVal % 2 !== 0 && !visited.has(oddVal)) {
-            visited.add(oddVal);
-            const oddNode = {
-              id: oddVal,
-              val: oddVal,
-              depth: d,
-              parent: node,
-              type: 'odd',
-              angleOffset: 0.42
-            };
-            this.treeNodes.push(oddNode);
-            this.treeLinks.push({ source: node, target: oddNode, type: 'odd' });
-            nextLayer.push(oddNode);
-          }
-        }
+          this.treeNodes.push(childNode);
+          this.treeLinks.push({ source: node, target: childNode, type: child.type });
+          nextLayer.push(childNode);
+        });
       });
 
       currentLayer = nextLayer;
@@ -230,26 +180,9 @@ class CollatzVisualizer {
    * 区间极值冰雹搜索 (寻找最大停机时间)
    */
   findExtremalSeed(start, end) {
-    const s = Math.max(1, Math.min(start, end));
-    const e = Math.min(s + 5000, Math.max(start, end)); // 防止冻结界面，单次最多搜索 5000 个数
-    let bestSeed = s;
-    let maxSteps = 0;
-
-    for (let i = s; i <= e; i++) {
-      let v = i;
-      let steps = 0;
-      while (v !== 1 && steps < 3000) {
-        v = (v % 2 === 0) ? (v / 2) : (3 * v + 1);
-        steps++;
-      }
-      if (steps > maxSteps) {
-        maxSteps = steps;
-        bestSeed = i;
-      }
-    }
-
-    this.computeSequence(bestSeed);
-    return { seed: bestSeed, steps: maxSteps };
+    const { seed, steps } = CollatzCore.findMaxStoppingTimeInRange(start, end);
+    this.computeSequence(seed);
+    return { seed, steps };
   }
 
   resize() {
@@ -400,17 +333,14 @@ class CollatzVisualizer {
     }
   }
 
-  detectHoveredTrajPoint(e) {
-    if (!this.canvas || this.sequence.length === 0) return;
-    const rect = this.canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-
+  /**
+   * 轨迹折线图的唯一坐标变换源：hover 命中检测与渲染共用，
+   * 避免两处各自实现导致平移/缩放/对数标尺漂移。
+   */
+  getTrajectoryTransform() {
     const padding = { top: 20, right: 18, bottom: 42, left: 52 };
     const chartW = this.width - padding.left - padding.right;
     const chartH = this.height - padding.top - padding.bottom;
-    if (chartW <= 0 || chartH <= 0) return;
-
     const chartCenterX = padding.left + chartW / 2;
     const chartCenterY = padding.top + chartH / 2;
     const maxSteps = Math.max(1, this.sequence.length - 1);
@@ -423,20 +353,31 @@ class CollatzVisualizer {
         const logMax = Math.max(0.5, Math.log10(Math.max(1, maxY)));
         const logVal = Math.log10(Math.max(1, val));
         return padding.top + chartH - (logVal / logMax) * chartH;
-      } else {
-        return padding.top + chartH - (val / maxY) * chartH;
       }
+      return padding.top + chartH - (val / maxY) * chartH;
     };
     const getScreenX = (step) => chartCenterX + (getBaseX(step) - chartCenterX) * this.trajZoom + this.trajPanX;
     const getScreenY = (val) => chartCenterY + (getBaseY(val) - chartCenterY) * this.trajZoom + this.trajPanY;
+
+    return { padding, chartW, chartH, chartCenterX, chartCenterY, maxSteps, maxY, useLog, getScreenX, getScreenY };
+  }
+
+  detectHoveredTrajPoint(e) {
+    if (!this.canvas || this.sequence.length === 0) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const transform = this.getTrajectoryTransform();
+    if (transform.chartW <= 0 || transform.chartH <= 0) return;
 
     let foundStep = null;
     let minDist = 22;
     const maxVisibleStep = Math.min(this.sequence.length - 1, Math.max(0, this.animStep));
 
     for (let i = 0; i <= maxVisibleStep; i++) {
-      const sx = getScreenX(i);
-      const sy = getScreenY(this.sequence[i]);
+      const sx = transform.getScreenX(i);
+      const sy = transform.getScreenY(this.sequence[i]);
       const dist = Math.hypot(mx - sx, my - sy);
       if (dist < minDist) {
         minDist = dist;
@@ -487,39 +428,10 @@ class CollatzVisualizer {
 
   renderTrajectory(ctx, w, h) {
     // 极致全屏沉浸式画幅：彻底释放右侧与上方空白，折线图横贯全屏延展
-    const padding = { top: 20, right: 18, bottom: 42, left: 52 };
-    const chartW = w - padding.left - padding.right;
-    const chartH = h - padding.top - padding.bottom;
+    const transform = this.getTrajectoryTransform();
+    const { padding, chartW, chartH, chartCenterX, chartCenterY, maxSteps, maxY, useLog, getScreenX, getScreenY } = transform;
 
     if (chartW <= 0 || chartH <= 0 || this.sequence.length === 0) return;
-
-    const chartCenterX = padding.left + chartW / 2;
-    const chartCenterY = padding.top + chartH / 2;
-
-    // 标尺计算 (X 为步数，Y 为值)
-    const maxSteps = Math.max(1, this.sequence.length - 1);
-    const maxY = this.stats.peakValue;
-    const useLog = (this.scaleType === 'log');
-
-    const getBaseX = (step) => padding.left + (step / maxSteps) * chartW;
-    const getBaseY = (val) => {
-      if (useLog) {
-        const logMax = Math.max(0.5, Math.log10(Math.max(1, maxY)));
-        const logVal = Math.log10(Math.max(1, val));
-        return padding.top + chartH - (logVal / logMax) * chartH;
-      } else {
-        return padding.top + chartH - (val / maxY) * chartH;
-      }
-    };
-
-    const getScreenX = (step) => {
-      const bx = getBaseX(step);
-      return chartCenterX + (bx - chartCenterX) * this.trajZoom + this.trajPanX;
-    };
-    const getScreenY = (val) => {
-      const by = getBaseY(val);
-      return chartCenterY + (by - chartCenterY) * this.trajZoom + this.trajPanY;
-    };
 
     // 绘制坐标轴底框
     ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';

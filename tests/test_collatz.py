@@ -1,4 +1,11 @@
-"""Unit tests for Collatz Conjecture (Hailstone) dynamical sequence algorithms."""
+"""
+Independent Python cross-check for the Collatz math (reference semantics only).
+
+The authoritative tests for the code the browser actually ships live in
+tests/test_collatz_core.mjs (exercises js/collatz_core.js + js/collatz.js).
+This Python module mirrors the same definitions so the two implementations
+can be cross-checked against each other, but it is NOT the production code.
+"""
 
 import pytest
 
