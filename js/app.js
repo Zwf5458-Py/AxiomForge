@@ -54,13 +54,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let activeTab = 'mandelbrot'; // 默认进入震撼的广义高阶分形视窗
 
-  // 视口自适应调整
+  // 可视化注册表：每个模式一条记录驱动 resize、动画派发、标签 DOM 切换与激活钩子。
+  // 新增模式只需添加一条记录，无需再改多处级联分支。
+  const VISUALIZATIONS = [
+    { id: 'koch', engine: kochEngine, tick: (t) => kochEngine.update(t) },
+    { id: 'mandelbrot', engine: mandelbrotEngine, tick: (t) => mandelbrotEngine.update(t) },
+    { id: 'funsearch', engine: funsearchEngine, tick: (t) => funsearchEngine.render(t) },
+    { id: 'collatz', engine: collatzEngine, tick: (t) => collatzEngine.update(t),
+      onActivate: (v) => { v.engine.resize(); v.engine.updateZoomBadge(); } },
+    { id: 'eulerbrick', engine: eulerbrickEngine, tick: (t) => eulerbrickEngine.update(t),
+      onActivate: (v) => {
+        v.engine.resize();
+        v.engine.updateZoomBadge();
+        v.engine.updateUI();
+        if (window.updateActiveModelBadge) window.updateActiveModelBadge();
+        v.engine.render();
+        requestAnimationFrame(() => { v.engine.resize(); v.engine.render(); });
+      } },
+  ].map(v => ({
+    ...v,
+    // 默认激活钩子：切换时重置视口尺寸
+    onActivate: v.onActivate || ((entry) => entry.engine.resize()),
+    tab: document.getElementById(`tab-${v.id}`),
+    view: document.getElementById(`view-${v.id}`),
+    sidebar: document.getElementById(`sidebar-${v.id}`)
+  }));
+
+  // 视口自适应调整 (各引擎 resize 内部自带 canvas 空值守卫)
   function handleResize() {
-    kochEngine.resize();
-    mandelbrotEngine.resize();
-    funsearchEngine.resize();
-    if (collatzEngine) collatzEngine.resize();
-    if (eulerbrickEngine) eulerbrickEngine.resize();
+    VISUALIZATIONS.forEach(v => v.engine.resize());
   }
   window.addEventListener('resize', handleResize);
   requestAnimationFrame(handleResize);
@@ -68,98 +90,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. 主动画循环 (统一由 requestAnimationFrame 驱动)
   function mainLoop(timestamp) {
-    if (activeTab === 'koch') {
-      kochEngine.update(timestamp);
-    } else if (activeTab === 'mandelbrot') {
-      mandelbrotEngine.update(timestamp);
-    } else if (activeTab === 'funsearch') {
-      funsearchEngine.render(timestamp);
-    } else if (activeTab === 'collatz') {
-      collatzEngine.update(timestamp);
-    } else if (activeTab === 'eulerbrick') {
-      eulerbrickEngine.update(timestamp);
-    }
+    const active = VISUALIZATIONS.find(v => v.id === activeTab);
+    if (active) active.tick(timestamp);
     requestAnimationFrame(mainLoop);
   }
   requestAnimationFrame(mainLoop);
 
   // 3. 模式选项卡切换
-  const tabKochBtn = document.getElementById('tab-koch');
-  const tabMandelBtn = document.getElementById('tab-mandelbrot');
-  const tabFunsearchBtn = document.getElementById('tab-funsearch');
-  const tabCollatzBtn = document.getElementById('tab-collatz');
-  const tabEulerbrickBtn = document.getElementById('tab-eulerbrick');
-  const viewKoch = document.getElementById('view-koch');
-  const viewMandel = document.getElementById('view-mandelbrot');
-  const viewFunsearch = document.getElementById('view-funsearch');
-  const viewCollatz = document.getElementById('view-collatz');
-  const viewEulerbrick = document.getElementById('view-eulerbrick');
-  const sidebarKoch = document.getElementById('sidebar-koch');
-  const sidebarMandel = document.getElementById('sidebar-mandelbrot');
-  const sidebarFunsearch = document.getElementById('sidebar-funsearch');
-  const sidebarCollatz = document.getElementById('sidebar-collatz');
-  const sidebarEulerbrick = document.getElementById('sidebar-eulerbrick');
-
   function switchTab(target) {
     activeTab = target;
-    [tabKochBtn, tabMandelBtn, tabFunsearchBtn, tabCollatzBtn, tabEulerbrickBtn].forEach(b => b && b.classList.remove('active'));
-    [viewKoch, viewMandel, viewFunsearch, viewCollatz, viewEulerbrick].forEach(v => v && v.classList.remove('active'));
-    if (sidebarKoch) sidebarKoch.style.display = 'none';
-    if (sidebarMandel) sidebarMandel.style.display = 'none';
-    if (sidebarFunsearch) sidebarFunsearch.style.display = 'none';
-    if (sidebarCollatz) sidebarCollatz.style.display = 'none';
-    if (sidebarEulerbrick) sidebarEulerbrick.style.display = 'none';
-
-    if (target === 'koch') {
-      tabKochBtn.classList.add('active');
-      viewKoch.classList.add('active');
-      sidebarKoch.style.display = 'block';
-      kochEngine.resize();
-    } else if (target === 'mandelbrot') {
-      tabMandelBtn.classList.add('active');
-      viewMandel.classList.add('active');
-      sidebarMandel.style.display = 'block';
-      mandelbrotEngine.resize();
-    } else if (target === 'funsearch') {
-      tabFunsearchBtn.classList.add('active');
-      viewFunsearch.classList.add('active');
-      sidebarFunsearch.style.display = 'block';
-      funsearchEngine.resize();
-    } else if (target === 'collatz') {
-      if (tabCollatzBtn) tabCollatzBtn.classList.add('active');
-      if (viewCollatz) viewCollatz.classList.add('active');
-      if (sidebarCollatz) sidebarCollatz.style.display = 'block';
-      collatzEngine.resize();
-      collatzEngine.updateZoomBadge();
-    } else if (target === 'eulerbrick') {
-      if (tabEulerbrickBtn) tabEulerbrickBtn.classList.add('active');
-      if (viewEulerbrick) viewEulerbrick.classList.add('active');
-      if (sidebarEulerbrick) sidebarEulerbrick.style.display = 'block';
-      eulerbrickEngine.resize();
-      eulerbrickEngine.updateZoomBadge();
-      eulerbrickEngine.updateUI();
-      if (window.updateActiveModelBadge) {
-        window.updateActiveModelBadge();
-      }
-      eulerbrickEngine.render();
-      requestAnimationFrame(() => {
-        eulerbrickEngine.resize();
-        eulerbrickEngine.render();
-      });
-    }
+    VISUALIZATIONS.forEach(v => {
+      if (v.tab) v.tab.classList.remove('active');
+      if (v.view) v.view.classList.remove('active');
+      if (v.sidebar) v.sidebar.style.display = 'none';
+    });
+    const active = VISUALIZATIONS.find(v => v.id === target);
+    if (!active) return;
+    if (active.tab) active.tab.classList.add('active');
+    if (active.view) active.view.classList.add('active');
+    if (active.sidebar) active.sidebar.style.display = 'block';
+    active.onActivate(active);
   }
 
-  tabKochBtn.addEventListener('click', () => switchTab('koch'));
-  tabMandelBtn.addEventListener('click', () => switchTab('mandelbrot'));
-  if (tabFunsearchBtn) {
-    tabFunsearchBtn.addEventListener('click', () => switchTab('funsearch'));
-  }
-  if (tabCollatzBtn) {
-    tabCollatzBtn.addEventListener('click', () => switchTab('collatz'));
-  }
-  if (tabEulerbrickBtn) {
-    tabEulerbrickBtn.addEventListener('click', () => switchTab('eulerbrick'));
-  }
+  VISUALIZATIONS.forEach(v => {
+    if (v.tab) v.tab.addEventListener('click', () => switchTab(v.id));
+  });
 
   // ==========================
   // 4. 科赫雪花 控制事件绑定
@@ -1662,32 +1617,20 @@ ${JSON.stringify(points, null, 2)}
   // ==============================================
   // 6. 完美欧拉砖 (Euler Brick) 控制事件绑定
   // ==============================================
-  const sliderEulerA = document.getElementById('eulerbrick-slider-a');
-  const inputEulerA = document.getElementById('eulerbrick-input-a');
-  const valEulerA = document.getElementById('eulerbrick-val-a');
-
-  const sliderEulerB = document.getElementById('eulerbrick-slider-b');
-  const inputEulerB = document.getElementById('eulerbrick-input-b');
-  const valEulerB = document.getElementById('eulerbrick-val-b');
-
-  const sliderEulerC = document.getElementById('eulerbrick-slider-c');
-  const inputEulerC = document.getElementById('eulerbrick-input-c');
-  const valEulerC = document.getElementById('eulerbrick-val-c');
+  // 边缘控件元数据驱动：一条配置生成 a/b/c 三组绑定，杜绝平行重复
+  const eulerEdgeControls = ['a', 'b', 'c'].map(edge => ({
+    edge,
+    slider: document.getElementById(`eulerbrick-slider-${edge}`),
+    input: document.getElementById(`eulerbrick-input-${edge}`),
+    val: document.getElementById(`eulerbrick-val-${edge}`)
+  }));
 
   function syncEulerEdgeUI(edge, val) {
-    if (edge === 'a') {
-      if (sliderEulerA) sliderEulerA.value = Math.min(val, 1000);
-      if (inputEulerA) inputEulerA.value = val;
-      if (valEulerA) valEulerA.textContent = val;
-    } else if (edge === 'b') {
-      if (sliderEulerB) sliderEulerB.value = Math.min(val, 1000);
-      if (inputEulerB) inputEulerB.value = val;
-      if (valEulerB) valEulerB.textContent = val;
-    } else if (edge === 'c') {
-      if (sliderEulerC) sliderEulerC.value = Math.min(val, 1000);
-      if (inputEulerC) inputEulerC.value = val;
-      if (valEulerC) valEulerC.textContent = val;
-    }
+    const ctl = eulerEdgeControls.find(c => c.edge === edge);
+    if (!ctl) return;
+    if (ctl.slider) ctl.slider.value = Math.min(val, 1000);
+    if (ctl.input) ctl.input.value = val;
+    if (ctl.val) ctl.val.textContent = val;
   }
 
   function handleEdgeChange(edge, val) {
@@ -1696,23 +1639,13 @@ ${JSON.stringify(points, null, 2)}
     eulerbrickEngine.setEdge(edge, v);
   }
 
-  if (sliderEulerA) sliderEulerA.addEventListener('input', (e) => handleEdgeChange('a', e.target.value));
-  if (inputEulerA) {
-    inputEulerA.addEventListener('input', (e) => handleEdgeChange('a', e.target.value));
-    inputEulerA.addEventListener('change', (e) => handleEdgeChange('a', e.target.value));
-  }
-
-  if (sliderEulerB) sliderEulerB.addEventListener('input', (e) => handleEdgeChange('b', e.target.value));
-  if (inputEulerB) {
-    inputEulerB.addEventListener('input', (e) => handleEdgeChange('b', e.target.value));
-    inputEulerB.addEventListener('change', (e) => handleEdgeChange('b', e.target.value));
-  }
-
-  if (sliderEulerC) sliderEulerC.addEventListener('input', (e) => handleEdgeChange('c', e.target.value));
-  if (inputEulerC) {
-    inputEulerC.addEventListener('input', (e) => handleEdgeChange('c', e.target.value));
-    inputEulerC.addEventListener('change', (e) => handleEdgeChange('c', e.target.value));
-  }
+  eulerEdgeControls.forEach(({ edge, slider, input }) => {
+    if (slider) slider.addEventListener('input', (e) => handleEdgeChange(edge, e.target.value));
+    if (input) {
+      input.addEventListener('input', (e) => handleEdgeChange(edge, e.target.value));
+      input.addEventListener('change', (e) => handleEdgeChange(edge, e.target.value));
+    }
+  });
 
   // 名人堂经典欧拉砖预设
   const eulerBrickPills = document.querySelectorAll('#sidebar-eulerbrick .seed-pill-btn[data-brick]');
@@ -1848,7 +1781,7 @@ ${JSON.stringify(points, null, 2)}
       resEulerAIText.textContent = isEn ? `Space Diag g = ${candidate.g.toFixed(4)}, Defect Δ = ${candidate.residual.toFixed(5)}` : `体对角线 g = ${candidate.g.toFixed(4)}, 极小残差 Δ = ${candidate.residual.toFixed(5)}`;
     }
     if (statusEulerAI) {
-      statusEulerAI.textContent = candidate.isPerfect
+      statusEulerAI.textContent = candidate.is_perfect_cuboid
         ? (isEn ? 'Perfect Cuboid Verified ✓' : '完美长方体已验证 ✓')
         : (isEn ? 'Euler Brick Verified ✓' : '欧拉砖已验证 ✓');
       statusEulerAI.style.color = '#34d399';

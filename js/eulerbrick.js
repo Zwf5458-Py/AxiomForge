@@ -70,12 +70,10 @@ class EulerBrickVisualizer {
   }
 
   /**
-   * 判定整数平方根
+   * 判定整数平方根 (数学核心由 EulerBrickCore 提供，UI 只消费结果)
    */
   isSquare(n) {
-    if (n < 0) return { isSquare: false, root: 0 };
-    const r = Math.round(Math.sqrt(n));
-    return { isSquare: (r * r === n), root: r };
+    return EulerBrickCore.isPerfectSquare(n);
   }
 
   /**
@@ -168,59 +166,9 @@ class EulerBrickVisualizer {
     this.b = b;
     this.c = c;
 
-    // 面对角线 d_ab, d_bc, d_ca
-    const sq_ab = a * a + b * b;
-    const res_ab = this.isSquare(sq_ab);
-    const d_ab = res_ab.isSquare ? res_ab.root : Math.sqrt(sq_ab);
-
-    const sq_bc = b * b + c * c;
-    const res_bc = this.isSquare(sq_bc);
-    const d_bc = res_bc.isSquare ? res_bc.root : Math.sqrt(sq_bc);
-
-    const sq_ca = c * c + a * a;
-    const res_ca = this.isSquare(sq_ca);
-    const d_ca = res_ca.isSquare ? res_ca.root : Math.sqrt(sq_ca);
-
-    // 体对角线 g
-    const sq_g = a * a + b * b + c * c;
-    const res_g = this.isSquare(sq_g);
-    const g = res_g.isSquare ? res_g.root : Math.sqrt(sq_g);
-    const round_g = Math.round(g);
-    const residual_g = Math.abs(g - round_g);
-
-    const isEuler = res_ab.isSquare && res_bc.isSquare && res_ca.isSquare;
-    const isPerfect = isEuler && res_g.isSquare;
-    const intCount = 3 + (res_ab.isSquare ? 1 : 0) + (res_bc.isSquare ? 1 : 0) + (res_ca.isSquare ? 1 : 0) + (res_g.isSquare ? 1 : 0);
-
-    // 同余必要条件判定 (Modular Constraints)
-    const edges = [a, b, c];
-    const evenCount = edges.filter(x => x % 2 === 0).length;
-    const div4Count = edges.filter(x => x % 4 === 0).length;
-    const passMod4 = (evenCount >= 2) && (div4Count >= 1);
-    const passMod16 = edges.some(x => x % 16 === 0);
-    const passMod5 = edges.some(x => x % 5 === 0);
-    const passMod11 = edges.some(x => x % 11 === 0);
-    const passAllMod = passMod4 && passMod16 && passMod5 && passMod11;
-
-    this.metrics = {
-      a, b, c,
-      d_ab, is_ab_int: res_ab.isSquare,
-      d_bc, is_bc_int: res_bc.isSquare,
-      d_ca, is_ca_int: res_ca.isSquare,
-      g, is_g_int: res_g.isSquare,
-      residual_g,
-      isEuler,
-      isPerfect,
-      intCount
-    };
-
-    this.modularCheck = {
-      passMod4,
-      passMod16,
-      passMod5,
-      passMod11,
-      passAllMod
-    };
+    // 7 大几何长度指标与同余必要条件均来自 EulerBrickCore 唯一契约
+    this.metrics = EulerBrickCore.getBrickMetrics(a, b, c);
+    this.modularCheck = EulerBrickCore.verifyModularConstraints(a, b, c);
 
     this.updateUI();
   }
@@ -231,68 +179,14 @@ class EulerBrickVisualizer {
    * residual alone is not meaningful when the face diagonals are irrational.
    */
   validateEulerCandidate(a, b, c) {
-    const edges = [a, b, c].map(Number);
-    if (edges.some(value => !Number.isSafeInteger(value) || value <= 0)) return null;
-
-    const [ea, eb, ec] = edges;
-    const sqAB = ea * ea + eb * eb;
-    const sqBC = eb * eb + ec * ec;
-    const sqCA = ec * ec + ea * ea;
-    const sqBody = ea * ea + eb * eb + ec * ec;
-    if (![sqAB, sqBC, sqCA, sqBody].every(Number.isSafeInteger)) return null;
-
-    const ab = this.isSquare(sqAB);
-    const bc = this.isSquare(sqBC);
-    const ca = this.isSquare(sqCA);
-    if (!ab.isSquare || !bc.isSquare || !ca.isSquare) return null;
-
-    const evenCount = edges.filter(value => value % 2 === 0).length;
-    const passMod4 = evenCount >= 2 && edges.some(value => value % 4 === 0);
-    const passMod16 = edges.some(value => value % 16 === 0);
-    const passMod5 = edges.some(value => value % 5 === 0);
-    const passMod11 = edges.some(value => value % 11 === 0);
-    if (!passMod4 || !passMod16 || !passMod5 || !passMod11) return null;
-
-    const body = this.isSquare(sqBody);
-    const g = body.isSquare ? body.root : Math.sqrt(sqBody);
-    return {
-      a: ea, b: eb, c: ec,
-      d_ab: ab.root, d_bc: bc.root, d_ca: ca.root,
-      g,
-      residual: Math.abs(g - Math.round(g)),
-      isPerfect: body.isSquare
-    };
+    return EulerBrickCore.validateEulerCandidate(a, b, c);
   }
 
   /**
    * Search nearby Euler bricks for the smallest body-diagonal residual.
    */
   searchMinimalResidual(radius = 50) {
-    const range = Math.max(5, Math.min(200, Math.round(radius)));
-    const baseA = this.a;
-    const baseB = this.b;
-    const baseC = this.c;
-    let best = this.validateEulerCandidate(baseA, baseB, baseC);
-
-    // Apply cheap necessary congruence filters before square-root tests.
-    const step = range > 60 ? 2 : 1;
-    for (let da = -range; da <= range; da += step) {
-      const na = Math.max(1, baseA + da);
-      for (let db = -range; db <= range; db += step) {
-        const nb = Math.max(1, baseB + db);
-        for (let dc = -range; dc <= range; dc += step) {
-          const nc = Math.max(1, baseC + dc);
-          const edges = [na, nb, nc];
-          const passMod4 = edges.filter(x => x % 2 === 0).length >= 2 && edges.some(x => x % 4 === 0);
-          if (!passMod4 || !edges.some(x => x % 16 === 0) || !edges.some(x => x % 5 === 0) || !edges.some(x => x % 11 === 0)) continue;
-
-          const candidate = this.validateEulerCandidate(na, nb, nc);
-          if (candidate && (!best || candidate.residual < best.residual)) best = candidate;
-        }
-      }
-    }
-
-    return best;
+    return EulerBrickCore.searchNeighborhoodEuler(this.a, this.b, this.c, radius);
   }
 
   setupInteractions() {
@@ -606,21 +500,21 @@ class EulerBrickVisualizer {
 
       // 1. 前表面对角线 d_ab (X-Y 面): 点 4 到 点 6
       this.drawDiagonal(
-        ctx, v[4], v[6], this.metrics.is_ab_int,
+        ctx, v[4], v[6], this.metrics.is_d_ab_int,
         hl === 'd_ab',
         (isAnyDiagHl && hl !== 'd_ab') || isAnyEdgeHl,
         '#38bdf8'
       );
       // 2. 右侧面对角线 d_bc (Y-Z 面): 点 1 到 点 6
       this.drawDiagonal(
-        ctx, v[1], v[6], this.metrics.is_bc_int,
+        ctx, v[1], v[6], this.metrics.is_d_bc_int,
         hl === 'd_bc',
         (isAnyDiagHl && hl !== 'd_bc') || isAnyEdgeHl,
         '#f59e0b'
       );
       // 3. 底表面对角线 d_ca (Z-X 面): 点 4 到 点 1
       this.drawDiagonal(
-        ctx, v[4], v[1], this.metrics.is_ca_int,
+        ctx, v[4], v[1], this.metrics.is_d_ca_int,
         hl === 'd_ca',
         (isAnyDiagHl && hl !== 'd_ca') || isAnyEdgeHl,
         '#a78bfa'
@@ -680,21 +574,21 @@ class EulerBrickVisualizer {
       const mid_ab = { x: (v[4].x + v[6].x) / 2, y: (v[4].y + v[6].y) / 2 };
       this.drawPill(
         ctx, mid_ab.x, mid_ab.y - 14,
-        `Face Diag d_ab = ${this.metrics.d_ab.toFixed(3)} ${this.metrics.is_ab_int ? '✓ INT' : ''}`,
+        `Face Diag d_ab = ${this.metrics.d_ab.toFixed(3)} ${this.metrics.is_d_ab_int ? '✓ INT' : ''}`,
         '#38bdf8', '#ffffff', 'rgba(15, 23, 42, 0.98)'
       );
     } else if (hl === 'd_bc') {
       const mid_bc = { x: (v[1].x + v[6].x) / 2, y: (v[1].y + v[6].y) / 2 };
       this.drawPill(
         ctx, mid_bc.x + 16, mid_bc.y - 14,
-        `Face Diag d_bc = ${this.metrics.d_bc.toFixed(3)} ${this.metrics.is_bc_int ? '✓ INT' : ''}`,
+        `Face Diag d_bc = ${this.metrics.d_bc.toFixed(3)} ${this.metrics.is_d_bc_int ? '✓ INT' : ''}`,
         '#f59e0b', '#ffffff', 'rgba(15, 23, 42, 0.98)'
       );
     } else if (hl === 'd_ca') {
       const mid_ca = { x: (v[4].x + v[1].x) / 2, y: (v[4].y + v[1].y) / 2 };
       this.drawPill(
         ctx, mid_ca.x, mid_ca.y + 18,
-        `Face Diag d_ca = ${this.metrics.d_ca.toFixed(3)} ${this.metrics.is_ca_int ? '✓ INT' : ''}`,
+        `Face Diag d_ca = ${this.metrics.d_ca.toFixed(3)} ${this.metrics.is_d_ca_int ? '✓ INT' : ''}`,
         '#a78bfa', '#ffffff', 'rgba(15, 23, 42, 0.98)'
       );
     }
@@ -817,27 +711,15 @@ class EulerBrickVisualizer {
   }
 
   updateUI() {
-    // 1. 侧边栏数值与滑块同步
-    const valA = document.getElementById('eulerbrick-val-a');
-    const valB = document.getElementById('eulerbrick-val-b');
-    const valC = document.getElementById('eulerbrick-val-c');
-    if (valA) valA.textContent = this.a;
-    if (valB) valB.textContent = this.b;
-    if (valC) valC.textContent = this.c;
-
-    const inputA = document.getElementById('eulerbrick-input-a');
-    const inputB = document.getElementById('eulerbrick-input-b');
-    const inputC = document.getElementById('eulerbrick-input-c');
-    if (inputA && document.activeElement !== inputA) inputA.value = this.a;
-    if (inputB && document.activeElement !== inputB) inputB.value = this.b;
-    if (inputC && document.activeElement !== inputC) inputC.value = this.c;
-
-    const sliderA = document.getElementById('eulerbrick-slider-a');
-    const sliderB = document.getElementById('eulerbrick-slider-b');
-    const sliderC = document.getElementById('eulerbrick-slider-c');
-    if (sliderA) sliderA.value = Math.min(this.a, 1000);
-    if (sliderB) sliderB.value = Math.min(this.b, 1000);
-    if (sliderC) sliderC.value = Math.min(this.c, 1000);
+    // 1. 侧边栏数值与滑块同步 (元数据驱动循环，a/b/c 单一来源)
+    ['a', 'b', 'c'].forEach(edge => {
+      const valEl = document.getElementById(`eulerbrick-val-${edge}`);
+      const inputEl = document.getElementById(`eulerbrick-input-${edge}`);
+      const sliderEl = document.getElementById(`eulerbrick-slider-${edge}`);
+      if (valEl) valEl.textContent = this[edge];
+      if (inputEl && document.activeElement !== inputEl) inputEl.value = this[edge];
+      if (sliderEl) sliderEl.value = Math.min(this[edge], 1000);
+    });
 
     // 2. 7/7 整数状态卡片更新
     const setDiagMetric = (valId, statusId, val, isInt, residual = null) => {
@@ -858,15 +740,15 @@ class EulerBrickVisualizer {
       }
     };
 
-    setDiagMetric('val-diag-ab', 'status-diag-ab', this.metrics.d_ab, this.metrics.is_ab_int);
-    setDiagMetric('val-diag-bc', 'status-diag-bc', this.metrics.d_bc, this.metrics.is_bc_int);
-    setDiagMetric('val-diag-ca', 'status-diag-ca', this.metrics.d_ca, this.metrics.is_ca_int);
+    setDiagMetric('val-diag-ab', 'status-diag-ab', this.metrics.d_ab, this.metrics.is_d_ab_int);
+    setDiagMetric('val-diag-bc', 'status-diag-bc', this.metrics.d_bc, this.metrics.is_d_bc_int);
+    setDiagMetric('val-diag-ca', 'status-diag-ca', this.metrics.d_ca, this.metrics.is_d_ca_int);
     setDiagMetric('val-diag-g', 'status-diag-g', this.metrics.g, this.metrics.is_g_int, this.metrics.residual_g);
 
     // 3. 同余筛选约束检验
     const tag416 = document.getElementById('tag-mod-4-16');
     const desc416 = document.getElementById('desc-mod-4-16');
-    const pass416 = this.modularCheck.passMod4 && this.modularCheck.passMod16;
+    const pass416 = this.modularCheck.pass_mod4 && this.modularCheck.pass_mod16;
     if (tag416) {
       tag416.className = `mod-pill-tag ${pass416 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
     }
@@ -878,21 +760,21 @@ class EulerBrickVisualizer {
     const tag5 = document.getElementById('tag-mod-5');
     const desc5 = document.getElementById('desc-mod-5');
     if (tag5) {
-      tag5.className = `mod-pill-tag ${this.modularCheck.passMod5 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
+      tag5.className = `mod-pill-tag ${this.modularCheck.pass_mod5 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
     }
     if (desc5) {
-      desc5.textContent = this.modularCheck.passMod5 ? 'At least one div 5 (✓ Satisfied)' : 'At least one div 5 (✗ Violated)';
-      desc5.style.color = this.modularCheck.passMod5 ? '#34d399' : '#fb7185';
+      desc5.textContent = this.modularCheck.pass_mod5 ? 'At least one div 5 (✓ Satisfied)' : 'At least one div 5 (✗ Violated)';
+      desc5.style.color = this.modularCheck.pass_mod5 ? '#34d399' : '#fb7185';
     }
 
     const tag11 = document.getElementById('tag-mod-11');
     const desc11 = document.getElementById('desc-mod-11');
     if (tag11) {
-      tag11.className = `mod-pill-tag ${this.modularCheck.passMod11 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
+      tag11.className = `mod-pill-tag ${this.modularCheck.pass_mod11 ? 'mod-tag-pass' : 'mod-tag-fail'}`;
     }
     if (desc11) {
-      desc11.textContent = this.modularCheck.passMod11 ? 'At least one div 11 (✓ Satisfied)' : 'At least one div 11 (✗ Violated)';
-      desc11.style.color = this.modularCheck.passMod11 ? '#34d399' : '#fb7185';
+      desc11.textContent = this.modularCheck.pass_mod11 ? 'At least one div 11 (✓ Satisfied)' : 'At least one div 11 (✗ Violated)';
+      desc11.style.color = this.modularCheck.pass_mod11 ? '#34d399' : '#fb7185';
     }
 
     // 4. 视窗 HUD 浮动药丸更新
@@ -907,16 +789,16 @@ class EulerBrickVisualizer {
     if (hudResidual) hudResidual.textContent = this.metrics.residual_g.toFixed(4);
 
     if (hudType) {
-      if (this.metrics.isPerfect) {
+      if (this.metrics.is_perfect_cuboid) {
         hudType.textContent = 'PERFECT CUBOID (7/7)!';
         hudType.style.color = '#10b981';
         if (hudPulse) hudPulse.className = 'pulse-indicator status-pill-pass';
-      } else if (this.metrics.isEuler) {
+      } else if (this.metrics.is_euler_brick) {
         hudType.textContent = 'Euler Brick (6/7)';
         hudType.style.color = '#38bdf8';
         if (hudPulse) hudPulse.className = 'pulse-indicator status-pill-pass';
       } else {
-        hudType.textContent = `Ordinary Cuboid (${this.metrics.intCount}/7)`;
+        hudType.textContent = `Ordinary Cuboid (${this.metrics.integer_lengths_count}/7)`;
         hudType.style.color = '#94a3b8';
         if (hudPulse) hudPulse.className = 'pulse-indicator status-pill-fail';
       }
