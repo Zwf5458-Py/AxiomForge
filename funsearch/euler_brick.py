@@ -95,7 +95,7 @@ def verify_modular_constraints(a: int, b: int, c: int) -> dict[str, bool]:
     """
     Check necessary modular arithmetic conditions proven by number theorists
     that any potential Perfect Cuboid MUST satisfy.
-    1. mod 4: At most one edge is odd. At least two edges are divisible by 4.
+    1. mod 4: At most one edge is odd, and at least one edge is divisible by 4.
     2. mod 16: At least one edge is divisible by 16.
     3. mod 5: At least one edge is divisible by 5. (Furthermore, face diagonals mod 5 constraints).
     4. mod 11: At least one edge is divisible by 11.
@@ -179,6 +179,9 @@ def search_minimal_residual(
             if ab2 not in squares:
                 continue
             for c in range(b, max_edge + 1):
+                # Cheap necessary congruence sieve before square checks.
+                if not verify_modular_constraints(a, b, c)["all_passed"]:
+                    continue
                 ac2 = a2 + c * c
                 if ac2 not in squares:
                     continue

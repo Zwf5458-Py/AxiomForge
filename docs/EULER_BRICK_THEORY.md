@@ -71,9 +71,9 @@ $$11 \mid abc$$
 ---
 
 ### 2.4 Combined Modular Filtering
-For any Euler brick, the volume $V = abc$ satisfies:
-$$abc \equiv 0 \pmod{2 \times 16 \times 5 \times 11 = 1760} \quad (\text{or } 3520)$$
-This obstruction enables an ultra-fast bitmask filter rejecting $>99.8\%$ of candidates in computational searches.
+For any Euler brick, the stated necessary conditions imply:
+$$abc \equiv 0 \pmod{16 \times 5 \times 11 = 880}.$$
+The factors need not occur on the same edge, but their pairwise-coprime product divides the volume. This obstruction provides a cheap necessary-condition sieve before the more expensive perfect-square checks. Its rejection rate depends on the candidate distribution and search domain, so no universal percentage is asserted here.
 
 ---
 

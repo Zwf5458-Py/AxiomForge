@@ -98,9 +98,11 @@ def test_modular_constraints():
 
 
 def test_search_minimal_residual():
-    """Verify search identifies Halcke's brick among smaller ranges."""
+    """Verify the modular-sieved search returns only valid Euler bricks."""
     results = search_minimal_residual(max_edge=250, top_k=3)
     assert len(results) > 0
+    assert all(r["is_euler_brick"] for r in results)
+    assert all(verify_modular_constraints(r["a"], r["b"], r["c"])["all_passed"] for r in results)
     # Smallest Euler brick (44, 117, 240) should be discovered
     found_halcke = any(r["a"] == 44 and r["b"] == 117 and r["c"] == 240 for r in results)
     assert found_halcke is True

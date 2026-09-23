@@ -226,18 +226,55 @@ class EulerBrickVisualizer {
   }
 
   /**
-   * 启发式搜索邻近极小残差长方体
+   * Validate a proposed triple without mutating the current visualization.
+   * A research candidate must first be an Euler brick; a small body-diagonal
+   * residual alone is not meaningful when the face diagonals are irrational.
+   */
+  validateEulerCandidate(a, b, c) {
+    const edges = [a, b, c].map(Number);
+    if (edges.some(value => !Number.isSafeInteger(value) || value <= 0)) return null;
+
+    const [ea, eb, ec] = edges;
+    const sqAB = ea * ea + eb * eb;
+    const sqBC = eb * eb + ec * ec;
+    const sqCA = ec * ec + ea * ea;
+    const sqBody = ea * ea + eb * eb + ec * ec;
+    if (![sqAB, sqBC, sqCA, sqBody].every(Number.isSafeInteger)) return null;
+
+    const ab = this.isSquare(sqAB);
+    const bc = this.isSquare(sqBC);
+    const ca = this.isSquare(sqCA);
+    if (!ab.isSquare || !bc.isSquare || !ca.isSquare) return null;
+
+    const evenCount = edges.filter(value => value % 2 === 0).length;
+    const passMod4 = evenCount >= 2 && edges.some(value => value % 4 === 0);
+    const passMod16 = edges.some(value => value % 16 === 0);
+    const passMod5 = edges.some(value => value % 5 === 0);
+    const passMod11 = edges.some(value => value % 11 === 0);
+    if (!passMod4 || !passMod16 || !passMod5 || !passMod11) return null;
+
+    const body = this.isSquare(sqBody);
+    const g = body.isSquare ? body.root : Math.sqrt(sqBody);
+    return {
+      a: ea, b: eb, c: ec,
+      d_ab: ab.root, d_bc: bc.root, d_ca: ca.root,
+      g,
+      residual: Math.abs(g - Math.round(g)),
+      isPerfect: body.isSquare
+    };
+  }
+
+  /**
+   * Search nearby Euler bricks for the smallest body-diagonal residual.
    */
   searchMinimalResidual(radius = 50) {
     const range = Math.max(5, Math.min(200, Math.round(radius)));
     const baseA = this.a;
     const baseB = this.b;
     const baseC = this.c;
-    let bestResidual = 1.0;
-    let bestTrip = [baseA, baseB, baseC];
-    let bestG = Math.sqrt(baseA * baseA + baseB * baseB + baseC * baseC);
+    let best = this.validateEulerCandidate(baseA, baseB, baseC);
 
-    // 智能步进抽样搜索，兼顾速度与精度
+    // Apply cheap necessary congruence filters before square-root tests.
     const step = range > 60 ? 2 : 1;
     for (let da = -range; da <= range; da += step) {
       const na = Math.max(1, baseA + da);
@@ -245,19 +282,17 @@ class EulerBrickVisualizer {
         const nb = Math.max(1, baseB + db);
         for (let dc = -range; dc <= range; dc += step) {
           const nc = Math.max(1, baseC + dc);
-          const sq = na * na + nb * nb + nc * nc;
-          const g = Math.sqrt(sq);
-          const res = Math.abs(g - Math.round(g));
-          if (res < bestResidual) {
-            bestResidual = res;
-            bestTrip = [na, nb, nc];
-            bestG = g;
-          }
+          const edges = [na, nb, nc];
+          const passMod4 = edges.filter(x => x % 2 === 0).length >= 2 && edges.some(x => x % 4 === 0);
+          if (!passMod4 || !edges.some(x => x % 16 === 0) || !edges.some(x => x % 5 === 0) || !edges.some(x => x % 11 === 0)) continue;
+
+          const candidate = this.validateEulerCandidate(na, nb, nc);
+          if (candidate && (!best || candidate.residual < best.residual)) best = candidate;
         }
       }
     }
 
-    return { a: bestTrip[0], b: bestTrip[1], c: bestTrip[2], residual: bestResidual, g: bestG };
+    return best;
   }
 
   setupInteractions() {
@@ -371,7 +406,11 @@ class EulerBrickVisualizer {
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = w * dpr;
     this.canvas.height = h * dpr;
-    this.ctx.resetTransform?.();
+    if (typeof this.ctx.resetTransform === 'function') {
+      this.ctx.resetTransform();
+    } else {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
     this.ctx.scale(dpr, dpr);
     this.width = w;
     this.height = h;

@@ -1818,21 +1818,42 @@ ${JSON.stringify(points, null, 2)}
   }
 
   function updateAISolutionUI(a, b, c) {
-    const sq_g = a * a + b * b + c * c;
-    const g = Math.sqrt(sq_g);
-    const res_g = Math.abs(g - Math.round(g));
     const isEn = window.I18N && window.I18N.currentLang === 'en';
+    const candidate = eulerbrickEngine.validateEulerCandidate(a, b, c);
 
+    if (!candidate) {
+      lastEulerAISolution = null;
+      if (solEulerAIText) {
+        solEulerAIText.textContent = isEn
+          ? `Rejected candidate: (a, b, c) = (${a}, ${b}, ${c})`
+          : `已拒绝候选解: (a, b, c) = (${a}, ${b}, ${c})`;
+      }
+      if (resEulerAIText) {
+        resEulerAIText.textContent = isEn
+          ? 'Verification failed: all three face diagonals must be integers.'
+          : '验证失败：三个面对角线必须全部为整数。';
+      }
+      if (statusEulerAI) {
+        statusEulerAI.textContent = isEn ? 'Candidate Rejected ✗' : '候选解未通过验证 ✗';
+        statusEulerAI.style.color = '#f43f5e';
+      }
+      return false;
+    }
+
+    lastEulerAISolution = { a: candidate.a, b: candidate.b, c: candidate.c };
     if (solEulerAIText) {
-      solEulerAIText.textContent = isEn ? `Candidate: (a, b, c) = (${a}, ${b}, ${c})` : `AI 推演候选解: (a, b, c) = (${a}, ${b}, ${c})`;
+      solEulerAIText.textContent = isEn ? `Verified Euler brick: (a, b, c) = (${candidate.a}, ${candidate.b}, ${candidate.c})` : `已验证欧拉砖: (a, b, c) = (${candidate.a}, ${candidate.b}, ${candidate.c})`;
     }
     if (resEulerAIText) {
-      resEulerAIText.textContent = isEn ? `Space Diag g = ${g.toFixed(4)}, Defect Δ = ${res_g.toFixed(5)}` : `体对角线 g = ${g.toFixed(4)}, 极小残差 Δ = ${res_g.toFixed(5)}`;
+      resEulerAIText.textContent = isEn ? `Space Diag g = ${candidate.g.toFixed(4)}, Defect Δ = ${candidate.residual.toFixed(5)}` : `体对角线 g = ${candidate.g.toFixed(4)}, 极小残差 Δ = ${candidate.residual.toFixed(5)}`;
     }
     if (statusEulerAI) {
-      statusEulerAI.textContent = isEn ? 'Deduction Completed ✓' : '推演完成 ✓';
+      statusEulerAI.textContent = candidate.isPerfect
+        ? (isEn ? 'Perfect Cuboid Verified ✓' : '完美长方体已验证 ✓')
+        : (isEn ? 'Euler Brick Verified ✓' : '欧拉砖已验证 ✓');
       statusEulerAI.style.color = '#34d399';
     }
+    return true;
   }
 
   if (btnEulerAIReason) {
@@ -1901,7 +1922,6 @@ ${JSON.stringify(points, null, 2)}
       // 2. 流式打字输出完成器 (解决一下子全量输出的问题)
       const finishAIWithStream = (a, b, c, fullText) => {
         stopHeartbeat();
-        lastEulerAISolution = { a, b, c };
 
         return new Promise((resolve) => {
           if (activeTypewriter) activeTypewriter.cancel();
@@ -1915,9 +1935,9 @@ ${JSON.stringify(points, null, 2)}
               }
               if (statusEulerAI) {
                 statusEulerAI.textContent = isDone
-                  ? (isEn ? 'Deduction Completed ✓' : '推演完成 ✓')
+                  ? (isEn ? 'Response received · verifying...' : '响应已接收 · 正在验证...')
                   : (isEn ? 'AI Streaming Reasoning... ▌' : 'AI 正在实时流式推演... ▌');
-                statusEulerAI.style.color = isDone ? '#34d399' : '#38bdf8';
+                statusEulerAI.style.color = '#38bdf8';
               }
             },
             () => {
@@ -2010,9 +2030,9 @@ ${JSON.stringify(points, null, 2)}
                   }
                   if (statusEulerAI) {
                     statusEulerAI.textContent = isDone
-                      ? (isEn ? 'Deduction Completed ✓' : '推演完成 ✓')
+                      ? (isEn ? 'Response received · verifying...' : '响应已接收 · 正在验证...')
                       : (isEn ? 'AI Streaming Reasoning... ▌' : 'AI 正在实时流式推演... ▌');
-                    statusEulerAI.style.color = isDone ? '#34d399' : '#38bdf8';
+                    statusEulerAI.style.color = '#38bdf8';
                   }
                 };
 
@@ -2043,7 +2063,6 @@ ${JSON.stringify(points, null, 2)}
                 const cleanContent = fullContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
                 const parsed = eulerbrickEngine.parseEulerResponse(cleanContent) || eulerbrickEngine.parseEulerResponse(fullContent);
                 const solTriple = parsed || eulerbrickEngine.simulateDeterministicReasoning();
-                lastEulerAISolution = { a: solTriple.a, b: solTriple.b, c: solTriple.c };
                 updateAISolutionUI(solTriple.a, solTriple.b, solTriple.c);
                 success = true;
               } else if (directResp.ok) {

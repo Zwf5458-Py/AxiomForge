@@ -112,7 +112,7 @@ The Perfect Euler Brick (Perfect Cuboid) problem represents the pinnacle of 3D E
 - **Diophantine Modular Sieve Telemetry**:
   - **Modulo 4 & 16 Obstructions**: Any primitive brick must have exactly two even edges and one odd edge, with at least one even edge divisible by 16;
   - **Modulo 5 & 11 Obstructions**: Enforces $5 \mid abc$ and $11 \mid abc$;
-  - Live inspection card dynamically highlighting constraints to filter $>99.8\%$ candidate triplets;
+  - Live inspection card dynamically highlighting necessary congruence constraints, now applied as a cheap pre-filter before exact face-diagonal checks;
 - **AI-Powered Dual-Track Diophantine Reasoning System**:
   - **End-to-End Real LLM Deduction**: Supports real-time reasoning with DeepSeek-R1, OpenAI o1/o3, SiliconFlow, and local Ollama;
   - **Dual-Track High-Availability Pipeline**: Direct browser fetch to OpenAI-compatible endpoints with zero proxy overhead, seamless fallback to local backend `/api/llm/generate` on CORS anomalies, and deterministic offline simulation fallback on network disconnection—guaranteed by `try ... finally` state machine unlocking;
