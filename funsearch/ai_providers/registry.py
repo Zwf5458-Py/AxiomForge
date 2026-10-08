@@ -4,7 +4,7 @@ AxiomForge AI Providers: 统一注册表与模型管理容器 (Models Registry)
 提供 builtin_models(), create_custom_provider(), 凭据自动解析, 流式与非流式统一分发。
 """
 
-from typing import Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 from .anthropic_provider import AnthropicProvider
 from .base import BaseProvider
 from .credentials import AuthResolver, CredentialStore

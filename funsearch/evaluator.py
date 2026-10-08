@@ -8,10 +8,12 @@ Cap Set（帽子集）是指不包含任何三点共线的点集 S ⊆ F_3^n。
 我们的目标是寻找尽可能大的集合基数 |S|。
 """
 
+import ast
 import itertools
 import math
-import sys
-from typing import Callable, List, Tuple, Set, Dict, Any, Sequence
+import re
+import types
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 Point = Tuple[int, ...]
 
@@ -102,8 +104,6 @@ def sanitize_code_for_sandbox(code: str) -> str:
     """代码清洗与语法自愈器：修复未闭合的 docstring、单双引号及多余自然语言文本"""
     if not code:
         return ""
-    import ast
-    import re
 
     lines = code.strip().split("\n")
     has_def = False
@@ -172,9 +172,87 @@ def sanitize_code_for_sandbox(code: str) -> str:
 
     return code_candidate
 
+# ---------------------------------------------------------------------------
+# 受限执行环境 (Restricted execution environment)
+# ---------------------------------------------------------------------------
+# 说明：LLM 生成的 priority 函数只需要基础内建函数与 math 模块。此处的白名单
+# 用于阻断 open / exec / eval / __import__ / subprocess 等能力。这是纵深防御
+# (defense-in-depth)，不是操作系统级安全边界——真正的强隔离应由子进程或容器承担。
+SAFE_BUILTINS: Dict[str, Any] = {
+    "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
+    "divmod": divmod, "enumerate": enumerate, "float": float, "int": int,
+    "len": len, "list": list, "max": max, "min": min, "pow": pow,
+    "range": range, "reversed": reversed, "round": round, "set": set,
+    "sorted": sorted, "sum": sum, "tuple": tuple, "zip": zip,
+}
+
+# 允许被导入的模块（模块导入仅限此白名单）
+ALLOWED_SANDBOX_MODULES = ("math",)
+
+# 静态拒绝的内建函数：文件系统、进程、自省、I/O 与动态求值相关能力
+DENIED_SANDBOX_NAMES = frozenset({
+    "breakpoint", "compile", "delattr", "dir", "eval", "exec", "exit", "getattr",
+    "globals", "help", "input", "locals", "memoryview", "object", "open", "quit",
+    "setattr", "super", "type", "vars", "__import__",
+})
+
+
+class SandboxViolation(Exception):
+    """LLM 或请求方提交的代码触犯了沙箱静态检查规则"""
+
+
+def _fresh_safe_math():
+    """返回 math 模块的独立副本，避免被求值代码污染进程内共享的 math 全局状态"""
+    clone = types.ModuleType("math")
+    for key, value in vars(math).items():
+        if not key.startswith("__"):
+            setattr(clone, key, value)
+    return clone
+
+
+def _sandbox_import(name, globals=None, locals=None, fromlist=(), level=0):
+    """仅放行白名单模块的 __import__ 替身"""
+    root = str(name).split(".")[0]
+    if root in ALLOWED_SANDBOX_MODULES:
+        return _fresh_safe_math()
+    raise ImportError(f"沙箱禁止导入模块: {name}")
+
+
+def assert_sandbox_safe(code: str) -> None:
+    """
+    静态检查待执行代码，拒绝逃逸沙箱的语法结构：
+      1. 白名单之外的 import / from ... import
+      2. 双下划线属性访问 (如 __class__ / __subclasses__ / __globals__)
+      3. 直接引用 __builtins__
+    语法错误会原样抛出 SyntaxError，由调用方转换为 valid=False。
+    """
+    tree = ast.parse(code)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split(".")[0] not in ALLOWED_SANDBOX_MODULES:
+                    raise SandboxViolation(f"沙箱禁止导入模块: {alias.name}")
+        elif isinstance(node, ast.ImportFrom):
+            root = (node.module or "").split(".")[0]
+            if root not in ALLOWED_SANDBOX_MODULES:
+                raise SandboxViolation(f"沙箱禁止导入模块: {node.module}")
+        elif isinstance(node, ast.Attribute):
+            if node.attr.startswith("__") and node.attr.endswith("__"):
+                raise SandboxViolation(f"沙箱禁止访问双下划线属性: {node.attr}")
+        elif isinstance(node, ast.Name):
+            if node.id == "__builtins__":
+                raise SandboxViolation("沙箱禁止访问 __builtins__")
+            # 拒绝名单：这些名字在运行期本会抛 NameError，但求解器会逐点吞掉异常，
+            # 使含违规调用的代码仍被判定为有效并产出评分，故在静态检查阶段直接拒绝。
+            if node.id in DENIED_SANDBOX_NAMES:
+                raise SandboxViolation(
+                    f"沙箱禁止使用内建函数: {node.id}（priority 函数只需基础数学运算）"
+                )
+
+
 def evaluate_program(code_str: str, n: int) -> Dict[str, Any]:
     """
-    在隔离的全局命名空间中执行 LLM 生成的 priority 函数代码并评分
+    在受限命名空间中执行 LLM 生成的 priority 函数代码并评分
     返回字典格式：{
         "valid": bool,
         "score": int (得到的 Cap Set 大小),
@@ -184,9 +262,15 @@ def evaluate_program(code_str: str, n: int) -> Dict[str, Any]:
     """
     local_scope: Dict[str, Any] = {}
     clean_code = sanitize_code_for_sandbox(code_str)
+    safe_globals: Dict[str, Any] = {
+        "math": _fresh_safe_math(),
+        "__name__": "__axiomforge_sandbox__",
+        "__builtins__": dict(SAFE_BUILTINS, __import__=_sandbox_import),
+    }
     try:
-        # 在安全沙箱中执行经过自愈清洗的代码
-        exec(clean_code, {"math": math, "__builtins__": __builtins__}, local_scope)
+        # 先做静态逃逸检查，再在受限命名空间中执行经过自愈清洗的代码
+        assert_sandbox_safe(clean_code)
+        exec(clean_code, safe_globals, local_scope)
         if "priority" not in local_scope or not callable(local_scope["priority"]):
             return {"valid": False, "score": 0, "error": "Function 'priority(p, n)' not found", "points": []}
 
