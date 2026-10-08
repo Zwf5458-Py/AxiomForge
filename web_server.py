@@ -32,15 +32,72 @@ MODELS_REGISTRY = builtin_models()
 class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
     """处理静态文件及 REST API 请求"""
 
+    # 仅放行本机来源的跨域请求：本服务暴露沙箱求值与密钥代理接口，
+    # 通配 CORS 会让任意网站借浏览器发起 drive-by 调用。
+    ALLOWED_ORIGIN_RE = re.compile(r"^https?://(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$")
+
+    # 不对外托管的路径：资助申请等含个人信息，其余为仓库内部目录
+    BLOCKED_PATH_PREFIXES = ("docs/grants",)
+    BLOCKED_PATH_NAMES = {"__pycache__", ".pytest_cache", "node_modules"}
+
+    # 3^n 点集规模上限：8 维即 6,561 点，避免指数级资源耗尽
+    MIN_DIMENSION = 1
+    MAX_DIMENSION = 8
+
+    # 单次请求体上限，防御畸形 Content-Length 造成的内存耗尽
+    MAX_REQUEST_BYTES = 2 * 1024 * 1024
+
     def end_headers(self):
-        # 允许跨域请求与防止缓存
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        # 同源请求无需跨域头；仅为本机前端（含其他端口调试）放行
+        origin = (self.headers.get("Origin") or "").strip()
+        if origin and self.ALLOWED_ORIGIN_RE.match(origin):
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            self.send_header("Vary", "Origin")
+        # 防止缓存
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
         super().end_headers()
+
+    def _is_blocked_path(self, url_path: str) -> bool:
+        """拒绝托管仓库元数据、本地凭据与含个人信息的目录"""
+        try:
+            decoded = urllib.parse.unquote(url_path, errors="replace")
+        except Exception:
+            return True
+        parts = [p for p in decoded.replace("\\", "/").split("/") if p not in ("", ".")]
+        # 任意以 . 开头的路径段（.git / .axiomforge / .. 等）一律拒绝
+        if any(p.startswith(".") or p in self.BLOCKED_PATH_NAMES for p in parts):
+            return True
+        normalized = "/".join(parts)
+        return any(
+            normalized == prefix or normalized.startswith(prefix + "/")
+            for prefix in self.BLOCKED_PATH_PREFIXES
+        )
+
+    def list_directory(self, path):
+        """禁用目录列表，避免暴露仓库文件清单"""
+        self.send_error(404, "Not Found")
+        return None
+
+    @classmethod
+    def _parse_dimension(cls, raw, default: int = 3) -> int:
+        """校验维度参数，非法输入抛出 ValueError（由 do_GET/do_POST 转为 400）"""
+        if raw is None or raw == "":
+            return default
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(
+                f"dimension 必须是 {cls.MIN_DIMENSION}-{cls.MAX_DIMENSION} 之间的整数，收到: {raw!r}"
+            )
+        if not (cls.MIN_DIMENSION <= n <= cls.MAX_DIMENSION):
+            raise ValueError(
+                f"dimension 必须在 {cls.MIN_DIMENSION}-{cls.MAX_DIMENSION} 之间，收到: {n}"
+            )
+        return n
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -50,41 +107,69 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        if path == "/api/providers":
-            self.handle_get_providers()
-        elif path == "/api/models":
-            self.handle_get_models(parsed.query)
-        elif path == "/api/topology":
-            self.handle_get_topology(parsed.query)
-        else:
-            # 回退到默认的静态文件服务
-            super().do_GET()
+        if path.startswith("/api/"):
+            try:
+                if path == "/api/providers":
+                    self.handle_get_providers()
+                elif path == "/api/models":
+                    self.handle_get_models(parsed.query)
+                elif path == "/api/topology":
+                    self.handle_get_topology(parsed.query)
+                else:
+                    self._send_json({"error": f"未知的 API 端点: GET {path}"}, status_code=404)
+            except ValueError as e:
+                self._send_json({"error": str(e)}, status_code=400)
+            except Exception as e:
+                self._send_json({"error": f"服务器内部错误: {type(e).__name__}: {e}"}, status_code=500)
+            return
+
+        # 拒绝仓库元数据、本地凭据与含个人信息的路径
+        if self._is_blocked_path(path):
+            self.send_error(404, "Not Found")
+            return
+
+        # 回退到默认的静态文件服务
+        super().do_GET()
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        content_len = int(self.headers.get("Content-Length", 0))
-        post_body = self.rfile.read(content_len).decode("utf-8") if content_len > 0 else "{}"
+        try:
+            content_len = int(self.headers.get("Content-Length") or 0)
+        except (TypeError, ValueError):
+            content_len = 0
+        if content_len < 0 or content_len > self.MAX_REQUEST_BYTES:
+            self._send_json({"error": "请求体过大或 Content-Length 非法"}, status_code=413)
+            return
+
+        post_body = self.rfile.read(content_len).decode("utf-8", errors="replace") if content_len > 0 else "{}"
         try:
             payload = json.loads(post_body)
         except Exception:
             payload = {}
+        if not isinstance(payload, dict):
+            payload = {}
 
-        if path == "/api/providers/check":
-            self.handle_check_provider(payload)
-        elif path == "/api/providers/custom":
-            self.handle_register_custom(payload)
-        elif path == "/api/models/fetch":
-            self.handle_fetch_models(payload)
-        elif path == "/api/eval":
-            self.handle_eval_code(payload)
-        elif path == "/api/llm/generate":
-            self.handle_llm_generate(payload)
-        elif path == "/api/funsearch/evolve_step":
-            self.handle_funsearch_evolve_step(payload)
-        else:
-            self.send_error(404, "API endpoint not found")
+        try:
+            if path == "/api/providers/check":
+                self.handle_check_provider(payload)
+            elif path == "/api/providers/custom":
+                self.handle_register_custom(payload)
+            elif path == "/api/models/fetch":
+                self.handle_fetch_models(payload)
+            elif path == "/api/eval":
+                self.handle_eval_code(payload)
+            elif path == "/api/llm/generate":
+                self.handle_llm_generate(payload)
+            elif path == "/api/funsearch/evolve_step":
+                self.handle_funsearch_evolve_step(payload)
+            else:
+                self._send_json({"error": f"未知的 API 端点: POST {path}"}, status_code=404)
+        except ValueError as e:
+            self._send_json({"error": str(e)}, status_code=400)
+        except Exception as e:
+            self._send_json({"error": f"服务器内部错误: {type(e).__name__}: {e}"}, status_code=500)
 
     def _send_json(self, data: dict, status_code: int = 200):
         resp_bytes = json.dumps(data, ensure_ascii=False).encode("utf-8")
@@ -128,7 +213,7 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_get_topology(self, query_str: str):
         qs = urllib.parse.parse_qs(query_str)
-        n = int(qs.get("dimension", [3])[0])
+        n = self._parse_dimension(qs.get("dimension", [3])[0])
         topo = get_dimension_topology(n)
         self._send_json(topo)
 
@@ -234,7 +319,7 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_eval_code(self, payload: dict):
         code_str = payload.get("code", "")
-        n = int(payload.get("dimension", 3))
+        n = self._parse_dimension(payload.get("dimension", 3))
         t0 = time.time()
         res = evaluate_program(code_str, n)
         eval_time = time.time() - t0
@@ -285,7 +370,7 @@ class AxiomForgeHandler(http.server.SimpleHTTPRequestHandler):
         4. 真实在 Python 沙箱中编译并执行 F_3^n 空间的 3^n 点贪心打分与无共线检测
         5. 真实返回点集坐标、基数得分与违规检测结果，拒绝一切虚假预定数据！
         """
-        dimension = int(payload.get("dimension", 4))
+        dimension = self._parse_dimension(payload.get("dimension", 4))
         provider_id = payload.get("provider_id", "mock")
         model_id = payload.get("model_id", "reproducible-mock-llm")
         api_key = payload.get("api_key")
@@ -375,10 +460,13 @@ def priority(p: tuple, n: int) -> float:
                 extracted_code = r_code
 
         # 智能代数先验合成兜底：若模型已在代数推演中证明了代数不变量，但受截断或格式未打出完整代码块
+        # 注意：该分支产出的代码由本系统内置模板合成，并非模型直接输出，必须向调用方显式声明来源。
+        synthetic_note = ""
         if not extracted_code or "def priority" not in extracted_code:
             combined_text = ((result.text or "") + " " + (result.reasoning or "")).lower()
             if "x^2" in combined_text or "x**2" in combined_text or "quadratic" in combined_text or "paraboloid" in combined_text:
                 print(f"[FunSearch] 命中大模型代数推导二次型抛物面构造，自动合成优先级代码！", flush=True)
+                synthetic_note = "【⚠️ 代码来源声明】本轮 priority 函数由系统按模型的分析文本自动合成的内置先验模板生成，并非模型直接输出的代码；模型原始响应见 raw_text。沙箱评分针对该合成函数真实计算，请勿将其归因于模型代码。"
                 extracted_code = """def priority(p: tuple, n: int) -> float:
     # 真实采纳大模型推演证明的二次型抛物面 Cap Set 不变量 (z = x^2 + y^2 mod 3)
     if n == 3:
@@ -389,6 +477,7 @@ def priority(p: tuple, n: int) -> float:
         return float(80.0 if (n >= 3 and p[2] == quad) else sum(p))"""
             elif "hamming" in combined_text or "weight" in combined_text or "norm" in combined_text or "sphere" in combined_text:
                 print(f"[FunSearch] 命中大模型汉明球层代数推导，自动合成优先级代码！", flush=True)
+                synthetic_note = "【⚠️ 代码来源声明】本轮 priority 函数由系统按模型的分析文本自动合成的内置汉明球层模板生成，并非模型直接输出的代码；模型原始响应见 raw_text。沙箱评分针对该合成函数真实计算，请勿将其归因于模型代码。"
                 extracted_code = """def priority(p: tuple, n: int) -> float:
     # 真实采纳大模型推演证明的汉明重量球面层 Cap Set 启发式
     nonzero_count = sum(1 for x in p if x != 0)
@@ -396,6 +485,7 @@ def priority(p: tuple, n: int) -> float:
     return float(10.0 * nonzero_count - 5.0 * parity_sum)"""
             elif len(result.text.strip()) > 30 or (result.reasoning and len(result.reasoning.strip()) > 30):
                 print(f"[FunSearch] 命中大模型综合代数推导，自动适配高阶代数优先级代码！", flush=True)
+                synthetic_note = "【⚠️ 代码来源声明】本轮 priority 函数由系统按模型的分析文本自动合成的内置代数差分模板生成，并非模型直接输出的代码；模型原始响应见 raw_text。沙箱评分针对该合成函数真实计算，请勿将其归因于模型代码。"
                 extracted_code = """def priority(p: tuple, n: int) -> float:
     # 真实采纳大模型代数分析：综合坐标差分与仿射模3不变量
     diffs = sum(abs(p[i] - p[(i+1)%n]) for i in range(n))
@@ -414,6 +504,10 @@ def priority(p: tuple, n: int) -> float:
 
         if not analysis_parts:
             analysis_parts.append(f"【📐 代数分析】模型已针对 F_3^{dimension} 空间构建出汉明切片与坐标不变性特征。")
+
+        # 若本轮代码来自内置合成兜底，则置顶声明来源，避免把系统模板误认作模型输出
+        if synthetic_note:
+            analysis_parts.insert(0, synthetic_note)
 
         full_deduction_text = "\n\n".join(analysis_parts)
 
@@ -502,18 +596,38 @@ def priority(p: tuple, n: int) -> float:
 
 def main():
     parser = argparse.ArgumentParser(description="AxiomForge Web Server")
-    parser.add_argument("--port", "-p", type=int, default=8080, help="Web 监听端口 (默认 8080)")
+    parser.add_argument(
+        "--port", "-p", type=int, default=8080,
+        help="Web 监听端口 (默认 8080；若被占用则自动改用其他可用端口)"
+    )
     parser.add_argument("--host", "-H", type=str, default="127.0.0.1", help="监听主机 (默认 127.0.0.1)")
+    parser.add_argument(
+        "--strict-port", action="store_true",
+        help="端口被占用时直接报错退出，不自动切换端口"
+    )
     args = parser.parse_args()
 
     # 将工作目录切换至代码根目录以提供静态资源
     web_dir = Path(__file__).parent.resolve()
     os.chdir(web_dir)
 
-    server = http.server.ThreadingHTTPServer((args.host, args.port), AxiomForgeHandler)
+    port = args.port
+    try:
+        server = http.server.ThreadingHTTPServer((args.host, port), AxiomForgeHandler)
+    except OSError as e:
+        if args.strict_port:
+            print(f"❌ 端口 {port} 无法监听: {e.strerror or e}", flush=True)
+            print(f"   请改用 --port <其他端口> 指定空闲端口，或去掉 --strict-port 由系统自动选择。", flush=True)
+            sys.exit(1)
+        # 端口冲突（常见于 8080 被其他应用占用）：自动回退到系统分配的可用端口
+        print(f"⚠️  端口 {port} 已被占用（{e.strerror or e}），正在自动选择可用端口...", flush=True)
+        server = http.server.ThreadingHTTPServer((args.host, 0), AxiomForgeHandler)
+        port = server.server_address[1]
+        print(f"   已自动改用端口 {port}", flush=True)
+
     print("=" * 65)
     print(f"🚀 AxiomForge Web 端系统服务已启动")
-    print(f"🌐 本地访问地址: http://{args.host}:{args.port}")
+    print(f"🌐 本地访问地址: http://{args.host}:{port}")
     print(f"🧬 AI Provider 架构: 已挂载 6 个内置平台 (DeepSeek, OpenAI, Claude, Ollama, 等)")
     print("=" * 65)
 
