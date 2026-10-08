@@ -88,8 +88,38 @@
 
 ### 5. 质量工程与测试全绿
 - 配置文件：[`pyproject.toml`](file:///Users/oraclez/code/数学模型/pyproject.toml) 固化 `pythonpath = ["."]`；
-- 单元测试：`pytest` 覆盖核心功能（AI 适配器、Cap Set 共线校验、演化引擎、6D/7D 高维快速求解器与先验、考拉兹动力学、欧拉砖数论算法与同余筛），**33 项 Python 测试 100% 通过**；浏览器前端逻辑由 Node 测试套件直接驱动真实生产代码（`node tests/test_collatz_core.mjs`、`node tests/test_euler_brick_ui.mjs`）保证；
-- GitHub Actions：`.github/workflows/tests.yml` 自动化 CI 持续集成保持绿灯。
+- 单元测试：`pytest` 覆盖核心功能（AI 适配器、Cap Set 共线校验、演化引擎、6D/7D 高维快速求解器与先验、考拉兹动力学、欧拉砖数论算法与同余筛），**62 项 Python 测试 100% 通过**（原 33 项核心算法 + 新增 29 项安全回归测试）；浏览器前端逻辑由 Node 测试套件直接驱动真实生产代码（`node tests/test_collatz_core.mjs`、`node tests/test_euler_brick_ui.mjs`）保证；
+- GitHub Actions：`.github/workflows/tests.yml` 自动化 CI。**已修正此前"保持绿灯"的说法与实际不符的问题**：CI 固定 Python 3.10，而 `funsearch/evaluator.py` 缺失 `Optional` 导入，在 3.10–3.13 上模块导入即 `NameError`，3.14 因注解延迟求值才不报错，属于典型的"本地全绿、CI 红灯"。现已修复该导入，且 CI 升级为 Python 3.10/3.13 版本矩阵，并新增 Node 前端测试作业（此前前端套件从未在 CI 中运行）。
+
+### 6. 安全审计与加固（本轮代码审核修复）
+本轮对全项目做了一次安全与正确性审核，发现并修复了以下**真实存在的缺陷**（均有回归测试固化于 `tests/test_sandbox_security.py`）：
+
+| # | 缺陷 | 危害 | 修复 |
+| :--- | :--- | :--- | :--- |
+| 1 | 注解名字未导入（**同类 2 处**：`evaluator.py` 缺 `Optional`、`ai_providers/registry.py` 缺 `Any`） | Python 3.10–3.13 上导入即 `NameError`；CI 固定 3.10 ⇒ **CI 实际红灯**，与文档"CI 全绿"矛盾。3.14 因注解延迟求值（PEP 649）才掩盖了问题 | 补齐两处导入；现 3.10/3.13/3.14 全部 26 个非测试模块导入通过 |
+| 2 | `evaluate_program` 以真实 `__builtins__` 执行 `exec` | 并非沙箱：任意代码可执行。`POST /api/eval` 无需鉴权即可提交代码 ⇒ **本地任意代码执行（RCE）** | 改为受限内建函数白名单 + 静态 AST 检查（禁 `import`/双下划线属性/`open`/`eval`/`getattr` 等）；`math` 按次隔离副本，避免污染进程内共享模块 |
+| 3 | `Access-Control-Allow-Origin: *` | 与第 2 项叠加 ⇒ **任意网站可对本地服务发起 drive-by RCE** | 仅回显本机来源（`localhost`/`127.0.0.1`/`[::1]`）；前端本就使用同源相对路径，功能不受影响 |
+| 4 | 默认静态服务托管整个仓库根 | `/.git/config`、`/.axiomforge/credentials.json`（明文 API Key）、`/docs/grants/*`（含个人姓名/邮箱/申请编号）均可被读取，且因第 3 项可被任意网站跨域读取 | 拒绝以 `.` 开头的路径段、`__pycache__` 与 `docs/grants`；禁用目录列表 |
+| 5 | `dimension` 参数未校验 | `?dimension=abc` 触发未捕获 `ValueError` 中断连接并向终端吐栈；`3^n` 无上限 ⇒ 资源耗尽 | 限定 1–8，非法输入返回 400 JSON；API 路径统一异常兜底；请求体大小上限 2 MB |
+| 6 | 兜底合成代码未声明来源 | 模型未能输出合法代码时，系统注入**内置模板**函数，却与模型分析文本一并返回，易被误认为模型产出，与"拒绝一切虚假预定数据"的表述冲突 | 该分支置顶插入【⚠️ 代码来源声明】，明确代码为系统合成、非模型输出 |
+| 7 | `.axiomforge/` 未加入 `.gitignore` | 明文 API Key 存在被提交入库的风险 | 已加入 `.gitignore` |
+| 8 | 监听端口硬编码 8080，冲突即崩溃 | 端口被其他应用占用时抛 `OSError` 直接退出且无提示（本机 8080/8099 已被 `hyperspac` 占用） | 冲突时打印明确提示并**自动改用可用端口**、回显新地址；新增 `--strict-port` 供必须固定端口的场景报错退出 |
+
+**已复核证实的正面结论**：前端渲染大模型输出全部走 `textContent`，`innerHTML` 插值点均为本地 i18n 文案或数值 ⇒ **未发现 XSS**；6D（81 点）、7D（166 点）、4D（18 点）存档结果经 `is_valid_cap_set` 独立复核，**均为合法 Cap Set，共线数为 0**。
+
+### 7. 前端结构审计（本轮）
+对 `js/*.js`（12 个共享全局作用域的脚本）+ `index.html` + `css/style.css` 做了完整静态结构审计，**整体质量良好**：
+
+| 检查项 | 结果 |
+| :--- | :--- |
+| 跨脚本全局命名冲突 / 重复函数定义 | **0 处**（无模块系统、共享全局作用域本属高风险项，实际干净） |
+| `getElementById` / `querySelector('#..')` 悬空引用 | **0 处**（初扫唯一的 `btn-apply-euler-search` 系 app.js:1679 动态创建后再查询，属误报） |
+| 死代码（定义后从未被调用的函数） | **0 处** |
+| 内联 `<script>` / `on*` 事件属性 / `<style>` 块 | **0 处**，标记与逻辑完全分离 |
+| 未被引用的 CSS 类 | **1 处**（`.theory-highlight`） |
+| 跨文件重复代码 | **约 65 行**：`collatz.js` 与 `eulerbrick.js` 的鼠标拖拽收尾（`mouseup`/`mouseleave`）与阻尼滚轮缩放（`wheel` → `zoomBy`）样板完全相同 |
+
+**遗留建议（未实施，原因：交互代码零测试覆盖）**：现有 Node 套件只覆盖纯数学逻辑（序列、逆向树、坐标变换、残差搜索），**不覆盖 pan/zoom/drag 交互**，因此抽取共享的视口交互助手（`attachCanvasPointerHandlers`）需先在浏览器人工验证后进行，否则无法回归。
 
 ---
 
@@ -116,7 +146,7 @@ AxiomForge 已正式在国际著名非营利资助平台 **Manifund** 完成全�
    - 终审通过后将激活 `Enter bank info`，支持国内商业银行（如中国银行、招商银行、工行等）通过 SWIFT Code 直接国际电汇或通过 Wise / Stripe 接收美元结汇。
 
 ### 3. 社区信誉维护与 Pangram 声明
-- **作者透明度公开置顶说明**：针对页面上方出现的 Pangram 自动化检测提示，已在讨论区以项目作者身份（带 🔧 徽标）发布了正式声明，说明母语非英语使用 AI 辅助英文润色，但核心数学构思与 100% 代码均为自主研发，并附有 GitHub 源码与 16 项 CI 测试背书，极大提升了项目的学术真实度与公信力。
+- **作者透明度公开置顶说明**：针对页面上方出现的 Pangram 自动化检测提示，已在讨论区以项目作者身份（带 🔧 徽标）发布了正式声明，说明母语非英语使用 AI 辅助英文润色，但核心数学构思与 100% 代码均为自主研发，并附有 GitHub 源码与 **62 项单元测试**（原表述"16 项 CI 测试"为早期遗留数字，与本文其余处的 33 项自相矛盾，现已统一）背书，极大提升了项目的学术真实度与公信力。
 - **GitHub 首页资助 Badge 挂载**：中英文 `README.md` 与 `README_CN.md` 顶端及文末已挂载专属橙色资助徽章与介绍，代码已推送至远程（Commit `1b5cd73`）。
 
 ---
@@ -126,7 +156,7 @@ AxiomForge 已正式在国际著名非营利资助平台 **Manifund** 完成全�
 | 资产类型 | 关键标识 / 链接 | 备注 / 对应人 |
 | :--- | :--- | :--- |
 | **GitHub 账号** | `Zwf5458-Py` | 项目代码与开源展示阵地 |
-| **GitHub 仓库** | `Zwf5458-Py/AxiomForge` | 分支 `main`，CI 全绿 |
+| **GitHub 仓库** | `Zwf5458-Py/AxiomForge` | 分支 `main`；CI 已覆盖 Python 3.10/3.13 矩阵 + Node 前端测试 |
 | **Manifund 用户名** | `zwf225458` | 资助申请管理账号 |
 | **Manifund 认证姓名**| **Wanfu Zhuang** | 法定收款人姓名拼音（必须与银行开户名一致） |
 | **关联工作邮箱** | `zwf225458@gmail.com` | 接收协议副本与放款通知 |

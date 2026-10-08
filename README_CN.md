@@ -134,7 +134,7 @@ pip install -r requirements.txt
 
 ### 2. 运行单元测试
 ```bash
-pytest tests/                                  # Python：33 项核心算法测试
+pytest tests/                                  # Python：62 项测试（核心算法 + 安全回归）
 node tests/test_collatz_core.mjs               # JS：真实浏览器代码的考拉兹数学 + 可视化
 node tests/test_euler_brick_ui.mjs             # JS：真实浏览器代码的欧拉砖验证/搜索
 ```
