@@ -21,3 +21,6 @@ venv/
 *.log
 *.jsonl
 .zvec-grep/
+
+# Local credentials — CredentialStore 明文存放 AI 平台 API Key 的位置，绝不可入库
+.axiomforge/

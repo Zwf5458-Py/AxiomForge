@@ -7,14 +7,21 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
+  python:
+    name: Python tests (${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 为 requires-python 下限；3.13 用于暴露仅在 3.14 之前才显现的问题
+        # （例如 evaluator 缺失 Optional 导入导致的模块导入失败）
+        python-version: ["3.10", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.10
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -22,3 +29,19 @@ jobs:
       - name: Run tests
         run: |
           python -m pytest tests/
+
+  node:
+    # 前端逻辑由 Node 套件直接驱动浏览器实际加载的 js/*.js，
+    # 此前未纳入 CI，存在"测试全绿但前端回归"的敞口
+    name: Frontend tests (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run frontend tests
+        run: |
+          node tests/test_collatz_core.mjs
+          node tests/test_euler_brick_ui.mjs
